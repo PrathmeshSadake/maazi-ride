@@ -1,10 +1,28 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import {
+  clerkClient,
+  clerkMiddleware,
+  createRouteMatcher,
+} from "@clerk/nextjs/server";
 
 const isPublicRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    await auth.protect();
+  const userSession = (await auth()).sessionClaims;
+
+  const user = await (
+    await clerkClient()
+  ).users.getUser(userSession?.sub as string);
+
+  console.log(user);
+
+  const role = (user?.publicMetadata?.role as string) || "user";
+
+  if (role === "driver") {
+    console.log("driver");
+  } else if (role === "admin") {
+    console.log("admin");
+  } else {
+    console.log("user");
   }
 });
 
