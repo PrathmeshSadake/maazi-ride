@@ -1,35 +1,33 @@
-import { auth } from "@clerk/nextjs";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SiteHeader } from "@/components/site-header";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { userId } = auth();
-  
-  // If not logged in, redirect to sign in
-  if (!userId) {
+  const user = await currentUser();
+
+  if (!user) {
     redirect("/sign-in");
   }
-  
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm py-4">
-        <div className="container mx-auto px-4">
-          <h1 className="text-2xl font-bold text-gray-800">Maazi Ride Admin</h1>
-        </div>
-      </header>
-      
-      <main>
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--header-height": "calc(var(--spacing) * 12)",
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar variant='inset' />
+      <SidebarInset>
+        <SiteHeader />
         {children}
-      </main>
-      
-      <footer className="bg-white shadow-sm py-4 mt-auto">
-        <div className="container mx-auto px-4 text-center text-gray-500">
-          <p>© {new Date().getFullYear()} Maazi Ride Admin Portal</p>
-        </div>
-      </footer>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
-} 
+}

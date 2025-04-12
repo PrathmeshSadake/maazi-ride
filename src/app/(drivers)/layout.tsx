@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Home, Car, User, Clock, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import prisma from "@/lib/db";
 
 export default async function DriversLayout({
   children,
@@ -36,7 +38,33 @@ export default async function DriversLayout({
     },
   ];
 
+  const user = await currentUser();
 
+  if (!user) {
+    redirect("/sign-in");
+  }
+
+  if (user && user.publicMetadata.role !== "driver") {
+    redirect("/");
+  }
+
+  const driver = await prisma.user.findUnique({
+    where: {
+      id: user.id,
+    },
+  });
+
+  if (!driver?.isVerified || !user.publicMetadata.verified) {
+    return (
+      <div className='min-h-screen flex flex-col w-full max-w-sm mx-auto'>
+        <div className='mx-auto w-full max-w-sm fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white'>
+          <div className='flex justify-between items-center h-16'>
+            <span>Verification in progress</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen flex flex-col w-full max-w-sm mx-auto'>
