@@ -8,13 +8,14 @@ const DriversAuthCallback = async () => {
     return redirect("/drivers/sign-in");
   }
 
-  (await clerkClient()).users.updateUser(userId, {
-    publicMetadata: {
-      role: "driver",
-    },
-  });
+  const user = await (await clerkClient()).users.getUser(userId);
+  const isVerified = user.publicMetadata?.verified === true;
 
-  return redirect("/drivers/onboarding");
+  if (!isVerified) {
+    return redirect("/drivers/onboarding");
+  }
+
+  return redirect("/drivers/dashboard");
 };
 
 export default DriversAuthCallback;

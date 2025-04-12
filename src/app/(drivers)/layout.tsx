@@ -36,8 +36,7 @@ export default async function DriversLayout({
     },
   ];
 
-  const user = await currentUser();
-  console.log(user);
+
 
   return (
     <div className='min-h-screen flex flex-col w-full max-w-sm mx-auto'>

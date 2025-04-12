@@ -7,23 +7,19 @@ import {
 const isPublicRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const userSession = (await auth()).sessionClaims;
-
-  const user = await (
-    await clerkClient()
-  ).users.getUser(userSession?.sub as string);
-
-  console.log(user);
-
-  const role = (user?.publicMetadata?.role as string) || "user";
-
-  if (role === "driver") {
-    console.log("driver");
-  } else if (role === "admin") {
-    console.log("admin");
-  } else {
-    console.log("user");
-  }
+  // const userSession = (await auth()).sessionClaims;
+  // const user = await (
+  //   await clerkClient()
+  // ).users.getUser(userSession?.sub as string);
+  // console.log(user);
+  // const role = (user?.publicMetadata?.role as string) || "user";
+  // if (role === "driver") {
+  //   console.log("driver");
+  // } else if (role === "admin") {
+  //   console.log("admin");
+  // } else {
+  //   console.log("user");
+  // }
 });
 
 export const config = {

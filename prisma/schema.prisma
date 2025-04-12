@@ -43,7 +43,13 @@ model User {
   // Driver specific fields
   driverRating  Float?         // Out of 5
   ridesCompleted Int           @default(0)
+  isVerified    Boolean        @default(false)
   vehicle       Vehicle?
+
+  // Document URLs
+  drivingLicenseUrl String?
+  vehicleRegistrationUrl String?
+  insuranceUrl String?
 
   // Relations
   offeredRides  Ride[]         @relation("DriverRides")
