@@ -70,11 +70,17 @@ export default function SignUpPage() {
           >
             Change role
           </button>
-          <div className='mt-2 p-2 bg-blue-50 rounded-md text-sm text-blue-700'>
-            After signing up, your account will be configured as a{" "}
-            {selectedRole === "driver" ? "Driver" : "Passenger"}.
-            {selectedRole === "driver" &&
-              " You'll need to complete verification after registration."}
+          <div className='mt-2 p-3 bg-blue-50 rounded-md text-sm'>
+            <p className='font-semibold text-blue-800 mb-1'>
+              Selected Role:{" "}
+              {selectedRole === "driver" ? "Driver" : "Passenger"}
+            </p>
+            <p className='text-blue-700'>
+              After signing up, your account will be configured as a{" "}
+              {selectedRole === "driver" ? "Driver" : "Passenger"}.
+              {selectedRole === "driver" &&
+                " You'll need to complete verification after registration."}
+            </p>
           </div>
         </div>
 
@@ -82,6 +88,7 @@ export default function SignUpPage() {
           path='/sign-up'
           forceRedirectUrl={`/setup?role=${selectedRole}`}
           signInUrl='/sign-in'
+          afterSignUpUrl={`/setup?role=${selectedRole}`}
         />
       </div>
     </div>

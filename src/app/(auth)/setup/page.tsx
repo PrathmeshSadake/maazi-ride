@@ -9,37 +9,52 @@ function SetupContent() {
   const searchParams = useSearchParams();
   const role = searchParams.get("role");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const setupAccount = async () => {
       try {
         if (!role) {
           setError("Missing role parameter");
+          setLoading(false);
           return;
         }
 
-        // Call the API route to set up the user
-        const response = await fetch(`/api/auth/clerk?role=${role}`);
+        console.log(`Setting up account with role: ${role}`);
+
+        // Call the API route to set up the user with explicit role parameter
+        const response = await fetch(
+          `/api/auth/clerk?role=${role}&redirect=json`
+        );
 
         if (!response.ok) {
-          throw new Error("Failed to set up account");
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Setup failed:", errorData);
+          throw new Error(errorData.error || "Failed to set up account");
         }
 
-        // The API will handle the redirect, but we'll add a fallback
         const data = await response.json().catch(() => ({}));
+        console.log("Setup response:", data);
 
-        // If we're still here after 3 seconds, redirect based on role
-        setTimeout(() => {
+        setLoading(false);
+
+        // If we got a response, redirect to the appropriate page
+        if (data.redirectUrl) {
+          router.push(data.redirectUrl);
+        } else {
+          // Fallback redirect based on role
           if (role === "driver") {
             router.push("/drivers/onboarding");
           } else {
             router.push("/");
           }
-        }, 3000);
+        }
       } catch (error) {
+        console.error("Setup error:", error);
         setError(
           error instanceof Error ? error.message : "Unknown error occurred"
         );
+        setLoading(false);
       }
     };
 

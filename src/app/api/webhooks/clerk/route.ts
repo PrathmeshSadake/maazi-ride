@@ -46,6 +46,7 @@ export async function POST(req: Request) {
   const eventType = evt.type;
 
   console.log(`Webhook with ID: ${id} and type: ${eventType}`);
+  console.log("Webhook data:", JSON.stringify(evt.data, null, 2));
 
   // Handle different event types
   if (eventType === "user.created") {
@@ -58,29 +59,73 @@ export async function POST(req: Request) {
       public_metadata,
     } = evt.data;
 
-    // Set default values based on roles
-    const role = (public_metadata?.role as string) || "user";
-    const isVerified = role === "user" ? true : false;
+    // Access last_sign_in_url safely with type assertion
+    const last_sign_in_url = (evt.data as any).last_sign_in_url;
+
+    if (!id) {
+      console.error("Error: Missing user ID in webhook data");
+      return NextResponse.json(
+        { error: "Missing user ID in webhook data" },
+        { status: 422 }
+      );
+    }
+
+    // Check if this user was created through our signup flow with role parameter
+    // If there's a last_sign_in_url, we can extract the role from it if present
+    let role = "user";
+    let isVerified = true;
+
+    if (
+      public_metadata &&
+      typeof public_metadata === "object" &&
+      public_metadata.role
+    ) {
+      // If metadata already has role, use that (set from setup page)
+      role = public_metadata.role as string;
+      isVerified = role === "user" ? true : false;
+    } else if (last_sign_in_url) {
+      // Try to extract role from the URL if user signed up with our flow
+      try {
+        const url = new URL(last_sign_in_url);
+        const roleParam = url.searchParams.get("role");
+        if (
+          roleParam &&
+          (roleParam === "driver" ||
+            roleParam === "user" ||
+            roleParam === "admin")
+        ) {
+          role = roleParam;
+          isVerified = role === "user" ? true : false;
+        }
+      } catch (e) {
+        console.error("Failed to parse sign-in URL:", e);
+      }
+    }
+
+    const email = email_addresses?.[0]?.email_address || null;
+    const phoneNumber = phone_numbers?.[0]?.phone_number || null;
 
     try {
       // Create a new user in the database
       await prisma.user.create({
         data: {
           id,
-          email: email_addresses?.[0]?.email_address,
-          phoneNumber: phone_numbers?.[0]?.phone_number,
-          firstName: first_name,
-          lastName: last_name,
+          email,
+          phoneNumber,
+          firstName: first_name || null,
+          lastName: last_name || null,
           role: role as any,
           isVerified,
         },
       });
 
-      console.log(`User ${id} created successfully in the database`);
+      console.log(
+        `User ${id} created successfully in the database with role: ${role}`
+      );
     } catch (error) {
       console.error("Error creating user in database:", error);
       return NextResponse.json(
-        { error: "Error creating user" },
+        { error: "Error creating user", details: error },
         { status: 500 }
       );
     }
@@ -94,11 +139,21 @@ export async function POST(req: Request) {
       public_metadata,
     } = evt.data;
 
+    if (!id) {
+      console.error("Error: Missing user ID in webhook data");
+      return NextResponse.json(
+        { error: "Missing user ID in webhook data" },
+        { status: 422 }
+      );
+    }
+
     // Update values based on metadata
     const role = (public_metadata?.role as string) || "user";
     const isVerified =
       (public_metadata?.isVerified as boolean) ??
       (role === "user" ? true : false);
+    const email = email_addresses?.[0]?.email_address || null;
+    const phoneNumber = phone_numbers?.[0]?.phone_number || null;
 
     try {
       // Check if user exists
@@ -111,43 +166,53 @@ export async function POST(req: Request) {
         await prisma.user.update({
           where: { id },
           data: {
-            email: email_addresses?.[0]?.email_address,
-            phoneNumber: phone_numbers?.[0]?.phone_number,
-            firstName: first_name,
-            lastName: last_name,
-            role: role as any,
-            isVerified,
-          },
-        });
-
-        console.log(`User ${id} updated successfully in the database`);
-      } else {
-        // Create the user if they don't exist (this can happen if the webhook fails on creation)
-        await prisma.user.create({
-          data: {
-            id,
-            email: email_addresses?.[0]?.email_address,
-            phoneNumber: phone_numbers?.[0]?.phone_number,
-            firstName: first_name,
-            lastName: last_name,
+            email,
+            phoneNumber,
+            firstName: first_name || null,
+            lastName: last_name || null,
             role: role as any,
             isVerified,
           },
         });
 
         console.log(
-          `User ${id} created successfully in the database during update webhook`
+          `User ${id} updated successfully in the database with role: ${role}`
+        );
+      } else {
+        // Create the user if they don't exist (this can happen if the webhook fails on creation)
+        await prisma.user.create({
+          data: {
+            id,
+            email,
+            phoneNumber,
+            firstName: first_name || null,
+            lastName: last_name || null,
+            role: role as any,
+            isVerified,
+          },
+        });
+
+        console.log(
+          `User ${id} created successfully in the database during update webhook with role: ${role}`
         );
       }
     } catch (error) {
       console.error("Error updating user in database:", error);
       return NextResponse.json(
-        { error: "Error updating user" },
+        { error: "Error updating user", details: error },
         { status: 500 }
       );
     }
   } else if (eventType === "user.deleted") {
     const { id } = evt.data;
+
+    if (!id) {
+      console.error("Error: Missing user ID in webhook data");
+      return NextResponse.json(
+        { error: "Missing user ID in webhook data" },
+        { status: 422 }
+      );
+    }
 
     try {
       // Delete the user from the database
@@ -159,7 +224,7 @@ export async function POST(req: Request) {
     } catch (error) {
       console.error("Error deleting user from database:", error);
       return NextResponse.json(
-        { error: "Error deleting user" },
+        { error: "Error deleting user", details: error },
         { status: 500 }
       );
     }
