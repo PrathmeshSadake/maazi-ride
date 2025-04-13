@@ -85,14 +85,14 @@ const OnboardingPage = () => {
 
       // First, let's update the user metadata in Clerk
       if (user) {
-        await user.update({
-          publicMetadata: {
-            ...user.publicMetadata,
-            role: "driver",
-            isVerified: false,
-            onboardingCompleted: true,
-          },
-        });
+        // await user.update({
+        //   publicMetadata: {
+        //     ...user.publicMetadata,
+        //     role: "driver",
+        //     isVerified: false,
+        //     onboardingCompleted: true,
+        //   },
+        // });
       }
 
       // Then submit vehicle and document information

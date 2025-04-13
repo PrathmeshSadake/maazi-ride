@@ -48,16 +48,16 @@ export default function UserOnboarding() {
 
     try {
       // Update user metadata
-      await user?.update({
-        publicMetadata: {
-          ...user.publicMetadata,
-          role: "user",
-          onboardingComplete: true,
-          fullName: formData.fullName,
-          homeAddress: formData.homeAddress,
-          emergencyContact: formData.emergencyContact,
-        },
-      });
+      // await user?.update({
+      //   publicMetadata: {
+      //     ...user.publicMetadata,
+      //     role: "user",
+      //     onboardingComplete: true,
+      //     fullName: formData.fullName,
+      //     homeAddress: formData.homeAddress,
+      //     emergencyContact: formData.emergencyContact,
+      //   },
+      // });
 
       // Redirect to explore page
       router.push("/explore");

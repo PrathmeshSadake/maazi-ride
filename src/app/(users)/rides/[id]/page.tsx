@@ -4,15 +4,14 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, Circle, Car } from "lucide-react";
 
 type Props = {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 };
 
-export default function DriverDetailPage({ params }: Props) {
+export default async function DriverDetailPage({ params }: Props) {
+  const { id } = await params;
   // In a real app, you would fetch this data based on the ID
   const driverDetails = {
-    id: params.id,
+    id: id,
     name: "Amanda H.",
     rating: 4.8,
     rides: 120,
