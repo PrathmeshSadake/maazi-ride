@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader } from "lucide-react";
 
-export default function SetupPage() {
+function SetupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const role = searchParams.get("role");
@@ -69,5 +69,23 @@ export default function SetupPage() {
         {role === "driver" ? "driver" : "passenger"} account
       </p>
     </div>
+  );
+}
+
+// Fallback loading state for Suspense
+function LoadingFallback() {
+  return (
+    <div className='flex flex-col items-center justify-center min-h-screen'>
+      <Loader className='animate-spin' size={40} />
+      <h1 className='mt-4 text-xl font-semibold'>Loading...</h1>
+    </div>
+  );
+}
+
+export default function SetupPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <SetupContent />
+    </Suspense>
   );
 }
