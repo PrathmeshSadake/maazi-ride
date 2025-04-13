@@ -1,10 +1,11 @@
+"use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { Button } from "./ui/button";
 import { UserRole } from "@prisma/client";
 import { Badge } from "./ui/badge";
-import { toast } from "./ui/use-toast";
+import { toast } from "sonner";
 
 interface RoleManagerProps {
   showSwitcher?: boolean;
@@ -32,10 +33,7 @@ export function RoleManager({ showSwitcher = true }: RoleManagerProps) {
       const data = await response.json();
 
       if (data.success) {
-        toast({
-          title: "Role updated",
-          description: `You are now a ${newRole}. Redirecting...`,
-        });
+        toast.success(`You are now a ${newRole}. Redirecting...`);
 
         // Force refresh
         router.push(data.redirectUrl);
@@ -44,11 +42,7 @@ export function RoleManager({ showSwitcher = true }: RoleManagerProps) {
       }
     } catch (error) {
       console.error("Error changing role:", error);
-      toast({
-        title: "Error",
-        description: "Failed to change role. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to change role. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -78,7 +72,7 @@ export function RoleManager({ showSwitcher = true }: RoleManagerProps) {
           {userRole}
         </Badge>
         {userRole === "driver" && (
-          <Badge variant={isVerified ? "success" : "warning"}>
+          <Badge variant={isVerified ? "default" : "outline"}>
             {isVerified ? "Verified" : "Unverified"}
           </Badge>
         )}
