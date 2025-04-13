@@ -1,48 +1,68 @@
-import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
+import prisma from "@/lib/db";
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const user = await currentUser();
+
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const userId = user.id;
+    const data = await req.json();
     const { vehicleMake, vehicleModel, vehicleYear, licensePlate, documents } =
-      await request.json();
+      data;
 
-    // Update user profile
-    await prisma.user.create({
+    // Check if the user exists in the database
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!existingUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Create or update the vehicle
+    const vehicle = await prisma.vehicle.upsert({
+      where: { userId },
+      update: {
+        make: vehicleMake,
+        model: vehicleModel,
+        year: parseInt(vehicleYear),
+        licensePlate,
+      },
+      create: {
+        userId,
+        make: vehicleMake,
+        model: vehicleModel,
+        year: parseInt(vehicleYear),
+        licensePlate,
+      },
+    });
+
+    // Update the user with document URLs
+    await prisma.user.update({
+      where: { id: userId },
       data: {
-        id: userId,
         drivingLicenseUrl: documents.drivingLicense,
         vehicleRegistrationUrl: documents.vehicleRegistration,
         insuranceUrl: documents.insurance,
-        vehicle: {
-          create: {
-            make: vehicleMake,
-            model: vehicleModel,
-            year: parseInt(vehicleYear),
-            licensePlate,
-          },
-        },
+        // Set isVerified to false, will be reviewed by admin
+        isVerified: false,
       },
     });
 
-    // Update Clerk metadata
-    (await clerkClient()).users.updateUser(userId, {
-      publicMetadata: {
-        role: "driver",
-        verified: false,
-      },
+    return NextResponse.json({
+      success: true,
+      message: "Driver onboarding information saved successfully",
+      vehicle,
     });
-
-    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error updating driver profile:", error);
+    console.error("Error in driver onboarding API:", error);
     return NextResponse.json(
-      { error: "Failed to update driver profile" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

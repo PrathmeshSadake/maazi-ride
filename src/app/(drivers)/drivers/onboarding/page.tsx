@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import VehicleInfoStep from "@/components/drivers/onboarding/VehicleInfoStep";
 import DocumentsStep from "@/components/drivers/onboarding/DocumentsStep";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Check, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 const OnboardingPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -37,6 +38,7 @@ const OnboardingPage = () => {
 
   const router = useRouter();
   const { userId } = useAuth();
+  const { user } = useUser();
 
   const validateCurrentStep = () => {
     const errors: Record<string, string> = {};
@@ -80,21 +82,44 @@ const OnboardingPage = () => {
   const handleSubmit = async () => {
     try {
       setIsLoading(true);
+
+      // First, let's update the user metadata in Clerk
+      if (user) {
+        await user.update({
+          publicMetadata: {
+            ...user.publicMetadata,
+            role: "driver",
+            isVerified: false,
+            onboardingCompleted: true,
+          },
+        });
+      }
+
+      // Then submit vehicle and document information
       const response = await fetch("/api/drivers/onboarding", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          userId,
+        }),
       });
 
       if (!response.ok) {
         throw new Error("Failed to submit form");
       }
 
-      router.push("/drivers/dashboard");
+      toast.success(
+        "Onboarding completed! Your documents are now under review."
+      );
+
+      // Redirect to a pending verification page
+      router.push("/drivers/verification-pending");
     } catch (error) {
       console.error("Error submitting form:", error);
+      toast.error("Error submitting your information. Please try again.");
       setIsLoading(false);
     }
   };
