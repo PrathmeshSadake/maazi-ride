@@ -3,34 +3,34 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 
-const DriversAuthCallback = async () => {
+const UserAuthCallback = async () => {
   const { userId } = await auth();
 
   if (!userId) {
-    return redirect("/drivers/sign-in");
+    return redirect("/sign-in");
   }
 
   const user = await (await clerkClient()).users.getUser(userId);
   const isVerified = user.publicMetadata?.verified === true;
-  const isDriver = user.publicMetadata?.role === "driver";
 
+  // Update user metadata in Clerk
   const updatedUser = await (
     await clerkClient()
   ).users.updateUser(userId, {
     publicMetadata: {
-      role: isDriver ? "driver" : "user",
+      role: user.publicMetadata?.role ? user.publicMetadata?.role : "user",
       verified: isVerified ? true : false,
     },
   });
 
+  // Check if user exists in Prisma DB
   const existingUser = await prisma.user.findUnique({
     where: {
       phoneNumber: updatedUser.phoneNumbers[0].phoneNumber,
     },
   });
 
-  console.log(updatedUser);
-
+  // Create user in Prisma DB if not exists
   if (!existingUser) {
     await prisma.user.create({
       data: {
@@ -42,27 +42,17 @@ const DriversAuthCallback = async () => {
         firstName: updatedUser.firstName,
         lastName: updatedUser.lastName,
         phoneNumber: updatedUser.phoneNumbers[0].phoneNumber,
-        role: UserRole.driver,
-        driverRating: 0,
-        ridesCompleted: 0,
-        isVerified: isVerified ? true : false,
-      },
-    });
-  } else {
-    await prisma.user.update({
-      where: { id: updatedUser.id },
-      data: {
-        role: UserRole.driver,
+        role: UserRole.user,
         isVerified: isVerified ? true : false,
       },
     });
   }
 
   if (!isVerified) {
-    return redirect("/drivers/onboarding");
+    return redirect("/onboarding");
   }
 
-  return redirect("/drivers/dashboard");
+  return redirect("/dashboard");
 };
 
-export default DriversAuthCallback;
+export default UserAuthCallback;
