@@ -1,8 +1,13 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
+import { createClerkClient } from "@clerk/backend";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
+
+const clerkClient = createClerkClient({
+  secretKey: process.env.CLERK_SECRET_KEY,
+});
 
 export async function POST(req: Request) {
   // Get the headers
@@ -96,6 +101,12 @@ export async function POST(req: Request) {
     const phoneNumber = phone_numbers?.[0]?.phone_number || null;
 
     try {
+      await clerkClient.users.updateUserMetadata(id, {
+        publicMetadata: {
+          role,
+          isVerified,
+        },
+      });
       // Create a new user in the database
       await prisma.user.create({
         data: {
@@ -165,6 +176,12 @@ export async function POST(req: Request) {
     const phoneNumber = phone_numbers?.[0]?.phone_number || null;
 
     try {
+      await clerkClient.users.updateUserMetadata(id, {
+        publicMetadata: {
+          role,
+          isVerified,
+        },
+      });
       // Check if user exists
       const existingUser = await prisma.user.findUnique({
         where: { id },
