@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs/";
+import { useUser } from "@clerk/nextjs";
 import { Button } from "./ui/button";
 import { UserRole } from "@prisma/client";
 import { Badge } from "./ui/badge";
