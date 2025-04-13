@@ -59,9 +59,6 @@ export async function POST(req: Request) {
       public_metadata,
     } = evt.data;
 
-    // Access last_sign_in_url safely with type assertion
-    const last_sign_in_url = (evt.data as any).last_sign_in_url;
-
     if (!id) {
       console.error("Error: Missing user ID in webhook data");
       return NextResponse.json(
@@ -70,35 +67,23 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if this user was created through our signup flow with role parameter
-    // If there's a last_sign_in_url, we can extract the role from it if present
+    // Extract role and verification status from metadata
+    // Default to "user" role and verified for users
     let role = "user";
     let isVerified = true;
 
-    if (
-      public_metadata &&
-      typeof public_metadata === "object" &&
-      public_metadata.role
-    ) {
-      // If metadata already has role, use that (set from setup page)
-      role = public_metadata.role as string;
-      isVerified = role === "user" ? true : false;
-    } else if (last_sign_in_url) {
-      // Try to extract role from the URL if user signed up with our flow
-      try {
-        const url = new URL(last_sign_in_url);
-        const roleParam = url.searchParams.get("role");
-        if (
-          roleParam &&
-          (roleParam === "driver" ||
-            roleParam === "user" ||
-            roleParam === "admin")
-        ) {
-          role = roleParam;
-          isVerified = role === "user" ? true : false;
-        }
-      } catch (e) {
-        console.error("Failed to parse sign-in URL:", e);
+    if (public_metadata && typeof public_metadata === "object") {
+      // Check for role in public metadata
+      if (public_metadata.role) {
+        role = public_metadata.role as string;
+
+        // Set isVerified based on role (only users are verified by default)
+        isVerified = role === "user" ? true : false;
+      }
+
+      // Check if isVerified is explicitly set in metadata
+      if (public_metadata.isVerified !== undefined) {
+        isVerified = public_metadata.isVerified as boolean;
       }
     }
 
@@ -120,7 +105,7 @@ export async function POST(req: Request) {
       });
 
       console.log(
-        `User ${id} created successfully in the database with role: ${role}`
+        `User ${id} created successfully in the database with role: ${role}, isVerified: ${isVerified}`
       );
     } catch (error) {
       console.error("Error creating user in database:", error);
@@ -147,11 +132,25 @@ export async function POST(req: Request) {
       );
     }
 
-    // Update values based on metadata
-    const role = (public_metadata?.role as string) || "user";
-    const isVerified =
-      (public_metadata?.isVerified as boolean) ??
-      (role === "user" ? true : false);
+    // Handle metadata updates properly
+    let role = "user";
+    let isVerified = true;
+
+    if (public_metadata && typeof public_metadata === "object") {
+      // Check for role in public metadata
+      if (public_metadata.role) {
+        role = public_metadata.role as string;
+      }
+
+      // Check if isVerified is explicitly set in metadata
+      if (public_metadata.isVerified !== undefined) {
+        isVerified = public_metadata.isVerified as boolean;
+      } else {
+        // If not explicitly set, default based on role
+        isVerified = role === "user" ? true : false;
+      }
+    }
+
     const email = email_addresses?.[0]?.email_address || null;
     const phoneNumber = phone_numbers?.[0]?.phone_number || null;
 
@@ -176,7 +175,7 @@ export async function POST(req: Request) {
         });
 
         console.log(
-          `User ${id} updated successfully in the database with role: ${role}`
+          `User ${id} updated successfully in the database with role: ${role}, isVerified: ${isVerified}`
         );
       } else {
         // Create the user if they don't exist (this can happen if the webhook fails on creation)
@@ -193,7 +192,7 @@ export async function POST(req: Request) {
         });
 
         console.log(
-          `User ${id} created successfully in the database during update webhook with role: ${role}`
+          `User ${id} created successfully in the database during update webhook with role: ${role}, isVerified: ${isVerified}`
         );
       }
     } catch (error) {
