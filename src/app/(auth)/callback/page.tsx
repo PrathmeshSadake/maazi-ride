@@ -1,23 +1,34 @@
 import prisma from "@/lib/db";
 import { auth, clerkClient } from "@clerk/nextjs/server";
-import { UserRole } from '@prisma/client';
+import { UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 
-const DriversAuthCallback = async () => {
+const AuthCallback = async () => {
   const { userId } = await auth();
 
   if (!userId) {
-    return redirect("/drivers/sign-in");
+    return redirect("/sign-in");
   }
 
   const user = await (await clerkClient()).users.getUser(userId);
+  const isDriver = user.publicMetadata?.role === "driver";
+  const isAdmin = user.publicMetadata?.role === "admin";
+
+  if (isDriver) {
+    return redirect("/drivers/auth-callback");
+  }
+
+  if (isAdmin) {
+    return redirect("/admin");
+  }
+
   const isVerified = user.publicMetadata?.verified === true;
 
   const updatedUser = await (
     await clerkClient()
   ).users.updateUser(userId, {
     publicMetadata: {
-      role: "driver",
+      role: "user",
       verified: isVerified ? true : false,
     },
   });
@@ -36,19 +47,13 @@ const DriversAuthCallback = async () => {
         firstName: updatedUser.firstName,
         lastName: updatedUser.lastName,
         phoneNumber: updatedUser.phoneNumbers[0].phoneNumber,
-        role: UserRole.driver,
-        driverRating: 0,
-        ridesCompleted: 0,
+        role: UserRole.user,
         isVerified: isVerified ? true : false,
       },
     });
   }
 
-  if (!isVerified) {
-    return redirect("/drivers/onboarding");
-  }
-
-  return redirect("/drivers/dashboard");
+  return redirect("/");
 };
 
-export default DriversAuthCallback;
+export default AuthCallback;

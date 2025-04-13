@@ -47,9 +47,9 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
+      title: "Manage Drivers",
+      url: "/admin/drivers",
+      icon: IconUsers,
     },
     {
       title: "Analytics",

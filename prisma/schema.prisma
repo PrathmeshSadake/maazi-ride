@@ -10,9 +10,9 @@ datasource db {
 }
 
 enum UserRole {
-  USER
-  DRIVER
-  ADMIN
+  user
+  driver
+  admin
 }
 
 enum RideStatus {
@@ -35,17 +35,16 @@ model User {
   id            String         @id @unique  // External ID from Clerk
   email         String?        @unique
   phoneNumber   String?        @unique
-  firstName     String?
+  firstName      String?
   lastName      String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  
+  role          UserRole       @default(user)
   // Driver specific fields
   driverRating  Float?         // Out of 5
   ridesCompleted Int           @default(0)
   isVerified    Boolean        @default(false)
   vehicle       Vehicle?
-
   // Document URLs
   drivingLicenseUrl String?
   vehicleRegistrationUrl String?
