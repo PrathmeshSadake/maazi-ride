@@ -4,6 +4,7 @@ import { UserProfile } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { prisma } from "@/lib/prisma";
 
 export default async function DriverDashboard() {
   // Check if user has the driver role (this function will redirect if not)
@@ -12,8 +13,17 @@ export default async function DriverDashboard() {
   // Check if the driver is verified
   const isVerified = await getVerificationStatus();
 
+  const driver = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
   // If driver is not verified, redirect to onboarding
-  if (!isVerified) {
+  if (
+    !isVerified &&
+    !driver?.drivingLicenseUrl &&
+    !driver?.vehicleRegistrationUrl &&
+    !driver?.insuranceUrl
+  ) {
     redirect("/drivers/onboarding");
   }
 

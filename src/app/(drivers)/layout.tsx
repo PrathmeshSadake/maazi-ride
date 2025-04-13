@@ -54,7 +54,12 @@ export default async function DriversLayout({
     },
   });
 
-  if (!driver?.isVerified || !user.publicMetadata.verified) {
+  if (
+    (!driver?.isVerified || !user.publicMetadata.isVerified) &&
+    driver?.drivingLicenseUrl &&
+    driver?.vehicleRegistrationUrl &&
+    driver?.insuranceUrl
+  ) {
     return (
       <div className='min-h-screen flex flex-col w-full max-w-sm mx-auto'>
         <div className='mx-auto w-full max-w-sm fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white'>

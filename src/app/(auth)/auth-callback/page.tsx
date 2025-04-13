@@ -7,6 +7,7 @@ const AuthCallback = async () => {
     redirect("/sign-in");
   }
   const role = user.publicMetadata.role;
+  console.log(role);
   if (role === "driver") {
     redirect("/drivers");
   } else if (role === "admin") {

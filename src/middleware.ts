@@ -10,6 +10,7 @@ const publicRoutes = [
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/api/webhooks/clerk(.*)",
+  "/api/upload-docs(.*)",
   "/api/auth/clerk(.*)",
   "/_next(.*)",
   "/favicon.ico",
@@ -24,7 +25,7 @@ export default clerkMiddleware(async (auth, req) => {
     publicRoutes.some((pattern) =>
       new RegExp(pattern).test(req.nextUrl.pathname)
     ) ||
-    req.nextUrl.pathname.startsWith("/api/webhooks/clerk")
+    req.nextUrl.pathname.startsWith("/api")
   ) {
     return NextResponse.next();
   }
