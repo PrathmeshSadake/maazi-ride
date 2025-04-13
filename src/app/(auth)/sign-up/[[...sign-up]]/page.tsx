@@ -85,9 +85,9 @@ export default function SignUpPage() {
         </div>
 
         <SignUp
-          path='/sign-up'
-          forceRedirectUrl={`/api/auth/role?role=${selectedRole}&redirect=redirect`}
-          signInUrl='/sign-in'
+          // path='/sign-up'
+          // forceRedirectUrl={`/api/auth/role?role=${selectedRole}&redirect=redirect`}
+          // signInUrl='/sign-in'
           unsafeMetadata={{
             role: selectedRole,
             isVerified: selectedRole === "user", // Users are verified by default, drivers need verification

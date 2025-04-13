@@ -57,6 +57,7 @@ export async function POST(req: Request) {
       first_name,
       last_name,
       public_metadata,
+      unsafe_metadata,
     } = evt.data;
 
     if (!id) {
@@ -67,24 +68,28 @@ export async function POST(req: Request) {
       );
     }
 
-    // Extract role and verification status from metadata
-    // Default to "user" role and verified for users
+    // Extract role from unsafe_metadata
+    // Default to "user" role and verified for users, drivers are not verified by default
     let role = "user";
     let isVerified = true;
 
-    if (public_metadata && typeof public_metadata === "object") {
-      // Check for role in public metadata
-      if (public_metadata.role) {
-        role = public_metadata.role as string;
+    if (unsafe_metadata && typeof unsafe_metadata === "object") {
+      // Check for role in unsafe metadata
+      if (unsafe_metadata.role) {
+        role = unsafe_metadata.role as string;
 
         // Set isVerified based on role (only users are verified by default)
         isVerified = role === "user" ? true : false;
       }
+    }
 
-      // Check if isVerified is explicitly set in metadata
-      if (public_metadata.isVerified !== undefined) {
-        isVerified = public_metadata.isVerified as boolean;
-      }
+    // Check if isVerified is explicitly set in public metadata
+    if (
+      public_metadata &&
+      typeof public_metadata === "object" &&
+      public_metadata.isVerified !== undefined
+    ) {
+      isVerified = public_metadata.isVerified as boolean;
     }
 
     const email = email_addresses?.[0]?.email_address || null;
@@ -122,6 +127,7 @@ export async function POST(req: Request) {
       first_name,
       last_name,
       public_metadata,
+      unsafe_metadata,
     } = evt.data;
 
     if (!id) {
@@ -136,19 +142,23 @@ export async function POST(req: Request) {
     let role = "user";
     let isVerified = true;
 
-    if (public_metadata && typeof public_metadata === "object") {
-      // Check for role in public metadata
-      if (public_metadata.role) {
-        role = public_metadata.role as string;
-      }
+    if (unsafe_metadata && typeof unsafe_metadata === "object") {
+      // Check for role in unsafe metadata
+      if (unsafe_metadata.role) {
+        role = unsafe_metadata.role as string;
 
-      // Check if isVerified is explicitly set in metadata
-      if (public_metadata.isVerified !== undefined) {
-        isVerified = public_metadata.isVerified as boolean;
-      } else {
-        // If not explicitly set, default based on role
+        // Set isVerified based on role (only users are verified by default)
         isVerified = role === "user" ? true : false;
       }
+    }
+
+    // Check if isVerified is explicitly set in public metadata
+    if (
+      public_metadata &&
+      typeof public_metadata === "object" &&
+      public_metadata.isVerified !== undefined
+    ) {
+      isVerified = public_metadata.isVerified as boolean;
     }
 
     const email = email_addresses?.[0]?.email_address || null;
