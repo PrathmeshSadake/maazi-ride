@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SignUp, useSignUp } from "@clerk/nextjs";
+import { SignUp } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -80,7 +80,7 @@ export default function SignUpPage() {
 
         <SignUp
           path='/sign-up'
-          forceRedirectUrl={`/api/auth/clerk?role=${selectedRole}`}
+          forceRedirectUrl={`/setup?role=${selectedRole}`}
           signInUrl='/sign-in'
         />
       </div>
