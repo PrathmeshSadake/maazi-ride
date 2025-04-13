@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { getAuth } from "@clerk/nextjs/server";
+import { createClerkClient } from "@clerk/backend";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 
+const clerkClient = createClerkClient({
+  secretKey: process.env.CLERK_SECRET_KEY,
+});
 // List of public routes that don't require authentication
 const publicRoutes = [
   "/sign-in(.*)",
@@ -12,10 +15,11 @@ const publicRoutes = [
   "/favicon.ico",
 ];
 
-export default async function middleware(req: NextRequest) {
-  const { userId, sessionClaims } = await getAuth(req);
+export default clerkMiddleware(async (auth, req) => {
+  const authInfo = await auth(); // Check if the path is a public route
 
-  // Check if the path is a public route
+  const userId = authInfo?.userId;
+
   if (
     publicRoutes.some((pattern) =>
       new RegExp(pattern).test(req.nextUrl.pathname)
@@ -31,9 +35,10 @@ export default async function middleware(req: NextRequest) {
   }
 
   try {
+    const user = await clerkClient.users.getUser(userId);
     // Get user role from session claims
     const userMetadata =
-      (sessionClaims?.metadata as Record<string, unknown>) || {};
+      (user?.publicMetadata as Record<string, unknown>) || {};
     const role = (userMetadata.role as string) || "user";
     const isVerified = (userMetadata.isVerified as boolean) ?? false;
 
@@ -90,7 +95,7 @@ export default async function middleware(req: NextRequest) {
 
   // If no redirects were triggered, continue
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: [
