@@ -1,73 +1,163 @@
 "use client";
 
-import { User, Settings, CreditCard, Bell, LogOut, Car } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  User,
+  Settings,
+  CreditCard,
+  LogOut,
+  ChevronRight,
+  Bell,
+  MessageSquare,
+  Clock,
+  Star,
+} from "lucide-react";
+import { useUser, useClerk } from "@clerk/nextjs";
 
 export default function AccountPage() {
+  const router = useRouter();
+  const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
+  const [loading, setLoading] = useState(false);
+
+  const handleSignOut = async () => {
+    setLoading(true);
+    try {
+      await signOut();
+      router.push("/sign-in");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isLoaded) {
+    return (
+      <div className='p-4 max-w-md mx-auto flex flex-col items-center justify-center min-h-[60vh]'>
+        <div className='w-10 h-10 border-2 border-t-blue-600 border-r-transparent border-b-blue-600 border-l-transparent rounded-full animate-spin mb-4'></div>
+        <p className='text-gray-500'>Loading your profile...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    router.push("/sign-in");
+    return null;
+  }
+
   const menuItems = [
     {
-      icon: User,
-      label: "Personal Information",
-      href: "/account/profile",
+      icon: <MessageSquare size={20} className='text-blue-600' />,
+      title: "Messages",
+      description: "Your conversations with drivers",
+      onClick: () => router.push("/messages"),
     },
     {
-      icon: Car,
-      label: "My Vehicles",
-      href: "/account/vehicles",
+      icon: <Clock size={20} className='text-purple-600' />,
+      title: "Ride History",
+      description: "Your past and upcoming rides",
+      onClick: () => router.push("/activity"),
     },
     {
-      icon: CreditCard,
-      label: "Payment Methods",
-      href: "/account/payment",
+      icon: <Star size={20} className='text-yellow-600' />,
+      title: "Reviews",
+      description: "Your ratings and reviews",
+      onClick: () => router.push("/reviews"),
     },
     {
-      icon: Bell,
-      label: "Notifications",
-      href: "/account/notifications",
+      icon: <Bell size={20} className='text-green-600' />,
+      title: "Notifications",
+      description: "Manage your notifications",
+      onClick: () => router.push("/notifications"),
     },
     {
-      icon: Settings,
-      label: "Settings",
-      href: "/account/settings",
+      icon: <CreditCard size={20} className='text-indigo-600' />,
+      title: "Payment Methods",
+      description: "Manage your payment options",
+      onClick: () => router.push("/payment-methods"),
     },
     {
-      icon: LogOut,
-      label: "Log Out",
-      href: "/auth/logout",
+      icon: <Settings size={20} className='text-gray-600' />,
+      title: "Settings",
+      description: "App preferences and more",
+      onClick: () => router.push("/settings"),
     },
   ];
 
   return (
     <div className='p-4 max-w-md mx-auto'>
-      <h1 className='text-3xl font-bold mb-8'>Account</h1>
+      <h1 className='text-xl font-bold mb-6'>Account</h1>
 
-      <div className='flex items-center mb-8'>
-        <div className='w-16 h-16 rounded-full overflow-hidden bg-gray-200 mr-4'>
-          <div className='w-full h-full flex items-center justify-center bg-green-100 text-green-800 text-xl font-bold'>
-            J
+      {/* User Profile Section */}
+      <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6'>
+        <div className='flex items-center'>
+          <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 mr-4 overflow-hidden'>
+            {user.imageUrl ? (
+              <img
+                src={user.imageUrl}
+                alt={user.fullName || "User"}
+                className='w-full h-full object-cover'
+              />
+            ) : (
+              <User size={30} />
+            )}
           </div>
-        </div>
-        <div>
-          <h2 className='text-xl font-semibold'>John Doe</h2>
-          <p className='text-gray-500'>john.doe@example.com</p>
+          <div>
+            <h2 className='text-lg font-semibold'>
+              {user.fullName || user.firstName || "User"}
+            </h2>
+            <p className='text-gray-500 text-sm'>
+              {user.primaryEmailAddress?.emailAddress}
+            </p>
+            <button
+              className='text-blue-600 text-sm mt-1'
+              onClick={() => router.push("/account/edit")}
+            >
+              Edit Profile
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className='space-y-1'>
+      {/* Menu */}
+      <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6'>
         {menuItems.map((item, index) => (
-          <a
+          <div
             key={index}
-            href={item.href}
-            className='flex items-center p-4 hover:bg-gray-50 rounded-lg transition-colors'
+            className={`flex items-center justify-between p-4 hover:bg-gray-50 cursor-pointer ${
+              index !== menuItems.length - 1 ? "border-b border-gray-200" : ""
+            }`}
+            onClick={item.onClick}
           >
-            <item.icon size={20} className='text-gray-500 mr-3' />
-            <span className='flex-1'>{item.label}</span>
-          </a>
+            <div className='flex items-center'>
+              <div className='w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mr-3'>
+                {item.icon}
+              </div>
+              <div>
+                <h3 className='font-medium'>{item.title}</h3>
+                <p className='text-xs text-gray-500'>{item.description}</p>
+              </div>
+            </div>
+            <ChevronRight size={20} className='text-gray-400' />
+          </div>
         ))}
       </div>
 
-      <div className='mt-8 text-center text-gray-500 text-sm'>
-        <p>Version 1.0.0</p>
-      </div>
+      {/* Sign Out Button */}
+      <button
+        onClick={handleSignOut}
+        disabled={loading}
+        className='w-full flex items-center justify-center gap-2 py-3 bg-red-50 text-red-600 font-medium rounded-lg hover:bg-red-100 transition-colors'
+      >
+        <LogOut size={18} />
+        {loading ? "Signing out..." : "Sign Out"}
+      </button>
+
+      <p className='text-xs text-gray-500 text-center mt-6'>
+        App Version 1.0.0
+      </p>
     </div>
   );
 }

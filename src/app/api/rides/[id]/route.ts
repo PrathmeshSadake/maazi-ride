@@ -8,35 +8,12 @@ export async function GET(
 ) {
   try {
     const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const rideId = params.id;
+    const { id } = params;
 
     // Fetch the ride details
     const ride = await prisma.ride.findUnique({
-      where: {
-        id: rideId,
-      },
-      select: {
-        id: true,
-        fromLocation: true,
-        toLocation: true,
-        fromLat: true,
-        fromLng: true,
-        toLat: true,
-        toLng: true,
-        departureDate: true,
-        departureTime: true,
-        price: true,
-        availableSeats: true,
-        status: true,
-        description: true,
-        createdAt: true,
-        approvedById: true,
-        approvedAt: true,
+      where: { id },
+      include: {
         driver: {
           select: {
             id: true,
@@ -44,21 +21,18 @@ export async function GET(
             lastName: true,
             driverRating: true,
             ridesCompleted: true,
-            isVerified: true,
+            // Don't include sensitive info
           },
         },
         bookings: {
+          where: {
+            status: { in: ["PENDING", "CONFIRMED"] },
+          },
           select: {
             id: true,
             status: true,
             numSeats: true,
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-              },
-            },
+            userId: true,
           },
         },
       },
@@ -68,31 +42,50 @@ export async function GET(
       return NextResponse.json({ message: "Ride not found" }, { status: 404 });
     }
 
-    // Check if the user has permission to view this ride
-    // If the user is the driver or has a booking on this ride
-    const isDriver = ride.driver.id === userId;
+    // Calculate real available seats by subtracting booked seats
+    const bookedSeats = ride.bookings.reduce((total, booking) => {
+      return total + booking.numSeats;
+    }, 0);
 
-    const isPassenger = ride.bookings.some(
-      (booking) => booking.user.id === userId
-    );
+    const realAvailableSeats = ride.availableSeats - bookedSeats;
 
-    const isAdmin = await prisma.user
-      .findUnique({
-        where: { id: userId },
-        select: { role: true },
-      })
-      .then((user) => user?.role === "admin");
-
-    if (!isDriver && !isPassenger && !isAdmin) {
-      return NextResponse.json(
-        { message: "You don't have permission to view this ride" },
-        { status: 403 }
-      );
+    // Check if the current user has already booked this ride
+    let userBooking = null;
+    if (userId) {
+      userBooking = ride.bookings.find((booking) => booking.userId === userId);
     }
 
-    return NextResponse.json(ride);
+    // Return formatted response without sensitive data
+    const response = {
+      id: ride.id,
+      fromLocation: ride.fromLocation,
+      toLocation: ride.toLocation,
+      fromLat: ride.fromLat,
+      fromLng: ride.fromLng,
+      toLat: ride.toLat,
+      toLng: ride.toLng,
+      departureDate: ride.departureDate,
+      departureTime: ride.departureTime,
+      price: ride.price,
+      availableSeats: realAvailableSeats,
+      description: ride.description,
+      status: ride.status,
+      createdAt: ride.createdAt,
+      driver: {
+        id: ride.driver.id,
+        firstName: ride.driver.firstName,
+        lastName: ride.driver.lastName,
+        driverRating: ride.driver.driverRating,
+        ridesCompleted: ride.driver.ridesCompleted,
+      },
+      userHasBooked: userBooking !== null,
+      userBookingId: userBooking?.id || null,
+      userBookingStatus: userBooking?.status || null,
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
-    console.error("Error fetching ride:", error);
+    console.error("Error fetching ride details:", error);
     return NextResponse.json(
       { message: "Error fetching ride details" },
       { status: 500 }
