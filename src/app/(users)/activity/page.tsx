@@ -65,7 +65,7 @@ export default function ActivityPage() {
 
   const statusColors: Record<
     string,
-    { bg: string; text: string; icon: JSX.Element }
+    { bg: string; text: string; icon: React.ReactNode }
   > = {
     PENDING: {
       bg: "bg-yellow-100",
