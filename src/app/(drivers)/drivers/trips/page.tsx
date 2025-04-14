@@ -137,7 +137,7 @@ export default function TripsPage() {
           {isLoading ? (
             <div className='text-center py-10'>Loading rides...</div>
           ) : approvedRides.length > 0 ? (
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+            <div className='grid grid-cols-1 gap-6'>
               {approvedRides.map((ride) => (
                 <RideCard
                   key={ride.id}
@@ -162,7 +162,7 @@ export default function TripsPage() {
           {isLoading ? (
             <div className='text-center py-10'>Loading rides...</div>
           ) : completedRides.length > 0 ? (
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+            <div className='grid grid-cols-1 gap-6'>
               {completedRides.map((ride) => (
                 <RideCard
                   key={ride.id}

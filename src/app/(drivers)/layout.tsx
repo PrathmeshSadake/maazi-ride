@@ -18,15 +18,15 @@ export default async function DriversLayout({
       icon: Home,
     },
     {
-      label: "Rides",
-      href: "/drivers/rides",
+      label: "My Trips",
+      href: "/drivers/trips",
       icon: Car,
     },
-    {
-      label: "Messages",
-      href: "/drivers/messages",
-      icon: MessageSquare,
-    },
+    // {
+    //   label: "Messages",
+    //   href: "/drivers/messages",
+    //   icon: MessageSquare,
+    // },
     {
       label: "Earnings",
       href: "/drivers/earnings",
