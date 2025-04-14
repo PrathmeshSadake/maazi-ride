@@ -12,8 +12,16 @@ export const DestinationContext = createContext<DestinationContextType>({
   setDestination: () => {},
 });
 
-export const DestinationProvider = ({ children }: { children: ReactNode }) => {
-  const [destination, setDestination] = useState<Location | null>(null);
+interface DestinationProviderProps {
+  children: ReactNode;
+  initialValue?: Location | null;
+}
+
+export const DestinationProvider = ({
+  children,
+  initialValue = null,
+}: DestinationProviderProps) => {
+  const [destination, setDestination] = useState<Location | null>(initialValue);
 
   return (
     <DestinationContext.Provider value={{ destination, setDestination }}>

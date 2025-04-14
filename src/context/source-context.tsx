@@ -18,8 +18,16 @@ export const SourceContext = createContext<SourceContextType>({
   setSource: () => {},
 });
 
-export const SourceProvider = ({ children }: { children: ReactNode }) => {
-  const [source, setSource] = useState<Location | null>(null);
+interface SourceProviderProps {
+  children: ReactNode;
+  initialValue?: Location | null;
+}
+
+export const SourceProvider = ({
+  children,
+  initialValue = null,
+}: SourceProviderProps) => {
+  const [source, setSource] = useState<Location | null>(initialValue);
 
   return (
     <SourceContext.Provider value={{ source, setSource }}>
