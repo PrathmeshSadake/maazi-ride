@@ -1,27 +1,23 @@
 "use client";
-import { createContext, useState, ReactNode } from "react";
-import { Location } from "./source-context";
+import React, { createContext, useState } from "react";
 
-type DestinationContextType = {
-  destination: Location | null;
-  setDestination: (destination: Location | null) => void;
-};
-
-export const DestinationContext = createContext<DestinationContextType>({
-  destination: null,
-  setDestination: () => {},
-});
-
-interface DestinationProviderProps {
-  children: ReactNode;
-  initialValue?: Location | null;
+interface DestinationContextType {
+  destination: { name: string } | null;
+  setDestination: React.Dispatch<React.SetStateAction<{ name: string } | null>>;
 }
 
-export const DestinationProvider = ({
-  children,
-  initialValue = null,
-}: DestinationProviderProps) => {
-  const [destination, setDestination] = useState<Location | null>(initialValue);
+const defaultDestinationContext: DestinationContextType = {
+  destination: null,
+  setDestination: () => null,
+};
+
+export const DestinationContext = createContext<DestinationContextType>(defaultDestinationContext);
+
+export const DestinationProvider: React.FC<{
+  children: React.ReactNode;
+  initialValue?: { name: string } | null;
+}> = ({ children, initialValue = null }) => {
+  const [destination, setDestination] = useState<{ name: string } | null>(initialValue);
 
   return (
     <DestinationContext.Provider value={{ destination, setDestination }}>

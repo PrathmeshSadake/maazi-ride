@@ -20,8 +20,13 @@ import {
   DestinationProvider,
   DestinationContext,
 } from "@/context/destination-context";
-import LocationInput from "@/components/drivers/location-input";
-import GoogleMapsSection from "@/components/drivers/google-maps-section";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import {
   DollarSign,
   Users,
@@ -43,20 +48,10 @@ const ScheduleRideForm = () => {
   const [price, setPrice] = useState("");
   const [seats, setSeats] = useState("4");
   const [description, setDescription] = useState("");
-  const [distance, setDistance] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { source } = useContext(SourceContext);
-  const { destination } = useContext(DestinationContext);
-
-  const handleDistanceCalculated = (calculatedDistance: string) => {
-    setDistance(calculatedDistance);
-    // Auto-calculate a suggested price based on distance
-    const suggestedPrice = (parseFloat(calculatedDistance) * 10.5).toFixed(2);
-    if (!price) {
-      setPrice(suggestedPrice);
-    }
-  };
+  const { source, setSource } = useContext(SourceContext);
+  const { destination, setDestination } = useContext(DestinationContext);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,38 +71,17 @@ const ScheduleRideForm = () => {
       return;
     }
 
-    // Log the location data for debugging
-    console.log("Source location:", source);
-    console.log("Destination location:", destination);
-
     setIsSubmitting(true);
 
     try {
       // Convert location objects to the expected format for the API
       const fromLocationData = {
-        lat: source.lat,
-        lng: source.lng,
         name: source.name || "",
-        label: source.label || "",
       };
 
       const toLocationData = {
-        lat: destination.lat,
-        lng: destination.lng,
         name: destination.name || "",
-        label: destination.label || "",
       };
-
-      // Log the data being sent to the API
-      console.log("Sending to API:", {
-        fromLocation: fromLocationData,
-        toLocation: toLocationData,
-        departureDate: date,
-        departureTime: time,
-        price: parseFloat(price),
-        availableSeats: parseInt(seats),
-        description,
-      });
 
       const response = await fetch("/api/rides", {
         method: "POST",
@@ -115,8 +89,8 @@ const ScheduleRideForm = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          fromLocation: fromLocationData,
-          toLocation: toLocationData,
+          fromLocation: fromLocationData.name,
+          toLocation: toLocationData.name,
           departureDate: date,
           departureTime: time,
           price: parseFloat(price),
@@ -156,34 +130,72 @@ const ScheduleRideForm = () => {
                   <div>
                     <Label htmlFor='fromLocation'>Pickup Location</Label>
                     <div id='fromLocation'>
-                      <LocationInput
-                        placeholder='Enter pickup location'
-                        type='source'
-                      />
+                      <Select 
+                        onValueChange={(value) => {
+                          const locationData = { name: value };
+                          const element = document.getElementById("fromLocation");
+                          if (element) {
+                            element.setAttribute("data-location", value);
+                          }
+                          setSource(locationData);
+                        }} 
+                        value={source?.name || undefined}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Enter pickup location" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem 
+                            value="Paithan" 
+                            disabled={destination?.name === "Paithan"}
+                          >
+                            Paithan
+                          </SelectItem>
+                          <SelectItem 
+                            value="Pune" 
+                            disabled={destination?.name === "Pune"}
+                          >
+                            Pune
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
                   <div>
                     <Label htmlFor='toLocation'>Dropoff Location</Label>
                     <div id='toLocation'>
-                      <LocationInput
-                        placeholder='Enter dropoff location'
-                        type='destination'
-                      />
+                      <Select 
+                        onValueChange={(value) => {
+                          const locationData = { name: value };
+                          const element = document.getElementById("toLocation");
+                          if (element) {
+                            element.setAttribute("data-location", value);
+                          }
+                          setDestination(locationData);
+                        }} 
+                        value={destination?.name || undefined}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Enter dropoff location" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem 
+                            value="Paithan" 
+                            disabled={source?.name === "Paithan"}
+                          >
+                            Paithan
+                          </SelectItem>
+                          <SelectItem 
+                            value="Pune" 
+                            disabled={source?.name === "Pune"}
+                          >
+                            Pune
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
-                </div>
-
-                <div className='mt-4'>
-                  <GoogleMapsSection
-                    onDistanceCalculated={handleDistanceCalculated}
-                  />
-                  {distance && (
-                    <div className='mt-3 text-sm text-gray-600 flex items-center justify-center'>
-                      <span className='font-medium'>Estimated distance:</span>
-                      <span className='ml-1'>{distance} km</span>
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
@@ -300,34 +312,17 @@ const ScheduleRideForm = () => {
                   <p className='text-lg'>{seats}</p>
                 </div>
 
-                {distance && (
-                  <div className='space-y-1'>
-                    <p className='text-sm font-medium'>Estimated Distance</p>
-                    <p className='text-lg'>{distance} km</p>
-                  </div>
-                )}
-
                 {source && (
                   <div className='space-y-1'>
                     <p className='text-sm font-medium'>From</p>
-                    <p className='text-lg'>{source.name || source.label}</p>
-                    <p className='text-xs text-gray-500'>
-                      Coordinates: {source.lat.toFixed(6)},{" "}
-                      {source.lng.toFixed(6)}
-                    </p>
+                    <p className='text-lg'>{source.name}</p>
                   </div>
                 )}
 
                 {destination && (
                   <div className='space-y-1'>
                     <p className='text-sm font-medium'>To</p>
-                    <p className='text-lg'>
-                      {destination.name || destination.label}
-                    </p>
-                    <p className='text-xs text-gray-500'>
-                      Coordinates: {destination.lat.toFixed(6)},{" "}
-                      {destination.lng.toFixed(6)}
-                    </p>
+                    <p className='text-lg'>{destination.name}</p>
                   </div>
                 )}
               </CardContent>

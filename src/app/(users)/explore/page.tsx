@@ -75,21 +75,14 @@ export default function ExplorePage() {
       // Build query params
       const queryParams = new URLSearchParams();
 
+      // Add from and to location names
+      queryParams.append("from", fromLocation.name || fromLocation);
+      queryParams.append("to", toLocation.name || toLocation);
+
       // Add date if available
       if (dateParam) {
         const date = new Date(dateParam);
         queryParams.append("date", date.toISOString().split("T")[0]);
-      }
-
-      // Add location coordinates
-      if (fromLocation?.lat && fromLocation?.lng) {
-        queryParams.append("fromLat", fromLocation.lat.toString());
-        queryParams.append("fromLng", fromLocation.lng.toString());
-      }
-
-      if (toLocation?.lat && toLocation?.lng) {
-        queryParams.append("toLat", toLocation.lat.toString());
-        queryParams.append("toLng", toLocation.lng.toString());
       }
 
       // Add other params

@@ -21,10 +21,6 @@ interface RideDetails {
   id: string;
   fromLocation: string;
   toLocation: string;
-  fromLat: number;
-  fromLng: number;
-  toLat: number;
-  toLng: number;
   departureDate: string;
   departureTime: string;
   price: number;

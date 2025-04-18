@@ -29,7 +29,6 @@ import {
   User,
 } from "lucide-react";
 import { format } from "date-fns";
-import GoogleMapsSection from "@/components/drivers/google-maps-section";
 import { SourceProvider } from "@/context/source-context";
 import { DestinationProvider } from "@/context/destination-context";
 
@@ -80,10 +79,6 @@ interface Ride {
   id: string;
   fromLocation: string;
   toLocation: string;
-  fromLat: number;
-  fromLng: number;
-  toLat: number;
-  toLng: number;
   departureDate: string;
   departureTime: string;
   price: number;
@@ -130,14 +125,10 @@ export default function TripDetailPage() {
         // Set up source and destination for maps
         if (data) {
           setSource({
-            lat: data.fromLat,
-            lng: data.fromLng,
             name: data.fromLocation,
           });
 
           setDestination({
-            lat: data.toLat,
-            lng: data.toLng,
             name: data.toLocation,
           });
 
@@ -289,7 +280,7 @@ export default function TripDetailPage() {
               {source && destination && (
                 <SourceProvider initialValue={source}>
                   <DestinationProvider initialValue={destination}>
-                    <GoogleMapsSection />
+                    {/* GoogleMapsSection removed */}
                   </DestinationProvider>
                 </SourceProvider>
               )}
@@ -358,24 +349,6 @@ export default function TripDetailPage() {
                 </Button>
               )}
             </CardFooter>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Enhanced Map View</CardTitle>
-              <CardDescription>
-                Interactive map with route details
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {source && destination && (
-                <SourceProvider initialValue={source}>
-                  <DestinationProvider initialValue={destination}>
-                    <GoogleMapsSection />
-                  </DestinationProvider>
-                </SourceProvider>
-              )}
-            </CardContent>
           </Card>
         </div>
 

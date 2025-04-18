@@ -88,6 +88,10 @@ export default function DriverOnboarding() {
     insurance: false,
   });
 
+  // Add a new state for vehicle images
+  const [vehicleImages, setVehicleImages] = useState<File[]>([]);
+  const [vehicleImageUrls, setVehicleImageUrls] = useState<string[]>([]);
+
   useEffect(() => {
     if (isLoaded && user) {
       setIsVerified((user.publicMetadata?.isVerified as boolean) || false);
@@ -231,6 +235,38 @@ export default function DriverOnboarding() {
   const isVehicleComplete = () => {
     const v = formData.vehicle;
     return v.make && v.model && v.year && v.color && v.licensePlate;
+  };
+
+  // Handle vehicle image change
+  const handleVehicleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newFiles = Array.from(files);
+    // Append new files to the existing list
+    setVehicleImages((prev) => [...prev, ...newFiles]);
+
+    // Upload each file and update URLs
+    const newUrls = await Promise.all(
+      newFiles.map(async (file) => {
+        const formDataObj = new FormData();
+        formDataObj.append("file", file);
+        const { data } = await axios.post("/api/upload-docs", formDataObj);
+        if (!data.url) {
+          throw new Error("Server response missing URL for uploaded file");
+        }
+        return data.url;
+      })
+    );
+
+    // Append new URLs to the existing list
+    setVehicleImageUrls((prev) => [...prev, ...newUrls]);
+  };
+
+  // Remove a vehicle image
+  const removeVehicleImage = (index: number) => {
+    setVehicleImages((prev) => prev.filter((_, i) => i !== index));
+    setVehicleImageUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   // Render different steps based on current step
@@ -590,6 +626,53 @@ export default function DriverOnboarding() {
         return (
           <Card>
             <CardHeader>
+              <CardTitle>Upload Vehicle Images</CardTitle>
+              <CardDescription>
+                Upload images of your vehicle. At least 2 images are required, and you can upload up to 4.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <div className='border rounded-lg p-4'>
+                <input
+                  type='file'
+                  accept='image/*'
+                  multiple
+                  onChange={handleVehicleImageChange}
+                  className='mb-4'
+                />
+                <div className='grid grid-cols-2 gap-4'>
+                  {vehicleImageUrls.map((url, index) => (
+                    <div key={index} className='relative'>
+                      <img src={url} alt={`Vehicle Image ${index + 1}`} className='w-full h-32 object-cover rounded-md' />
+                      <button
+                        onClick={() => removeVehicleImage(index)}
+                        className='absolute top-0 right-0 bg-red-500 text-white rounded-full p-1'
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className='flex justify-between'>
+              <Button variant='outline' onClick={handlePrevStep}>
+                Previous Step
+              </Button>
+              <Button
+                variant='default'
+                onClick={handleNextStep}
+                disabled={vehicleImageUrls.length < 2}
+              >
+                Next Step
+              </Button>
+            </CardFooter>
+          </Card>
+        );
+      case 4:
+        return (
+          <Card>
+            <CardHeader>
               <CardTitle>Confirm Your Information</CardTitle>
               <CardDescription>
                 Please review all information before submitting
@@ -599,7 +682,7 @@ export default function DriverOnboarding() {
               <div className='space-y-6'>
                 <div className='space-y-2'>
                   <h3 className='font-medium'>Documents</h3>
-                  <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                  <div className='grid grid-cols-1 gap-4'>
                     <div className='border rounded-lg p-4'>
                       <p className='font-medium'>Driver's License</p>
                       {formData.drivingLicenseUrl ? (
@@ -646,6 +729,15 @@ export default function DriverOnboarding() {
                       <p className='text-sm text-gray-500'>License Plate:</p>
                       <p>{formData.vehicle.licensePlate}</p>
                     </div>
+                  </div>
+                </div>
+
+                <div className='space-y-2'>
+                  <h3 className='font-medium'>Vehicle Images</h3>
+                  <div className='grid grid-cols-2 gap-4'>
+                    {vehicleImageUrls.map((url, index) => (
+                      <img key={index} src={url} alt={`Vehicle Image ${index + 1}`} className='w-full h-32 object-cover rounded-md' />
+                    ))}
                   </div>
                 </div>
 

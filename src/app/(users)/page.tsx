@@ -1,20 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Calendar, Car, Search } from "lucide-react";
-import { SourceProvider } from "@/context/source-context";
-import { DestinationProvider } from "@/context/destination-context";
-import LocationInput from "@/components/users/location-input";
-import GoogleMapsSection from "@/components/users/google-maps-section";
-import GoogleMapsProvider from "@/components/users/google-maps-provider";
+import { SourceProvider, SourceContext } from "@/context/source-context";
+import { DestinationProvider, DestinationContext } from "@/context/destination-context";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import DatePicker from "@/components/users/date-picker";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
-  const [distance, setDistance] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isFormValid, setIsFormValid] = useState(false);
   const router = useRouter();
+  const { source, setSource } = useContext(SourceContext);
+  const { destination, setDestination } = useContext(DestinationContext);
 
   // Check if both locations are set and form is valid
   useEffect(() => {
@@ -38,10 +43,17 @@ export default function HomePage() {
 
     const queryParams = new URLSearchParams();
 
-    if (fromLocation) queryParams.append("from", fromLocation);
-    if (toLocation) queryParams.append("to", toLocation);
+    if (fromLocation) {
+      const fromLocationData = { name: fromLocation };
+      queryParams.append("from", JSON.stringify(fromLocationData));
+    }
+    
+    if (toLocation) {
+      const toLocationData = { name: toLocation };
+      queryParams.append("to", JSON.stringify(toLocationData));
+    }
+    
     if (selectedDate) queryParams.append("date", selectedDate.toISOString());
-    if (distance) queryParams.append("distance", distance);
 
     router.push(`/explore?${queryParams.toString()}`);
   };
@@ -56,56 +68,100 @@ export default function HomePage() {
 
       <h1 className='text-2xl font-bold text-center mb-6'>Find a Ride</h1>
 
-      <GoogleMapsProvider>
-        <SourceProvider>
-          <DestinationProvider>
-            <div className='space-y-4'>
-              <div>
-                <div className='mb-1.5 text-sm font-medium'>From</div>
-                <div id='fromLocation'>
-                  <LocationInput
-                    placeholder='Enter pickup location'
-                    type='source'
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className='mb-1.5 text-sm font-medium'>To</div>
-                <div id='toLocation'>
-                  <LocationInput
-                    placeholder='Enter destination'
-                    type='destination'
-                  />
-                </div>
-              </div>
-
-              <GoogleMapsSection
-                onDistanceCalculated={(value) => setDistance(value)}
-              />
-
-              <div>
-                <div className='mb-1.5 text-sm font-medium'>Date</div>
-                <DatePicker onDateSelect={(date) => setSelectedDate(date)} />
+      <SourceProvider>
+        <DestinationProvider>
+          <div className='space-y-4'>
+            <div>
+              <div className='mb-1.5 text-sm font-medium'>From</div>
+              <div id='fromLocation'>
+                <Select 
+                  onValueChange={(value) => {
+                    const locationData = { name: value };
+                    const element = document.getElementById("fromLocation");
+                    if (element) {
+                      element.setAttribute("data-location", value);
+                    }
+                    setSource(locationData);
+                  }} 
+                  value={source?.name || undefined}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Enter pickup location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem 
+                      value="Paithan" 
+                      disabled={destination?.name === "Paithan"}
+                    >
+                      Paithan
+                    </SelectItem>
+                    <SelectItem 
+                      value="Pune" 
+                      disabled={destination?.name === "Pune"}
+                    >
+                      Pune
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            <button
-              onClick={handleSearch}
-              disabled={!isFormValid}
-              className={`w-full py-3 rounded-lg mt-6 font-medium flex items-center justify-center gap-2
-                ${
-                  isFormValid
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                }`}
-            >
-              <Search size={18} />
-              Find Rides
-            </button>
-          </DestinationProvider>
-        </SourceProvider>
-      </GoogleMapsProvider>
+            <div>
+              <div className='mb-1.5 text-sm font-medium'>To</div>
+              <div id='toLocation'>
+                <Select 
+                  onValueChange={(value) => {
+                    const locationData = { name: value };
+                    const element = document.getElementById("toLocation");
+                    if (element) {
+                      element.setAttribute("data-location", value);
+                    }
+                    setDestination(locationData);
+                  }} 
+                  value={destination?.name || undefined}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Enter destination" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem 
+                      value="Paithan" 
+                      disabled={source?.name === "Paithan"}
+                    >
+                      Paithan
+                    </SelectItem>
+                    <SelectItem 
+                      value="Pune" 
+                      disabled={source?.name === "Pune"}
+                    >
+                      Pune
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <div className='mb-1.5 text-sm font-medium'>Date</div>
+              <DatePicker onDateSelect={(date) => setSelectedDate(date)} />
+            </div>
+          </div>
+
+          <button
+            onClick={handleSearch}
+            disabled={!isFormValid}
+            className={`w-full py-3 rounded-lg mt-6 font-medium flex items-center justify-center gap-2
+              ${
+                isFormValid
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-500 cursor-not-allowed"
+              }`}
+          >
+            <Search size={18} />
+            Find Rides
+          </button>
+        </DestinationProvider>
+      </SourceProvider>
     </div>
   );
 }

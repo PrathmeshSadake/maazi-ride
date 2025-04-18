@@ -67,6 +67,7 @@ model Vehicle {
   year          Int?
   color         String?
   licensePlate  String?
+  vehicleImages String[] // Array of image URLs
   userId        String   @unique  // One-to-one relation with User
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())
@@ -79,15 +80,10 @@ model Ride {
   driver        User        @relation("DriverRides", fields: [driverId], references: [id])
   fromLocation  String
   toLocation    String
-  fromLat       Float       // From location latitude
-  fromLng       Float       // From location longitude 
-  toLat         Float       // To location latitude
-  toLng         Float       // To location longitude
   departureDate DateTime
   departureTime String
   price         Float
   availableSeats Int
-  status        RideStatus  @default(PENDING_APPROVAL)
   description   String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
