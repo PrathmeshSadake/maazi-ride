@@ -29,6 +29,7 @@ enum BookingStatus {
   REJECTED
   CANCELLED
   COMPLETED
+  PENDING_APPROVAL
 }
 
 model User {
@@ -87,6 +88,7 @@ model Ride {
   description   String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  isScheduled   Boolean     @default(false)
   
   // Admin approval info
   approvedById  String?

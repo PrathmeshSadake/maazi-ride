@@ -1,84 +1,119 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+import { sendMessageToUser } from "./sse/route";
+
+// Schema for creating a message
+const createMessageSchema = z.object({
+  content: z.string().min(1),
+  receiverId: z.string().optional(),
+  bookingId: z.string().optional(),
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    const user = await currentUser();
 
-    if (!userId) {
+    if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // Parse the request body
-    const { content, bookingId } = await req.json();
+    const body = await req.json();
+    const { content, receiverId, bookingId } = createMessageSchema.parse(body);
 
-    if (!content) {
+    // If we have a bookingId but no receiverId, find the receiver from the booking
+    let actualReceiverId = receiverId;
+    if (bookingId && !receiverId) {
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: { ride: true },
+      });
+
+      if (!booking) {
+        return NextResponse.json(
+          { message: "Booking not found" },
+          { status: 404 }
+        );
+      }
+
+      // Determine receiver based on who sent the message
+      actualReceiverId =
+        user.id === booking.userId ? booking.ride.driverId : booking.userId;
+    }
+
+    if (!actualReceiverId) {
       return NextResponse.json(
-        { message: "Message content is required" },
+        { message: "Receiver ID is required" },
         { status: 400 }
       );
     }
 
-    if (!bookingId) {
-      return NextResponse.json(
-        { message: "Booking ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Get the booking to determine sender and receiver
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: {
-        ride: {
-          select: {
-            driverId: true,
-          },
-        },
-      },
+    // Check if receiver exists
+    const receiver = await prisma.user.findUnique({
+      where: { id: actualReceiverId },
     });
 
-    if (!booking) {
+    if (!receiver) {
       return NextResponse.json(
-        { message: "Booking not found" },
+        { message: "Receiver not found" },
         { status: 404 }
       );
     }
 
-    // Determine if the user is the passenger or driver
-    const isPassenger = booking.userId === userId;
-    const isDriver = booking.ride.driverId === userId;
+    // If bookingId is provided, verify that it exists and involves both users
+    if (bookingId) {
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          ride: true,
+        },
+      });
 
-    if (!isPassenger && !isDriver) {
-      return NextResponse.json(
-        { message: "You are not authorized to send messages for this booking" },
-        { status: 403 }
-      );
+      if (!booking) {
+        return NextResponse.json(
+          { message: "Booking not found" },
+          { status: 404 }
+        );
+      }
+
+      // Check if the users are part of this booking
+      const isPartOfBooking =
+        (booking.userId === user.id &&
+          booking.ride.driverId === actualReceiverId) ||
+        (booking.userId === actualReceiverId &&
+          booking.ride.driverId === user.id);
+
+      if (!isPartOfBooking) {
+        return NextResponse.json(
+          {
+            message:
+              "You don't have permission to send messages for this booking",
+          },
+          { status: 403 }
+        );
+      }
     }
-
-    // Set sender and receiver IDs
-    const senderId = userId;
-    const receiverId = isPassenger ? booking.ride.driverId : booking.userId;
 
     // Create the message
     const message = await prisma.message.create({
       data: {
         content,
-        senderId,
-        receiverId,
+        senderId: user.id,
+        receiverId: actualReceiverId,
         bookingId,
-        read: false,
       },
       include: {
         sender: {
           select: {
+            id: true,
             firstName: true,
             lastName: true,
           },
         },
         receiver: {
           select: {
+            id: true,
             firstName: true,
             lastName: true,
           },
@@ -89,19 +124,34 @@ export async function POST(req: NextRequest) {
     // Create a notification for the receiver
     await prisma.notification.create({
       data: {
-        userId: receiverId,
+        userId: actualReceiverId,
         type: "message",
         title: "New Message",
-        message: `You have a new message from ${message.sender.firstName}`,
+        message: `You have a new message from ${user.firstName || ""} ${
+          user.lastName || ""
+        }`,
         relatedId: message.id,
       },
     });
 
+    // Send real-time update to receiver
+    sendMessageToUser(actualReceiverId, {
+      event: "newMessage",
+      message,
+    });
+
     return NextResponse.json(message, { status: 201 });
   } catch (error) {
-    console.error("Error sending message:", error);
+    console.error("Error creating message:", error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: "Invalid data", errors: error.errors },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { message: "Error sending message" },
+      { message: "Failed to create message" },
       { status: 500 }
     );
   }
@@ -109,100 +159,214 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    const user = await currentUser();
 
-    if (!userId) {
+    if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // Parse query parameters
-    const url = new URL(req.url);
-    const bookingId = url.searchParams.get("bookingId");
+    const searchParams = req.nextUrl.searchParams;
+    const otherUserId = searchParams.get("userId");
+    const bookingId = searchParams.get("bookingId");
 
-    if (!bookingId) {
-      return NextResponse.json(
-        { message: "Booking ID is required" },
-        { status: 400 }
+    if (!otherUserId && !bookingId) {
+      // Get all conversations (grouped by the other user)
+      const sentMessages = await prisma.message.findMany({
+        where: {
+          senderId: user.id,
+        },
+        select: {
+          receiverId: true,
+        },
+        distinct: ["receiverId"],
+      });
+
+      const receivedMessages = await prisma.message.findMany({
+        where: {
+          receiverId: user.id,
+        },
+        select: {
+          senderId: true,
+        },
+        distinct: ["senderId"],
+      });
+
+      // Combine unique user IDs from sent and received messages
+      const userIds = new Set([
+        ...sentMessages.map((m) => m.receiverId),
+        ...receivedMessages.map((m) => m.senderId),
+      ]);
+
+      // Get user details for each conversation
+      const conversations = await Promise.all(
+        Array.from(userIds).map(async (id) => {
+          const otherUser = await prisma.user.findUnique({
+            where: { id },
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          });
+
+          // Get latest message
+          const latestMessage = await prisma.message.findFirst({
+            where: {
+              OR: [
+                { senderId: user.id, receiverId: id },
+                { senderId: id, receiverId: user.id },
+              ],
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+          });
+
+          // Get unread count
+          const unreadCount = await prisma.message.count({
+            where: {
+              senderId: id,
+              receiverId: user.id,
+              read: false,
+            },
+          });
+
+          return {
+            user: otherUser,
+            latestMessage,
+            unreadCount,
+          };
+        })
       );
-    }
 
-    // Get the booking to verify access
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: {
-        ride: {
-          select: {
-            driverId: true,
+      return NextResponse.json(conversations);
+    } else if (otherUserId) {
+      // Get messages between two users
+      const messages = await prisma.message.findMany({
+        where: {
+          OR: [
+            { senderId: user.id, receiverId: otherUserId },
+            { senderId: otherUserId, receiverId: user.id },
+          ],
+          ...(bookingId ? { bookingId } : {}),
+        },
+        include: {
+          sender: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+          receiver: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
           },
         },
-      },
-    });
-
-    if (!booking) {
-      return NextResponse.json(
-        { message: "Booking not found" },
-        { status: 404 }
-      );
-    }
-
-    // Check if user is the passenger or driver
-    const isUserInvolved =
-      booking.userId === userId || booking.ride.driverId === userId;
-
-    if (!isUserInvolved) {
-      return NextResponse.json(
-        { message: "You are not authorized to view these messages" },
-        { status: 403 }
-      );
-    }
-
-    // Fetch messages for this booking
-    const messages = await prisma.message.findMany({
-      where: {
-        bookingId,
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-      include: {
-        sender: {
-          select: {
-            firstName: true,
-            lastName: true,
-          },
+        orderBy: {
+          createdAt: "asc",
         },
-        receiver: {
-          select: {
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
-    });
+      });
 
-    // Mark messages as read if user is the receiver
-    const unreadMessages = messages.filter(
-      (message) => !message.read && message.receiverId === userId
-    );
-
-    if (unreadMessages.length > 0) {
+      // Mark messages as read
       await prisma.message.updateMany({
         where: {
-          id: {
-            in: unreadMessages.map((message) => message.id),
-          },
+          senderId: otherUserId,
+          receiverId: user.id,
+          read: false,
         },
         data: {
           read: true,
         },
       });
+
+      return NextResponse.json(messages);
+    } else if (bookingId) {
+      // Get messages for a specific booking
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          ride: true,
+        },
+      });
+
+      if (!booking) {
+        return NextResponse.json(
+          { message: "Booking not found" },
+          { status: 404 }
+        );
+      }
+
+      // Check if the user is part of this booking
+      const isPartOfBooking =
+        booking.userId === user.id || booking.ride.driverId === user.id;
+
+      if (!isPartOfBooking) {
+        return NextResponse.json(
+          {
+            message:
+              "You don't have permission to view messages for this booking",
+          },
+          { status: 403 }
+        );
+      }
+
+      const otherUserId =
+        booking.userId === user.id ? booking.ride.driverId : booking.userId;
+
+      // Get messages for this booking
+      const messages = await prisma.message.findMany({
+        where: {
+          bookingId,
+        },
+        include: {
+          sender: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+          receiver: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
+
+      // Mark messages as read
+      await prisma.message.updateMany({
+        where: {
+          bookingId,
+          senderId: otherUserId,
+          receiverId: user.id,
+          read: false,
+        },
+        data: {
+          read: true,
+        },
+      });
+
+      return NextResponse.json(messages);
     }
 
-    return NextResponse.json(messages);
+    return NextResponse.json(
+      { message: "Either userId or bookingId is required" },
+      { status: 400 }
+    );
   } catch (error) {
     console.error("Error fetching messages:", error);
     return NextResponse.json(
-      { message: "Error fetching messages" },
+      { message: "Failed to fetch messages" },
       { status: 500 }
     );
   }

@@ -1,102 +1,291 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  ChevronLeft,
+  MapPin,
+  Calendar,
+  Clock,
+  IndianRupee,
+  Car,
+  Search,
+} from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
-type Driver = {
+interface Driver {
   id: string;
-  name: string;
-  avatar: string;
-  price: number;
+  firstName: string | null;
+  lastName: string | null;
+  driverRating: number | null;
+  ridesCompleted: number;
+}
+
+interface Booking {
+  id: string;
+  status: string;
+}
+
+interface Ride {
+  id: string;
+  driverId: string;
+  driver: Driver;
+  fromLocation: string;
+  toLocation: string;
+  departureDate: string;
   departureTime: string;
-  route: {
-    from: string;
-    to: string;
-  };
-};
+  price: number;
+  availableSeats: number;
+  bookings: Booking[];
+}
 
 export default function RidesPage() {
-  const drivers: Driver[] = [
-    {
-      id: "1",
-      name: "Amanda H.",
-      avatar: "/avatars/amanda.png",
-      price: 35,
-      departureTime: "9:00 AM",
-      route: {
-        from: "San Francisco",
-        to: "Los Angeles",
-      },
-    },
-    {
-      id: "2",
-      name: "John",
-      avatar: "/avatars/john.png",
-      price: 40,
-      departureTime: "10:30 AM",
-      route: {
-        from: "San Francisco",
-        to: "Los Angeles",
-      },
-    },
-    {
-      id: "3",
-      name: "Emily R",
-      avatar: "/avatars/emily.png",
-      price: 30,
-      departureTime: "2:45 PM",
-      route: {
-        from: "San Francisco",
-        to: "Los Angeles",
-      },
-    },
-  ];
+  const router = useRouter();
+  const [rides, setRides] = useState<Ride[]>([]);
+  const [filteredRides, setFilteredRides] = useState<Ride[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRides = async () => {
+      try {
+        const response = await fetch("/api/rides");
+        if (response.ok) {
+          const data = await response.json();
+          setRides(data);
+          setFilteredRides(data);
+        } else {
+          toast.error("Failed to load rides");
+        }
+      } catch (error) {
+        console.error("Error fetching rides:", error);
+        toast.error("An error occurred while loading rides");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRides();
+  }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredRides(rides);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = rides.filter(
+      (ride) =>
+        ride.fromLocation.toLowerCase().includes(query) ||
+        ride.toLocation.toLowerCase().includes(query)
+    );
+
+    setFilteredRides(filtered);
+  }, [searchQuery, rides]);
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(parseISO(dateString), "MMM d, yyyy");
+    } catch (e) {
+      console.error("Error formatting date:", e, dateString);
+      return dateString;
+    }
+  };
+
+  const handleApplyForRide = async (rideId: string) => {
+    try {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          rideId,
+          numSeats: 1,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success("Ride request sent to the driver!");
+        // Refresh the rides list to show updated status
+        const updatedResponse = await fetch("/api/rides");
+        if (updatedResponse.ok) {
+          const data = await updatedResponse.json();
+          setRides(data);
+          setFilteredRides(
+            data.filter(
+              (ride: Ride) =>
+                ride.fromLocation
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase()) ||
+                ride.toLocation
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase())
+            )
+          );
+        }
+      } else {
+        const error = await response.json();
+        toast.error(error.message || "Failed to apply for ride");
+      }
+    } catch (error) {
+      console.error("Error applying for ride:", error);
+      toast.error("An error occurred while applying for the ride");
+    }
+  };
+
+  // Helper function to check if user has already applied for the ride
+  const hasApplied = (ride: Ride) => {
+    return ride.bookings && ride.bookings.length > 0;
+  };
+
+  // Helper function to get booking status
+  const getBookingStatus = (ride: Ride) => {
+    if (!ride.bookings || !ride.bookings.length) return null;
+    return ride.bookings[0].status;
+  };
 
   return (
-    <div className='p-4 max-w-md mx-auto'>
-      <div className='flex items-center mb-6'>
-        <Link href='/' className='p-2'>
-          <ChevronLeft size={24} />
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center mb-6">
+        <Link href="/" className="mr-4">
+          <Button variant="ghost" size="icon">
+            <ChevronLeft size={20} />
+          </Button>
         </Link>
-        <div className='flex-1 flex justify-center mr-8'>
-          <h1 className='text-2xl font-bold'>Rides available</h1>
-        </div>
+        <h1 className="text-2xl font-bold">Scheduled Rides</h1>
       </div>
 
-      <div className='space-y-4'>
-        {drivers.map((driver) => (
-          <div key={driver.id} className='border-b border-gray-200 pb-4'>
-            <div className='flex items-center mb-3'>
-              <div className='w-12 h-12 rounded-full overflow-hidden bg-gray-200 mr-3'>
-                {/* Fallback avatar if image fails to load */}
-                <div className='w-full h-full flex items-center justify-center bg-green-100 text-green-800 font-bold'>
-                  {driver.name.charAt(0)}
-                </div>
-              </div>
-              <div className='flex-1'>
-                <div className='flex justify-between items-center'>
-                  <div className='text-lg font-medium'>{driver.route.from}</div>
-                  <div className='text-lg font-bold text-green-800'>
-                    ${driver.price}
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+        <Input
+          placeholder="Search by location..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {isLoading ? (
+        <div className="text-center py-10">Loading rides...</div>
+      ) : filteredRides.length > 0 ? (
+        <div className="grid grid-cols-1 gap-6">
+          {filteredRides.map((ride) => (
+            <Card key={ride.id} className="overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h2 className="text-xl font-bold">
+                      {ride.fromLocation} to {ride.toLocation}
+                    </h2>
+                    <div className="flex items-center mt-1 text-sm text-gray-500">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-1" />
+                        {formatDate(ride.departureDate)}
+                      </div>
+                      <div className="mx-2">•</div>
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-1" />
+                        {ride.departureTime}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center text-lg font-bold text-green-700">
+                      <IndianRupee className="h-4 w-4 mr-1" />
+                      {ride.price}
+                    </div>
+                    <div className="flex items-center text-sm text-gray-500 mt-1">
+                      <Car className="h-4 w-4 mr-1" />
+                      {ride.availableSeats} seats available
+                    </div>
                   </div>
                 </div>
-                <div className='text-gray-500'>{driver.route.to}</div>
-              </div>
-            </div>
 
-            <div className='flex justify-between items-center pl-14'>
-              <div>
-                <div className='font-medium'>{driver.route.from}</div>
-                <div className='text-gray-500'>{driver.route.to}</div>
-              </div>
-              <div className='text-right font-medium'>
-                {driver.departureTime}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+                <div className="flex items-center mb-4">
+                  <MapPin className="h-5 w-5 text-gray-400 mr-2" />
+                  <div>
+                    <div className="text-sm font-medium">
+                      {ride.fromLocation}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {ride.toLocation}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center mb-2">
+                  <div className="flex items-center mr-4">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium">
+                      {ride.driver.firstName?.charAt(0) || ""}
+                      {ride.driver.lastName?.charAt(0) || ""}
+                    </div>
+                    <div className="ml-2">
+                      <div className="text-sm font-medium">
+                        {ride.driver.firstName} {ride.driver.lastName}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {ride.driver.ridesCompleted} rides
+                      </div>
+                    </div>
+                  </div>
+                  {ride.driver.driverRating && (
+                    <Badge variant="outline" className="ml-auto bg-yellow-50">
+                      ★ {ride.driver.driverRating.toFixed(1)}
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+
+              <CardFooter className="px-6 py-4 bg-gray-50 flex justify-between">
+                <Link href={`/rides/${ride.id}`}>
+                  <Button variant="outline">View Details</Button>
+                </Link>
+
+                {hasApplied(ride) ? (
+                  <Badge
+                    variant={
+                      getBookingStatus(ride) === "PENDING"
+                        ? "outline"
+                        : getBookingStatus(ride) === "CONFIRMED"
+                        ? "default"
+                        : "destructive"
+                    }
+                    className={
+                      getBookingStatus(ride) === "PENDING"
+                        ? "bg-yellow-50 text-yellow-800"
+                        : getBookingStatus(ride) === "CONFIRMED"
+                        ? "bg-green-50 text-green-800"
+                        : "bg-red-50 text-red-800"
+                    }
+                  >
+                    {getBookingStatus(ride) === "PENDING"
+                      ? "Request Pending"
+                      : getBookingStatus(ride) === "CONFIRMED"
+                      ? "Request Approved"
+                      : "Request Rejected"}
+                  </Badge>
+                ) : (
+                  <Button onClick={() => handleApplyForRide(ride.id)}>
+                    Apply for Ride
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-10">
+          <p className="text-gray-500 mb-4">No rides found</p>
+        </div>
+      )}
     </div>
   );
 }

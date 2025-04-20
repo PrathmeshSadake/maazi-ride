@@ -150,7 +150,7 @@ export async function POST(req: Request) {
     }
 
     // Handle metadata updates properly
-    let role = "user";
+    let role = public_metadata.role ? public_metadata.role : "user";
     let isVerified = true;
 
     if (unsafe_metadata && typeof unsafe_metadata === "object") {

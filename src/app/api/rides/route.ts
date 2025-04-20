@@ -1,99 +1,82 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+
+const rideSchema = z.object({
+  fromLocation: z.string(),
+  toLocation: z.string(),
+  departureDate: z.string().or(z.date()),
+  departureTime: z.string(),
+  price: z.number().positive(),
+  availableSeats: z.number().int().positive(),
+  description: z.string().optional(),
+  isScheduled: z.boolean().optional().default(false),
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    const user = await currentUser();
 
-    if (!userId) {
+    if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is a driver
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    // Get user record from our database
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id },
     });
 
-    if (!user || user.role !== "driver") {
+    if (!dbUser || dbUser.role !== "driver") {
       return NextResponse.json(
         { message: "Only drivers can create rides" },
         { status: 403 }
       );
     }
 
-    // Parse request body
-    const {
-      fromLocation,
-      toLocation,
-      departureDate,
-      departureTime,
-      price,
-      availableSeats,
-      description,
-    } = await req.json();
-
-    console.log("API received:", {
-      fromLocation,
-      toLocation,
-      departureDate,
-      departureTime,
-      price,
-    });
-
-    // Validate request fields
-    if (!fromLocation || !toLocation) {
+    if (!dbUser.isVerified) {
       return NextResponse.json(
-        { message: "Missing location data" },
-        { status: 400 }
+        { message: "You must be verified to create rides" },
+        { status: 403 }
       );
     }
 
-    // Validate location objects have required properties
-    if (
-      !fromLocation.lat ||
-      !fromLocation.lng ||
-      !toLocation.lat ||
-      !toLocation.lng
-    ) {
-      return NextResponse.json(
-        { message: "Invalid location data: missing coordinates" },
-        { status: 400 }
-      );
-    }
+    const body = await req.json();
 
-    if (!departureDate || !departureTime || !price) {
-      return NextResponse.json(
-        { message: "Missing required fields" },
-        { status: 400 }
-      );
-    }
+    const validatedData = rideSchema.parse(body);
 
-    // Create the ride with properly formatted location data
-    const ride = await prisma.ride.create({
+    // Format date correctly if it's a string
+    const departureDate =
+      typeof validatedData.departureDate === "string"
+        ? new Date(validatedData.departureDate)
+        : validatedData.departureDate;
+
+    const createdRide = await prisma.ride.create({
       data: {
-        driverId: userId,
-        fromLocation:
-          fromLocation.name || `${fromLocation.lat},${fromLocation.lng}`,
-        toLocation: toLocation.name || `${toLocation.lat},${toLocation.lng}`,
-        fromLat: fromLocation.lat,
-        fromLng: fromLocation.lng,
-        toLat: toLocation.lat,
-        toLng: toLocation.lng,
-        departureDate: new Date(departureDate),
-        departureTime,
-        price,
-        availableSeats: availableSeats || 4,
-        description: description || "",
-        status: "PENDING_APPROVAL", // Default status
+        driverId: user.id,
+        fromLocation: validatedData.fromLocation,
+        toLocation: validatedData.toLocation,
+        departureDate,
+        departureTime: validatedData.departureTime,
+        price: validatedData.price,
+        availableSeats: validatedData.availableSeats,
+        description: validatedData.description,
+        isScheduled: validatedData.isScheduled,
       },
     });
 
-    return NextResponse.json(ride, { status: 201 });
+    return NextResponse.json(createdRide);
   } catch (error) {
     console.error("Error creating ride:", error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: "Invalid data", errors: error.errors },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { message: "Error creating ride" },
+      { message: "Failed to create ride" },
       { status: 500 }
     );
   }
@@ -101,59 +84,110 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    const user = await currentUser();
 
-    if (!userId) {
+    if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    let where: any = {};
+    const searchParams = req.nextUrl.searchParams;
+    const isScheduled = searchParams.get("isScheduled");
 
-    if (userId) {
-      where.driverId = userId;
-    }
-
-    const rides = await prisma.ride.findMany({
-      where,
-      orderBy: {
-        departureDate: "asc",
-      },
-      select: {
-        id: true,
-        fromLocation: true,
-        toLocation: true,
-        fromLat: true,
-        fromLng: true,
-        toLat: true,
-        toLng: true,
-        departureDate: true,
-        departureTime: true,
-        price: true,
-        availableSeats: true,
-        status: true,
-        description: true,
-        createdAt: true,
-        driver: {
-          select: {
-            firstName: true,
-            lastName: true,
-            driverRating: true,
-          },
-        },
-        bookings: {
-          select: {
-            id: true,
-            status: true,
-          },
-        },
-      },
+    // Check if the user is a driver or a user
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id },
     });
 
-    return NextResponse.json(rides);
+    if (!dbUser) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    if (dbUser.role === "driver") {
+      // Drivers get their own rides
+      const rides = await prisma.ride.findMany({
+        where: {
+          driverId: user.id,
+          ...(isScheduled ? { isScheduled: isScheduled === "true" } : {}),
+        },
+        include: {
+          bookings: {
+            select: {
+              id: true,
+              status: true,
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          departureDate: "asc",
+        },
+      });
+
+      // Format the dates to ISO strings for consistent handling on the client
+      const formattedRides = rides.map((ride) => ({
+        ...ride,
+        departureDate: ride.departureDate.toISOString(),
+      }));
+
+      return NextResponse.json(formattedRides);
+    } else {
+      // Regular users get available rides they can book
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const rides = await prisma.ride.findMany({
+        where: {
+          departureDate: {
+            gte: today,
+          },
+          availableSeats: {
+            gt: 0,
+          },
+          isScheduled: true,
+        },
+        include: {
+          driver: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              driverRating: true,
+              ridesCompleted: true,
+            },
+          },
+          bookings: {
+            where: {
+              userId: user.id,
+            },
+            select: {
+              id: true,
+              status: true,
+            },
+          },
+        },
+        orderBy: {
+          departureDate: "asc",
+        },
+      });
+
+      // Format the dates to ISO strings for consistent handling on the client
+      const formattedRides = rides.map((ride) => ({
+        ...ride,
+        departureDate: ride.departureDate.toISOString(),
+      }));
+
+      return NextResponse.json(formattedRides);
+    }
   } catch (error) {
     console.error("Error fetching rides:", error);
     return NextResponse.json(
-      { message: "Error fetching rides" },
+      { message: "Failed to fetch rides" },
       { status: 500 }
     );
   }

@@ -1,18 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { userId } = await auth();
-    const { id } = await params;
+    const user = await currentUser();
 
-    // Fetch the ride details
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const rideId = params.id;
+
+    if (!rideId) {
+      return NextResponse.json(
+        { message: "Ride ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if the user is a driver or a regular user
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    // Find the ride with appropriate data based on user role
     const ride = await prisma.ride.findUnique({
-      where: { id },
+      where: { id: rideId },
       include: {
         driver: {
           select: {
@@ -21,20 +42,32 @@ export async function GET(
             lastName: true,
             driverRating: true,
             ridesCompleted: true,
-            // Don't include sensitive info
           },
         },
-        bookings: {
-          where: {
-            status: { in: ["PENDING", "CONFIRMED"] },
-          },
-          select: {
-            id: true,
-            status: true,
-            numSeats: true,
-            userId: true,
-          },
-        },
+        bookings:
+          dbUser.role === "driver"
+            ? {
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      firstName: true,
+                      lastName: true,
+                    },
+                  },
+                },
+              }
+            : {
+                where: {
+                  userId: user.id,
+                },
+                select: {
+                  id: true,
+                  status: true,
+                  numSeats: true,
+                  createdAt: true,
+                },
+              },
       },
     });
 
@@ -42,52 +75,34 @@ export async function GET(
       return NextResponse.json({ message: "Ride not found" }, { status: 404 });
     }
 
-    // Calculate real available seats by subtracting booked seats
-    const bookedSeats = ride.bookings.reduce((total, booking) => {
-      return total + booking.numSeats;
-    }, 0);
-
-    const realAvailableSeats = ride.availableSeats - bookedSeats;
-
-    // Check if the current user has already booked this ride
-    let userBooking = null;
-    if (userId) {
-      userBooking = ride.bookings.find((booking) => booking.userId === userId);
+    // If the user is neither the driver nor has a booking, and the ride is not scheduled
+    if (
+      dbUser.role !== "driver" &&
+      ride.driverId !== user.id &&
+      ride.bookings.length === 0 &&
+      !ride.isScheduled
+    ) {
+      return NextResponse.json(
+        { message: "You don't have access to this ride" },
+        { status: 403 }
+      );
     }
 
-    // Return formatted response without sensitive data
-    const response = {
-      id: ride.id,
-      fromLocation: ride.fromLocation,
-      toLocation: ride.toLocation,
-      fromLat: ride.fromLat,
-      fromLng: ride.fromLng,
-      toLat: ride.toLat,
-      toLng: ride.toLng,
-      departureDate: ride.departureDate,
-      departureTime: ride.departureTime,
-      price: ride.price,
-      availableSeats: realAvailableSeats,
-      description: ride.description,
-      status: ride.status,
-      createdAt: ride.createdAt,
-      driver: {
-        id: ride.driver.id,
-        firstName: ride.driver.firstName,
-        lastName: ride.driver.lastName,
-        driverRating: ride.driver.driverRating,
-        ridesCompleted: ride.driver.ridesCompleted,
-      },
-      userHasBooked: userBooking !== null,
-      userBookingId: userBooking?.id || null,
-      userBookingStatus: userBooking?.status || null,
+    // Format dates to ISO strings for consistent client-side handling
+    const formattedRide = {
+      ...ride,
+      departureDate: ride.departureDate.toISOString(),
+      bookings: ride.bookings.map((booking: any) => ({
+        ...booking,
+        createdAt: booking.createdAt ? booking.createdAt.toISOString() : null,
+      })),
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(formattedRide);
   } catch (error) {
     console.error("Error fetching ride details:", error);
     return NextResponse.json(
-      { message: "Error fetching ride details" },
+      { message: "Failed to fetch ride details" },
       { status: 500 }
     );
   }
@@ -114,7 +129,6 @@ export async function PATCH(
       select: {
         id: true,
         driverId: true,
-        status: true,
         departureDate: true,
       },
     });
@@ -125,14 +139,21 @@ export async function PATCH(
 
     // Only the driver can update their own ride
     if (ride.driverId !== userId) {
-      return NextResponse.json(
-        { message: "You don't have permission to update this ride" },
-        { status: 403 }
-      );
+      return NextResponse.json({
+        message: "You don't have permission to update this ride",
+      });
     }
 
     // Parse the update data from the request
     const updateData = await req.json();
+
+    // Format date if provided
+    if (
+      updateData.departureDate &&
+      typeof updateData.departureDate === "string"
+    ) {
+      updateData.departureDate = new Date(updateData.departureDate);
+    }
 
     // Update the ride
     const updatedRide = await prisma.ride.update({
@@ -144,15 +165,10 @@ export async function PATCH(
         id: true,
         fromLocation: true,
         toLocation: true,
-        fromLat: true,
-        fromLng: true,
-        toLat: true,
-        toLng: true,
         departureDate: true,
         departureTime: true,
         price: true,
         availableSeats: true,
-        status: true,
         description: true,
         createdAt: true,
         driver: {
@@ -171,7 +187,14 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json(updatedRide);
+    // Format the date for consistent client-side handling
+    const formattedRide = {
+      ...updatedRide,
+      departureDate: updatedRide.departureDate.toISOString(),
+      createdAt: updatedRide.createdAt.toISOString(),
+    };
+
+    return NextResponse.json(formattedRide);
   } catch (error) {
     console.error("Error updating ride:", error);
     return NextResponse.json(

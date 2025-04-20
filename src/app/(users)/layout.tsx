@@ -18,6 +18,9 @@ export default async function UsersLayout({
   if (user && user.publicMetadata.role === "driver") {
     redirect("/drivers");
   }
+  if (user && user.publicMetadata.role === "admin") {
+    redirect("/admin");
+  }
 
   const navItems = [
     {
@@ -43,20 +46,20 @@ export default async function UsersLayout({
   ];
 
   return (
-    <div className='min-h-screen flex flex-col w-full max-w-md mx-auto bg-gray-50'>
-      <main className='flex-1 pb-16'>{children}</main>
+    <div className="min-h-screen flex flex-col w-full max-w-md mx-auto bg-gray-50">
+      <main className="flex-1 pb-16">{children}</main>
 
       {/* Bottom Navbar */}
-      <div className='mx-auto w-full max-w-md fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white shadow-md'>
-        <nav className='flex justify-between items-center h-16'>
+      <div className="mx-auto w-full max-w-md fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white shadow-md">
+        <nav className="flex justify-between items-center h-16">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className='flex flex-col items-center justify-center flex-1 pt-2 pb-1 text-xs text-gray-600 hover:text-blue-600'
+              className="flex flex-col items-center justify-center flex-1 pt-2 pb-1 text-xs text-gray-600 hover:text-blue-600"
               prefetch={false}
             >
-              <item.icon size={22} className='mb-1' />
+              <item.icon size={22} className="mb-1" />
               <span>{item.label}</span>
             </Link>
           ))}

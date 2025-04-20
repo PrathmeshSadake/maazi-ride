@@ -20,12 +20,12 @@ import {
   DestinationProvider,
   DestinationContext,
 } from "@/context/destination-context";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
   DollarSign,
@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 
 const ScheduleRideForm = () => {
   const router = useRouter();
@@ -49,6 +50,7 @@ const ScheduleRideForm = () => {
   const [seats, setSeats] = useState("4");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isScheduled, setIsScheduled] = useState(false);
 
   const { source, setSource } = useContext(SourceContext);
   const { destination, setDestination } = useContext(DestinationContext);
@@ -96,11 +98,16 @@ const ScheduleRideForm = () => {
           price: parseFloat(price),
           availableSeats: parseInt(seats),
           description,
+          isScheduled,
         }),
       });
 
       if (response.ok) {
-        toast.success("Ride scheduled successfully!");
+        toast.success(
+          isScheduled
+            ? "Ride scheduled successfully!"
+            : "Ride created successfully!"
+        );
         router.push("/drivers/trips");
       } else {
         const error = await response.json();
@@ -115,44 +122,45 @@ const ScheduleRideForm = () => {
   };
 
   return (
-    <div className='container mx-auto px-4 py-8'>
-      <h1 className='text-3xl font-bold mb-8'>Schedule a Ride</h1>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Schedule a Ride</h1>
 
       <form onSubmit={handleSubmit}>
-        <div className='grid grid-cols-1 gap-6'>
-          <div className='space-y-6'>
+        <div className="grid grid-cols-1 gap-6">
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Route Details</CardTitle>
               </CardHeader>
-              <CardContent className='space-y-4'>
-                <div className='space-y-4'>
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
                   <div>
-                    <Label htmlFor='fromLocation'>Pickup Location</Label>
-                    <div id='fromLocation'>
-                      <Select 
+                    <Label htmlFor="fromLocation">Pickup Location</Label>
+                    <div id="fromLocation">
+                      <Select
                         onValueChange={(value) => {
                           const locationData = { name: value };
-                          const element = document.getElementById("fromLocation");
+                          const element =
+                            document.getElementById("fromLocation");
                           if (element) {
                             element.setAttribute("data-location", value);
                           }
                           setSource(locationData);
-                        }} 
+                        }}
                         value={source?.name || undefined}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Enter pickup location" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem 
-                            value="Paithan" 
+                          <SelectItem
+                            value="Paithan"
                             disabled={destination?.name === "Paithan"}
                           >
                             Paithan
                           </SelectItem>
-                          <SelectItem 
-                            value="Pune" 
+                          <SelectItem
+                            value="Pune"
                             disabled={destination?.name === "Pune"}
                           >
                             Pune
@@ -163,9 +171,9 @@ const ScheduleRideForm = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor='toLocation'>Dropoff Location</Label>
-                    <div id='toLocation'>
-                      <Select 
+                    <Label htmlFor="toLocation">Dropoff Location</Label>
+                    <div id="toLocation">
+                      <Select
                         onValueChange={(value) => {
                           const locationData = { name: value };
                           const element = document.getElementById("toLocation");
@@ -173,21 +181,21 @@ const ScheduleRideForm = () => {
                             element.setAttribute("data-location", value);
                           }
                           setDestination(locationData);
-                        }} 
+                        }}
                         value={destination?.name || undefined}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Enter dropoff location" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem 
-                            value="Paithan" 
+                          <SelectItem
+                            value="Paithan"
                             disabled={source?.name === "Paithan"}
                           >
                             Paithan
                           </SelectItem>
-                          <SelectItem 
-                            value="Pune" 
+                          <SelectItem
+                            value="Pune"
                             disabled={source?.name === "Pune"}
                           >
                             Pune
@@ -204,24 +212,24 @@ const ScheduleRideForm = () => {
               <CardHeader>
                 <CardTitle>Schedule & Pricing</CardTitle>
               </CardHeader>
-              <CardContent className='space-y-4'>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  <div className='space-y-2'>
-                    <Label htmlFor='date'>Departure Date</Label>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="date">Departure Date</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
-                          variant='outline'
-                          className='w-full justify-start text-left font-normal'
-                          id='date'
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal"
+                          id="date"
                         >
-                          <CalendarIcon className='mr-2 h-4 w-4' />
+                          <CalendarIcon className="mr-2 h-4 w-4" />
                           {date ? format(date, "PPP") : "Select date"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className='w-auto p-0'>
+                      <PopoverContent className="w-auto p-0">
                         <Calendar
-                          mode='single'
+                          mode="single"
                           selected={date}
                           onSelect={setDate}
                           initialFocus
@@ -231,121 +239,92 @@ const ScheduleRideForm = () => {
                     </Popover>
                   </div>
 
-                  <div className='space-y-2'>
-                    <Label htmlFor='time'>Departure Time</Label>
-                    <div id='time'>
+                  <div className="space-y-2">
+                    <Label htmlFor="time">Departure Time</Label>
+                    <div id="time">
                       <TimePicker value={time} onChange={setTime} />
                     </div>
                   </div>
 
-                  <div className='space-y-2'>
-                    <Label htmlFor='price'>Price (INR)</Label>
-                    <div className='relative'>
-                      <IndianRupee className='absolute left-3 top-3 h-4 w-4 text-gray-500' />
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Price (INR)</Label>
+                    <div className="relative">
+                      <IndianRupee className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                       <Input
-                        id='price'
-                        placeholder='0.00'
+                        id="price"
+                        placeholder="0.00"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
-                        type='number'
-                        step='0.01'
-                        min='0'
-                        className='pl-10'
+                        type="number"
+                        className="pl-10"
+                        min="0"
+                        step="0.01"
                         required
                       />
                     </div>
                   </div>
 
-                  <div className='space-y-2'>
-                    <Label htmlFor='seats'>Available Seats</Label>
-                    <div className='relative'>
-                      <Users className='absolute left-3 top-3 h-4 w-4 text-gray-500' />
+                  <div className="space-y-2">
+                    <Label htmlFor="seats">Available Seats</Label>
+                    <div className="relative">
+                      <Users className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                       <Input
-                        id='seats'
-                        placeholder='4'
+                        id="seats"
+                        placeholder="1"
                         value={seats}
                         onChange={(e) => setSeats(e.target.value)}
-                        type='number'
-                        min='1'
-                        max='10'
-                        className='pl-10'
+                        type="number"
+                        className="pl-10"
+                        min="1"
+                        max="10"
                         required
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className='space-y-2'>
-                  <Label htmlFor='description'>Additional Information</Label>
+                <div className="space-y-2 mt-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="isScheduled">Schedule for booking</Label>
+                    <Switch
+                      id="isScheduled"
+                      checked={isScheduled}
+                      onCheckedChange={setIsScheduled}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    When enabled, users can request to book this ride and you'll
+                    need to approve each request.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description (Optional)</Label>
                   <Textarea
-                    id='description'
-                    placeholder='Add any details about the ride, vehicle, etc.'
+                    id="description"
+                    placeholder="Add any additional details about your ride..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    rows={4}
+                    className="min-h-[100px]"
                   />
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <div>
-            <Card className='sticky top-6'>
-              <CardHeader>
-                <CardTitle>Ride Summary</CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-4'>
-                <div className='space-y-1'>
-                  <p className='text-sm font-medium'>Date & Time</p>
-                  <p className='text-lg'>
-                    {date ? format(date, "PPP") : "Not selected"} at {time}
-                  </p>
-                </div>
-
-                <div className='space-y-1'>
-                  <p className='text-sm font-medium'>Price</p>
-                  <p className='text-lg font-semibold'>INR {price || "0.00"}</p>
-                </div>
-
-                <div className='space-y-1'>
-                  <p className='text-sm font-medium'>Available Seats</p>
-                  <p className='text-lg'>{seats}</p>
-                </div>
-
-                {source && (
-                  <div className='space-y-1'>
-                    <p className='text-sm font-medium'>From</p>
-                    <p className='text-lg'>{source.name}</p>
-                  </div>
-                )}
-
-                {destination && (
-                  <div className='space-y-1'>
-                    <p className='text-sm font-medium'>To</p>
-                    <p className='text-lg'>{destination.name}</p>
-                  </div>
-                )}
-              </CardContent>
-              <CardFooter className='flex-col gap-4'>
-                <Button
-                  className='w-full'
-                  size='lg'
-                  disabled={isSubmitting}
-                  type='submit'
-                >
-                  {isSubmitting ? "Scheduling..." : "Schedule Ride"}
-                </Button>
-                <Button
-                  variant='outline'
-                  className='w-full'
-                  type='button'
-                  onClick={() => router.back()}
-                >
-                  Cancel
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
+          <CardFooter className="flex justify-end space-x-4 pt-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/drivers/trips")}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Scheduling..." : "Schedule Ride"}
+            </Button>
+          </CardFooter>
         </div>
       </form>
     </div>

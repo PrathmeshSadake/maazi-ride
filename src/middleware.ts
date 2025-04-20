@@ -84,7 +84,7 @@ export default clerkMiddleware(async (auth, req) => {
       // Regular user
       // If user is trying to access admin or driver routes
       if (
-        req.nextUrl.pathname.startsWith("/admin") ||
+        // req.nextUrl.pathname.startsWith("/admin") ||
         req.nextUrl.pathname.startsWith("/drivers")
       ) {
         const homeUrl = new URL("/", req.url);

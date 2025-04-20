@@ -31,6 +31,7 @@ export default function MessagesPage() {
   const [messageText, setMessageText] = useState("");
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const sseRef = useRef<EventSource | null>(null);
 
   // Get driver and ride info from query params
   const driverName = searchParams.get("driver");
@@ -43,9 +44,43 @@ export default function MessagesPage() {
         router.push("/sign-in");
       } else {
         fetchMessages();
+        setupSSE();
       }
     }
+
+    return () => {
+      // Clean up SSE connection when component unmounts
+      if (sseRef.current) {
+        sseRef.current.close();
+      }
+    };
   }, [isLoaded, user, router, bookingId]);
+
+  const setupSSE = () => {
+    if (!user || sseRef.current) return;
+
+    const eventSource = new EventSource("/api/messages/sse");
+
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      if (data.event === "newMessage") {
+        if (bookingId && data.message.bookingId === bookingId) {
+          // Add the new message to the list if it belongs to this booking
+          setMessages((prev) => [...prev, data.message]);
+        }
+      }
+    };
+
+    eventSource.onerror = () => {
+      // Close and retry connection after 5 seconds
+      eventSource.close();
+      sseRef.current = null;
+      setTimeout(setupSSE, 5000);
+    };
+
+    sseRef.current = eventSource;
+  };
 
   const fetchMessages = async () => {
     if (!bookingId) return;
@@ -134,24 +169,24 @@ export default function MessagesPage() {
       : [];
 
   return (
-    <div className='flex flex-col h-screen max-w-md mx-auto'>
+    <div className="flex flex-col h-screen max-w-md mx-auto">
       {/* Header */}
-      <div className='flex items-center p-4 border-b'>
+      <div className="flex items-center p-4 border-b">
         <button
           onClick={goBack}
-          className='p-2 rounded-full hover:bg-gray-100 mr-2'
+          className="p-2 rounded-full hover:bg-gray-100 mr-2"
         >
           <ArrowLeft size={20} />
         </button>
 
-        <div className='flex items-center'>
-          <div className='w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 mr-3'>
+        <div className="flex items-center">
+          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 mr-3">
             <User size={18} />
           </div>
           <div>
-            <h1 className='font-medium'>{driverName || "Driver"}</h1>
+            <h1 className="font-medium">{driverName || "Driver"}</h1>
             {rideId && (
-              <p className='text-xs text-gray-500'>
+              <p className="text-xs text-gray-500">
                 Ride #{rideId.slice(0, 8)}
               </p>
             )}
@@ -160,13 +195,13 @@ export default function MessagesPage() {
       </div>
 
       {/* Messages */}
-      <div className='flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50'>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
         {loading ? (
-          <div className='flex justify-center py-10'>
-            <div className='w-8 h-8 border-2 border-t-blue-600 border-r-transparent border-b-blue-600 border-l-transparent rounded-full animate-spin'></div>
+          <div className="flex justify-center py-10">
+            <div className="w-8 h-8 border-2 border-t-blue-600 border-r-transparent border-b-blue-600 border-l-transparent rounded-full animate-spin"></div>
           </div>
         ) : displayMessages.length === 0 ? (
-          <div className='text-center py-10 text-gray-500'>
+          <div className="text-center py-10 text-gray-500">
             No messages yet. Start the conversation!
           </div>
         ) : (
@@ -187,7 +222,7 @@ export default function MessagesPage() {
                       : "bg-white border border-gray-200"
                   }`}
                 >
-                  <div className='text-sm'>{message.content}</div>
+                  <div className="text-sm">{message.content}</div>
                   <div
                     className={`text-xs mt-1 ${
                       isCurrentUser ? "text-blue-200" : "text-gray-500"
@@ -204,14 +239,14 @@ export default function MessagesPage() {
       </div>
 
       {/* Message Input */}
-      <div className='border-t p-3 bg-white'>
-        <div className='flex items-center'>
+      <div className="border-t p-3 bg-white">
+        <div className="flex items-center">
           <input
-            type='text'
+            type="text"
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
-            placeholder='Type a message...'
-            className='flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500'
+            placeholder="Type a message..."
+            className="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();

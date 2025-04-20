@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar, X } from "lucide-react";
 import { format } from "date-fns";
 import { DayPicker } from "react-day-picker";
@@ -14,7 +14,18 @@ const DatePicker = ({ onDateSelect, initialDate }: DatePickerProps) => {
   const [date, setDate] = useState<Date | undefined>(initialDate);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
+  // Set default date to today if initialDate is not provided
+  useEffect(() => {
+    if (!initialDate && !date) {
+      const today = new Date();
+      setDate(today);
+      onDateSelect(today);
+      console.log("DatePicker - Setting default date to today:", today);
+    }
+  }, [initialDate, date, onDateSelect]);
+
   const handleSelect = (selectedDate: Date | undefined) => {
+    console.log("DatePicker - Date selected:", selectedDate);
     setDate(selectedDate);
     onDateSelect(selectedDate);
     setIsCalendarOpen(false);
@@ -23,14 +34,15 @@ const DatePicker = ({ onDateSelect, initialDate }: DatePickerProps) => {
   const clearDate = () => {
     setDate(undefined);
     onDateSelect(undefined);
+    console.log("DatePicker - Date cleared");
   };
 
   return (
-    <div className='relative'>
-      <div className='flex items-center space-x-2 bg-gray-100 py-2 px-4 rounded-lg shadow-sm'>
-        <Calendar className='h-5 w-5 text-gray-500' />
+    <div className="relative">
+      <div className="flex items-center space-x-2 bg-gray-100 py-2 px-4 rounded-lg shadow-sm">
+        <Calendar className="h-5 w-5 text-gray-500" />
         <div
-          className='flex-1 outline-none cursor-pointer text-sm'
+          className="flex-1 outline-none cursor-pointer text-sm"
           onClick={() => setIsCalendarOpen(!isCalendarOpen)}
         >
           {date ? format(date, "dd MMM yyyy") : "Select date"}
@@ -41,7 +53,7 @@ const DatePicker = ({ onDateSelect, initialDate }: DatePickerProps) => {
               e.stopPropagation();
               clearDate();
             }}
-            className='text-gray-400 hover:text-gray-600'
+            className="text-gray-400 hover:text-gray-600"
           >
             <X size={14} />
           </button>
@@ -49,9 +61,9 @@ const DatePicker = ({ onDateSelect, initialDate }: DatePickerProps) => {
       </div>
 
       {isCalendarOpen && (
-        <div className='absolute z-50 mt-1 bg-white rounded-lg shadow-lg p-2 border border-gray-200'>
+        <div className="absolute z-50 mt-1 bg-white rounded-lg shadow-lg p-2 border border-gray-200">
           <DayPicker
-            mode='single'
+            mode="single"
             selected={date}
             onSelect={handleSelect}
             styles={{

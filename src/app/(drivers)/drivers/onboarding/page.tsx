@@ -14,7 +14,7 @@ import {
 import Link from "next/link";
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import axios from "axios";
 // Types
 interface VehicleData {
@@ -282,23 +282,23 @@ export default function DriverOnboarding() {
                 must be clear and legible.
               </CardDescription>
             </CardHeader>
-            <CardContent className='space-y-4'>
-              <div className='border rounded-lg p-4'>
-                <h3 className='font-medium mb-2'>Driver's License</h3>
-                <p className='text-sm text-gray-500 mb-4'>
+            <CardContent className="space-y-4">
+              <div className="border rounded-lg p-4">
+                <h3 className="font-medium mb-2">Driver's License</h3>
+                <p className="text-sm text-gray-500 mb-4">
                   Upload a photo of your valid driver's license (front and back)
                 </p>
                 {formData.drivingLicenseUrl ? (
-                  <div className='flex flex-col space-y-2'>
-                    <div className='text-green-600 flex items-center'>
-                      <span className='mr-2'>✓</span>
-                      <span className='text-sm truncate'>
+                  <div className="flex flex-col space-y-2">
+                    <div className="text-green-600 flex items-center">
+                      <span className="mr-2">✓</span>
+                      <span className="text-sm truncate">
                         {fileNames.drivingLicense || "File uploaded"}
                       </span>
                     </div>
                     <Button
-                      variant='outline'
-                      size='sm'
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         const element =
                           document.getElementById("drivingLicense");
@@ -309,37 +309,37 @@ export default function DriverOnboarding() {
                     </Button>
                   </div>
                 ) : (
-                  <div className='flex flex-col space-y-2'>
+                  <div className="flex flex-col space-y-2">
                     <Button
-                      variant='outline'
+                      variant="outline"
                       onClick={() => {
                         const element =
                           document.getElementById("drivingLicense");
                         if (element) element.click();
                       }}
                       disabled={uploading.drivingLicense}
-                      className='relative'
+                      className="relative"
                     >
                       {uploading.drivingLicense ? (
-                        <div className='flex items-center'>
+                        <div className="flex items-center">
                           <svg
-                            className='animate-spin -ml-1 mr-2 h-4 w-4 text-white'
-                            xmlns='http://www.w3.org/2000/svg'
-                            fill='none'
-                            viewBox='0 0 24 24'
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
                           >
                             <circle
-                              className='opacity-25'
-                              cx='12'
-                              cy='12'
-                              r='10'
-                              stroke='currentColor'
-                              strokeWidth='4'
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
                             ></circle>
                             <path
-                              className='opacity-75'
-                              fill='currentColor'
-                              d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             ></path>
                           </svg>
                           Uploading...
@@ -349,37 +349,37 @@ export default function DriverOnboarding() {
                       )}
                     </Button>
                     {files.drivingLicense && uploading.drivingLicense && (
-                      <p className='text-sm text-gray-500 truncate'>
+                      <p className="text-sm text-gray-500 truncate">
                         {fileNames.drivingLicense}
                       </p>
                     )}
                   </div>
                 )}
                 <input
-                  id='drivingLicense'
-                  type='file'
-                  accept='image/*,application/pdf'
-                  className='hidden'
+                  id="drivingLicense"
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="hidden"
                   onChange={(e) => handleFileChange(e, "drivingLicense")}
                 />
               </div>
 
-              <div className='border rounded-lg p-4'>
-                <h3 className='font-medium mb-2'>Vehicle Registration</h3>
-                <p className='text-sm text-gray-500 mb-4'>
+              <div className="border rounded-lg p-4">
+                <h3 className="font-medium mb-2">Vehicle Registration</h3>
+                <p className="text-sm text-gray-500 mb-4">
                   Upload the vehicle registration document
                 </p>
                 {formData.vehicleRegistrationUrl ? (
-                  <div className='flex flex-col space-y-2'>
-                    <div className='text-green-600 flex items-center'>
-                      <span className='mr-2'>✓</span>
-                      <span className='text-sm truncate'>
+                  <div className="flex flex-col space-y-2">
+                    <div className="text-green-600 flex items-center">
+                      <span className="mr-2">✓</span>
+                      <span className="text-sm truncate">
                         {fileNames.vehicleRegistration || "File uploaded"}
                       </span>
                     </div>
                     <Button
-                      variant='outline'
-                      size='sm'
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         const element = document.getElementById(
                           "vehicleRegistration"
@@ -391,9 +391,9 @@ export default function DriverOnboarding() {
                     </Button>
                   </div>
                 ) : (
-                  <div className='flex flex-col space-y-2'>
+                  <div className="flex flex-col space-y-2">
                     <Button
-                      variant='outline'
+                      variant="outline"
                       onClick={() => {
                         const element = document.getElementById(
                           "vehicleRegistration"
@@ -401,28 +401,28 @@ export default function DriverOnboarding() {
                         if (element) element.click();
                       }}
                       disabled={uploading.vehicleRegistration}
-                      className='relative'
+                      className="relative"
                     >
                       {uploading.vehicleRegistration ? (
-                        <div className='flex items-center'>
+                        <div className="flex items-center">
                           <svg
-                            className='animate-spin -ml-1 mr-2 h-4 w-4 text-white'
-                            xmlns='http://www.w3.org/2000/svg'
-                            fill='none'
-                            viewBox='0 0 24 24'
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
                           >
                             <circle
-                              className='opacity-25'
-                              cx='12'
-                              cy='12'
-                              r='10'
-                              stroke='currentColor'
-                              strokeWidth='4'
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
                             ></circle>
                             <path
-                              className='opacity-75'
-                              fill='currentColor'
-                              d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             ></path>
                           </svg>
                           Uploading...
@@ -433,37 +433,37 @@ export default function DriverOnboarding() {
                     </Button>
                     {files.vehicleRegistration &&
                       uploading.vehicleRegistration && (
-                        <p className='text-sm text-gray-500 truncate'>
+                        <p className="text-sm text-gray-500 truncate">
                           {fileNames.vehicleRegistration}
                         </p>
                       )}
                   </div>
                 )}
                 <input
-                  id='vehicleRegistration'
-                  type='file'
-                  accept='image/*,application/pdf'
-                  className='hidden'
+                  id="vehicleRegistration"
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="hidden"
                   onChange={(e) => handleFileChange(e, "vehicleRegistration")}
                 />
               </div>
 
-              <div className='border rounded-lg p-4'>
-                <h3 className='font-medium mb-2'>Insurance Document</h3>
-                <p className='text-sm text-gray-500 mb-4'>
+              <div className="border rounded-lg p-4">
+                <h3 className="font-medium mb-2">Insurance Document</h3>
+                <p className="text-sm text-gray-500 mb-4">
                   Upload proof of valid insurance coverage
                 </p>
                 {formData.insuranceUrl ? (
-                  <div className='flex flex-col space-y-2'>
-                    <div className='text-green-600 flex items-center'>
-                      <span className='mr-2'>✓</span>
-                      <span className='text-sm truncate'>
+                  <div className="flex flex-col space-y-2">
+                    <div className="text-green-600 flex items-center">
+                      <span className="mr-2">✓</span>
+                      <span className="text-sm truncate">
                         {fileNames.insurance || "File uploaded"}
                       </span>
                     </div>
                     <Button
-                      variant='outline'
-                      size='sm'
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         const element = document.getElementById("insurance");
                         if (element) element.click();
@@ -473,36 +473,36 @@ export default function DriverOnboarding() {
                     </Button>
                   </div>
                 ) : (
-                  <div className='flex flex-col space-y-2'>
+                  <div className="flex flex-col space-y-2">
                     <Button
-                      variant='outline'
+                      variant="outline"
                       onClick={() => {
                         const element = document.getElementById("insurance");
                         if (element) element.click();
                       }}
                       disabled={uploading.insurance}
-                      className='relative'
+                      className="relative"
                     >
                       {uploading.insurance ? (
-                        <div className='flex items-center'>
+                        <div className="flex items-center">
                           <svg
-                            className='animate-spin -ml-1 mr-2 h-4 w-4 text-white'
-                            xmlns='http://www.w3.org/2000/svg'
-                            fill='none'
-                            viewBox='0 0 24 24'
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
                           >
                             <circle
-                              className='opacity-25'
-                              cx='12'
-                              cy='12'
-                              r='10'
-                              stroke='currentColor'
-                              strokeWidth='4'
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
                             ></circle>
                             <path
-                              className='opacity-75'
-                              fill='currentColor'
-                              d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             ></path>
                           </svg>
                           Uploading...
@@ -512,24 +512,24 @@ export default function DriverOnboarding() {
                       )}
                     </Button>
                     {files.insurance && uploading.insurance && (
-                      <p className='text-sm text-gray-500 truncate'>
+                      <p className="text-sm text-gray-500 truncate">
                         {fileNames.insurance}
                       </p>
                     )}
                   </div>
                 )}
                 <input
-                  id='insurance'
-                  type='file'
-                  accept='image/*,application/pdf'
-                  className='hidden'
+                  id="insurance"
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="hidden"
                   onChange={(e) => handleFileChange(e, "insurance")}
                 />
               </div>
             </CardContent>
             <CardFooter>
               <Button
-                variant='default'
+                variant="default"
                 onClick={handleNextStep}
                 disabled={!isDocumentsComplete()}
               >
@@ -548,59 +548,59 @@ export default function DriverOnboarding() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className='space-y-4'>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  <div className='space-y-2'>
-                    <label className='text-sm font-medium'>Make</label>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Make</label>
                     <input
-                      type='text'
-                      name='vehicle.make'
-                      className='w-full p-2 border rounded-md'
-                      placeholder='e.g. Toyota'
+                      type="text"
+                      name="vehicle.make"
+                      className="w-full p-2 border rounded-md"
+                      placeholder="e.g. Toyota"
                       value={formData.vehicle.make}
                       onChange={handleInputChange}
                     />
                   </div>
-                  <div className='space-y-2'>
-                    <label className='text-sm font-medium'>Model</label>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Model</label>
                     <input
-                      type='text'
-                      name='vehicle.model'
-                      className='w-full p-2 border rounded-md'
-                      placeholder='e.g. Camry'
+                      type="text"
+                      name="vehicle.model"
+                      className="w-full p-2 border rounded-md"
+                      placeholder="e.g. Camry"
                       value={formData.vehicle.model}
                       onChange={handleInputChange}
                     />
                   </div>
-                  <div className='space-y-2'>
-                    <label className='text-sm font-medium'>Year</label>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Year</label>
                     <input
-                      type='number'
-                      name='vehicle.year'
-                      className='w-full p-2 border rounded-md'
-                      placeholder='e.g. 2019'
+                      type="number"
+                      name="vehicle.year"
+                      className="w-full p-2 border rounded-md"
+                      placeholder="e.g. 2019"
                       value={formData.vehicle.year}
                       onChange={handleInputChange}
                     />
                   </div>
-                  <div className='space-y-2'>
-                    <label className='text-sm font-medium'>Color</label>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Color</label>
                     <input
-                      type='text'
-                      name='vehicle.color'
-                      className='w-full p-2 border rounded-md'
-                      placeholder='e.g. Silver'
+                      type="text"
+                      name="vehicle.color"
+                      className="w-full p-2 border rounded-md"
+                      placeholder="e.g. Silver"
                       value={formData.vehicle.color}
                       onChange={handleInputChange}
                     />
                   </div>
-                  <div className='space-y-2'>
-                    <label className='text-sm font-medium'>License Plate</label>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">License Plate</label>
                     <input
-                      type='text'
-                      name='vehicle.licensePlate'
-                      className='w-full p-2 border rounded-md'
-                      placeholder='e.g. ABC123'
+                      type="text"
+                      name="vehicle.licensePlate"
+                      className="w-full p-2 border rounded-md"
+                      placeholder="e.g. ABC123"
                       value={formData.vehicle.licensePlate}
                       onChange={handleInputChange}
                     />
@@ -608,12 +608,12 @@ export default function DriverOnboarding() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className='flex justify-between'>
-              <Button variant='outline' onClick={handlePrevStep}>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={handlePrevStep}>
                 Previous Step
               </Button>
               <Button
-                variant='default'
+                variant="default"
                 onClick={handleNextStep}
                 disabled={!isVehicleComplete()}
               >
@@ -628,25 +628,30 @@ export default function DriverOnboarding() {
             <CardHeader>
               <CardTitle>Upload Vehicle Images</CardTitle>
               <CardDescription>
-                Upload images of your vehicle. At least 2 images are required, and you can upload up to 4.
+                Upload images of your vehicle. At least 2 images are required,
+                and you can upload up to 4.
               </CardDescription>
             </CardHeader>
-            <CardContent className='space-y-4'>
-              <div className='border rounded-lg p-4'>
+            <CardContent className="space-y-4">
+              <div className="border rounded-lg p-4">
                 <input
-                  type='file'
-                  accept='image/*'
+                  type="file"
+                  accept="image/*"
                   multiple
                   onChange={handleVehicleImageChange}
-                  className='mb-4'
+                  className="mb-4"
                 />
-                <div className='grid grid-cols-2 gap-4'>
+                <div className="grid grid-cols-2 gap-4">
                   {vehicleImageUrls.map((url, index) => (
-                    <div key={index} className='relative'>
-                      <img src={url} alt={`Vehicle Image ${index + 1}`} className='w-full h-32 object-cover rounded-md' />
+                    <div key={index} className="relative">
+                      <img
+                        src={url}
+                        alt={`Vehicle Image ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-md"
+                      />
                       <button
                         onClick={() => removeVehicleImage(index)}
-                        className='absolute top-0 right-0 bg-red-500 text-white rounded-full p-1'
+                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
                       >
                         &times;
                       </button>
@@ -655,12 +660,12 @@ export default function DriverOnboarding() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className='flex justify-between'>
-              <Button variant='outline' onClick={handlePrevStep}>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={handlePrevStep}>
                 Previous Step
               </Button>
               <Button
-                variant='default'
+                variant="default"
                 onClick={handleNextStep}
                 disabled={vehicleImageUrls.length < 2}
               >
@@ -679,70 +684,75 @@ export default function DriverOnboarding() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className='space-y-6'>
-                <div className='space-y-2'>
-                  <h3 className='font-medium'>Documents</h3>
-                  <div className='grid grid-cols-1 gap-4'>
-                    <div className='border rounded-lg p-4'>
-                      <p className='font-medium'>Driver's License</p>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <h3 className="font-medium">Documents</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="border rounded-lg p-4">
+                      <p className="font-medium">Driver's License</p>
                       {formData.drivingLicenseUrl ? (
-                        <p className='text-green-600'>✓ Uploaded</p>
+                        <p className="text-green-600">✓ Uploaded</p>
                       ) : (
-                        <p className='text-red-600'>Not uploaded</p>
+                        <p className="text-red-600">Not uploaded</p>
                       )}
                     </div>
-                    <div className='border rounded-lg p-4'>
-                      <p className='font-medium'>Vehicle Registration</p>
+                    <div className="border rounded-lg p-4">
+                      <p className="font-medium">Vehicle Registration</p>
                       {formData.vehicleRegistrationUrl ? (
-                        <p className='text-green-600'>✓ Uploaded</p>
+                        <p className="text-green-600">✓ Uploaded</p>
                       ) : (
-                        <p className='text-red-600'>Not uploaded</p>
+                        <p className="text-red-600">Not uploaded</p>
                       )}
                     </div>
-                    <div className='border rounded-lg p-4'>
-                      <p className='font-medium'>Insurance</p>
+                    <div className="border rounded-lg p-4">
+                      <p className="font-medium">Insurance</p>
                       {formData.insuranceUrl ? (
-                        <p className='text-green-600'>✓ Uploaded</p>
+                        <p className="text-green-600">✓ Uploaded</p>
                       ) : (
-                        <p className='text-red-600'>Not uploaded</p>
+                        <p className="text-red-600">Not uploaded</p>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div className='space-y-2'>
-                  <h3 className='font-medium'>Vehicle Information</h3>
-                  <div className='border rounded-lg p-4'>
-                    <div className='grid grid-cols-2 gap-2'>
-                      <p className='text-sm text-gray-500'>Make:</p>
+                <div className="space-y-2">
+                  <h3 className="font-medium">Vehicle Information</h3>
+                  <div className="border rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      <p className="text-sm text-gray-500">Make:</p>
                       <p>{formData.vehicle.make}</p>
 
-                      <p className='text-sm text-gray-500'>Model:</p>
+                      <p className="text-sm text-gray-500">Model:</p>
                       <p>{formData.vehicle.model}</p>
 
-                      <p className='text-sm text-gray-500'>Year:</p>
+                      <p className="text-sm text-gray-500">Year:</p>
                       <p>{formData.vehicle.year}</p>
 
-                      <p className='text-sm text-gray-500'>Color:</p>
+                      <p className="text-sm text-gray-500">Color:</p>
                       <p>{formData.vehicle.color}</p>
 
-                      <p className='text-sm text-gray-500'>License Plate:</p>
+                      <p className="text-sm text-gray-500">License Plate:</p>
                       <p>{formData.vehicle.licensePlate}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className='space-y-2'>
-                  <h3 className='font-medium'>Vehicle Images</h3>
-                  <div className='grid grid-cols-2 gap-4'>
+                <div className="space-y-2">
+                  <h3 className="font-medium">Vehicle Images</h3>
+                  <div className="grid grid-cols-2 gap-4">
                     {vehicleImageUrls.map((url, index) => (
-                      <img key={index} src={url} alt={`Vehicle Image ${index + 1}`} className='w-full h-32 object-cover rounded-md' />
+                      <img
+                        key={index}
+                        src={url}
+                        alt={`Vehicle Image ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-md"
+                      />
                     ))}
                   </div>
                 </div>
 
-                <div className='p-4 border rounded-lg bg-amber-50'>
-                  <p className='text-amber-800'>
+                <div className="p-4 border rounded-lg bg-amber-50">
+                  <p className="text-amber-800">
                     By submitting this information, you confirm that all
                     provided details are accurate. After submission, your
                     application will be reviewed by our team.
@@ -750,12 +760,12 @@ export default function DriverOnboarding() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className='flex justify-between'>
-              <Button variant='outline' onClick={handlePrevStep}>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={handlePrevStep}>
                 Edit Information
               </Button>
               <Button
-                variant='default'
+                variant="default"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
               >
@@ -769,38 +779,40 @@ export default function DriverOnboarding() {
     }
   };
 
+  isVerified && redirect("/drivers");
+
   return (
-    <div className='container mx-auto px-4 py-8'>
-      <div className='max-w-4xl mx-auto'>
-        <h1 className='text-3xl font-bold mb-2'>Driver Onboarding</h1>
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-2">Driver Onboarding</h1>
 
         {isVerified ? (
-          <div className='bg-green-50 border border-green-200 rounded-lg p-6 mb-8'>
-            <h2 className='text-xl font-semibold text-green-800 mb-2'>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
+            <h2 className="text-xl font-semibold text-green-800 mb-2">
               Your account is verified!
             </h2>
-            <p className='text-green-700 mb-4'>
+            <p className="text-green-700 mb-4">
               You can now start offering rides on the platform.
             </p>
-            <Link href='/drivers'>
+            <Link href="/drivers">
               <Button>Go to Driver Dashboard</Button>
             </Link>
           </div>
         ) : (
-          <div className='bg-amber-50 border border-amber-200 rounded-lg p-6 mb-8'>
-            <h2 className='text-xl font-semibold text-amber-800 mb-2'>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 mb-8">
+            <h2 className="text-xl font-semibold text-amber-800 mb-2">
               Your account needs verification
             </h2>
-            <p className='text-amber-700 mb-4'>
+            <p className="text-amber-700 mb-4">
               Complete the steps below to get verified as a driver.
             </p>
           </div>
         )}
 
         {/* Progress Steps */}
-        <div className='mb-8'>
-          <div className='flex items-center justify-between'>
-            <div className='w-full flex items-center'>
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div className="w-full flex items-center">
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center ${
                   step >= 1 ? "bg-blue-500 text-white" : "bg-gray-200"
@@ -834,10 +846,10 @@ export default function DriverOnboarding() {
               </div>
             </div>
           </div>
-          <div className='flex justify-between mt-2 text-sm'>
-            <div className='text-center w-24'>Documents</div>
-            <div className='text-center w-24'>Vehicle</div>
-            <div className='text-center w-24'>Confirm</div>
+          <div className="flex justify-between mt-2 text-sm">
+            <div className="text-center w-24">Documents</div>
+            <div className="text-center w-24">Vehicle</div>
+            <div className="text-center w-24">Confirm</div>
           </div>
         </div>
 

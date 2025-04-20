@@ -15,17 +15,41 @@ export async function PUT(request: NextRequest) {
     const { drivingLicenseUrl, vehicleRegistrationUrl, insuranceUrl, vehicle } =
       data;
 
-    // Update user document URLs
-    const updatedUser = await prisma.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        drivingLicenseUrl,
-        vehicleRegistrationUrl,
-        insuranceUrl,
-      },
+    // Check if user exists in the database
+    const existingUser = await prisma.user.findUnique({
+      where: { id: user.id },
     });
+
+    let updatedUser;
+
+    if (existingUser) {
+      // Update existing user
+      updatedUser = await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          drivingLicenseUrl,
+          vehicleRegistrationUrl,
+          insuranceUrl,
+        },
+      });
+    } else {
+      // Create user if they don't exist in the database
+      updatedUser = await prisma.user.create({
+        data: {
+          id: user.id,
+          email: user.emailAddresses[0]?.emailAddress,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          phoneNumber: user.phoneNumbers[0]?.phoneNumber,
+          role: "driver",
+          drivingLicenseUrl,
+          vehicleRegistrationUrl,
+          insuranceUrl,
+        },
+      });
+    }
 
     // Update or create vehicle information
     let updatedVehicle;

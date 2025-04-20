@@ -24,9 +24,9 @@ export async function GET(
       where: { id: user.id },
     });
 
-    if (!databaseUser || databaseUser.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    // if (!databaseUser || databaseUser.role !== "admin") {
+    //   return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // }
 
     const driver = await prisma.user.findUnique({
       where: {
@@ -66,9 +66,9 @@ export async function PATCH(
       where: { id: user.id },
     });
 
-    if (!databaseUser || databaseUser.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    // if (!databaseUser || databaseUser.role !== "admin") {
+    //   return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // }
 
     const body = await req.json();
     const { verified } = body;

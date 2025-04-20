@@ -14,6 +14,7 @@ import {
   CircleDollarSign,
   MapPin,
   Calendar,
+  IndianRupee,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -60,44 +61,41 @@ export default function TripsPage() {
     switch (status) {
       case "PENDING_APPROVAL":
         return (
-          <Badge variant='outline' className='bg-yellow-50 text-yellow-700'>
+          <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
             Pending Approval
           </Badge>
         );
       case "APPROVED":
         return (
-          <Badge variant='outline' className='bg-green-50 text-green-700'>
+          <Badge variant="outline" className="bg-green-50 text-green-700">
             Approved
           </Badge>
         );
       case "REJECTED":
         return (
-          <Badge variant='outline' className='bg-red-50 text-red-700'>
+          <Badge variant="outline" className="bg-red-50 text-red-700">
             Rejected
           </Badge>
         );
       case "COMPLETED":
         return (
-          <Badge variant='outline' className='bg-blue-50 text-blue-700'>
+          <Badge variant="outline" className="bg-blue-50 text-blue-700">
             Completed
           </Badge>
         );
       case "CANCELLED":
         return (
-          <Badge variant='outline' className='bg-gray-50 text-gray-700'>
+          <Badge variant="outline" className="bg-gray-50 text-gray-700">
             Cancelled
           </Badge>
         );
       default:
-        return <Badge variant='outline'>{status}</Badge>;
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
   // Filter rides by status
 
-  const approvedRides = rides.filter(
-    (ride) => ride.status === "APPROVED" || ride.status === "PENDING_APPROVAL"
-  );
   const completedRides = rides.filter((ride) =>
     ["COMPLETED", "CANCELLED"].includes(ride.status)
   );
@@ -111,34 +109,32 @@ export default function TripsPage() {
   };
 
   return (
-    <div className='container mx-auto px-4 py-8'>
-      <div className='flex justify-between items-center mb-8'>
-        <h1 className='text-3xl font-bold'>My Scheduled Rides</h1>
-        <Link href='/drivers/trips/new'>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">My Scheduled Rides</h1>
+        <Link href="/drivers/trips/new">
           <Button>
-            <CalendarPlus className='mr-2 h-4 w-4' />
+            <CalendarPlus className="mr-2 h-4 w-4" />
             Schedule New Ride
           </Button>
         </Link>
       </div>
 
-      <Tabs defaultValue='upcoming' className='w-full'>
-        <TabsList className='mb-6'>
-          <TabsTrigger value='upcoming'>
-            Upcoming ({approvedRides.length})
-          </TabsTrigger>
+      <Tabs defaultValue="upcoming" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="upcoming">Upcoming ({rides.length})</TabsTrigger>
 
-          <TabsTrigger value='completed'>
+          <TabsTrigger value="completed">
             Completed ({completedRides.length})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value='upcoming'>
+        <TabsContent value="upcoming">
           {isLoading ? (
-            <div className='text-center py-10'>Loading rides...</div>
-          ) : approvedRides.length > 0 ? (
-            <div className='grid grid-cols-1 gap-6'>
-              {approvedRides.map((ride) => (
+            <div className="text-center py-10">Loading rides...</div>
+          ) : rides.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6">
+              {rides.map((ride) => (
                 <RideCard
                   key={ride.id}
                   ride={ride}
@@ -147,22 +143,22 @@ export default function TripsPage() {
               ))}
             </div>
           ) : (
-            <div className='text-center py-10'>
-              <p className='text-gray-500 mb-4'>
+            <div className="text-center py-10">
+              <p className="text-gray-500 mb-4">
                 You don't have any upcoming rides
               </p>
-              <Link href='/drivers/trips/new'>
+              <Link href="/drivers/trips/new">
                 <Button>Schedule a ride</Button>
               </Link>
             </div>
           )}
         </TabsContent>
 
-        <TabsContent value='completed'>
+        <TabsContent value="completed">
           {isLoading ? (
-            <div className='text-center py-10'>Loading rides...</div>
+            <div className="text-center py-10">Loading rides...</div>
           ) : completedRides.length > 0 ? (
-            <div className='grid grid-cols-1 gap-6'>
+            <div className="grid grid-cols-1 gap-6">
               {completedRides.map((ride) => (
                 <RideCard
                   key={ride.id}
@@ -172,8 +168,8 @@ export default function TripsPage() {
               ))}
             </div>
           ) : (
-            <div className='text-center py-10'>
-              <p className='text-gray-500'>No completed rides</p>
+            <div className="text-center py-10">
+              <p className="text-gray-500">No completed rides</p>
             </div>
           )}
         </TabsContent>
@@ -184,49 +180,49 @@ export default function TripsPage() {
 
 function RideCard({ ride, status }: { ride: Ride; status: React.ReactNode }) {
   return (
-    <Card className='h-full'>
-      <CardHeader className='pb-2'>
-        <div className='flex justify-between items-start'>
-          <CardTitle className='text-xl'>
+    <Card className="h-full">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-xl">
             {ride.fromLocation.split(",")[0]} to {ride.toLocation.split(",")[0]}
           </CardTitle>
           {status}
         </div>
       </CardHeader>
-      <CardContent className='space-y-4'>
-        <div className='flex gap-4'>
-          <div className='flex items-center gap-2 text-gray-600'>
-            <Calendar className='h-4 w-4' />
+      <CardContent className="space-y-4">
+        <div className="flex gap-4">
+          <div className="flex items-center gap-2 text-gray-600">
+            <Calendar className="h-4 w-4" />
             <span>{formatDate(ride.departureDate)}</span>
           </div>
-          <div className='flex items-center gap-2 text-gray-600'>
-            <Clock className='h-4 w-4' />
+          <div className="flex items-center gap-2 text-gray-600">
+            <Clock className="h-4 w-4" />
             <span>{ride.departureTime}</span>
           </div>
         </div>
 
-        <div className='flex items-center gap-2 text-gray-600'>
-          <MapPin className='h-4 w-4 text-gray-500' />
-          <div className='text-sm'>
-            <p className='truncate'>{ride.fromLocation}</p>
-            <p className='truncate'>{ride.toLocation}</p>
+        <div className="flex items-center gap-2 text-gray-600">
+          <MapPin className="h-4 w-4 text-gray-500" />
+          <div className="text-sm">
+            <p className="truncate">{ride.fromLocation}</p>
+            <p className="truncate">{ride.toLocation}</p>
           </div>
         </div>
 
-        <div className='flex justify-between pt-2'>
-          <div className='flex items-center gap-2'>
-            <CircleDollarSign className='h-4 w-4 text-gray-500' />
-            <span className='font-semibold'>${ride.price.toFixed(2)}</span>
+        <div className="flex justify-between pt-2">
+          <div className="flex items-center gap-2">
+            <IndianRupee className="h-4 w-4 text-gray-500" />
+            <span className="font-semibold">${ride.price.toFixed(2)}</span>
           </div>
-          <div className='flex items-center gap-2'>
-            <Car className='h-4 w-4 text-gray-500' />
+          <div className="flex items-center gap-2">
+            <Car className="h-4 w-4 text-gray-500" />
             <span>{ride.availableSeats} seats</span>
           </div>
         </div>
 
-        <div className='pt-2'>
+        <div className="pt-2">
           <Link href={`/drivers/trips/${ride.id}`}>
-            <Button variant='outline' className='w-full'>
+            <Button variant="outline" className="w-full">
               View Details
             </Button>
           </Link>

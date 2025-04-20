@@ -16,9 +16,9 @@ export async function GET() {
       where: { id: user.id },
     });
 
-    if (!databaseUser || databaseUser.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    // if (!databaseUser || databaseUser.role !== "admin") {
+    //   return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // }
 
     const drivers = await prisma.user.findMany({
       where: {
