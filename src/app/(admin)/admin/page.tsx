@@ -1,4 +1,4 @@
-import { ChartAreaInteractive } from "@/components/chart-area-interactive";
+// import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { DataTable } from "@/components/data-table";
 import { SectionCards } from "@/components/section-cards";
 import { BookingStatusPieChart } from "@/components/booking-status-pie-chart";
@@ -23,11 +23,11 @@ const AdminDashboard = () => {
               </TabsList>
 
               <TabsContent value="bookings" className="mt-0">
-                <ChartAreaInteractive />
+                {/* <ChartAreaInteractive /> */}
               </TabsContent>
 
               <TabsContent value="users" className="mt-0">
-                <ChartAreaInteractive chartType="users" />
+                {/* <ChartAreaInteractive chartType="users" /> */}
               </TabsContent>
 
               <TabsContent value="status" className="mt-0">

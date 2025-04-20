@@ -84,9 +84,10 @@ export function BookingStatusPieChart() {
                     `${name}: ${(percent * 100).toFixed(0)}%`
                   }
                 >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
+                  {chartData &&
+                    chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
                 </Pie>
                 <Tooltip
                   formatter={(value: number) => [`${value} bookings`, "Count"]}
