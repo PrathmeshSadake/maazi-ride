@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, JSX } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Clock, X, Calendar, MapPin, MessageSquare } from "lucide-react";
 import { format } from "date-fns";

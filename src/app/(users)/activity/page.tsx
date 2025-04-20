@@ -143,7 +143,7 @@ export default function ActivityPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredBookings.map((booking) => (
+          {filteredBookings.map((booking: any) => (
             <div
               key={booking.id}
               className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 hover:shadow-md transition-shadow"
