@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 const clients = new Map<string, ReadableStreamController<Uint8Array>>();
 
 // Function to send message to a specific user
-export function sendMessageToUser(userId: string, data: any) {
+function sendMessageToUser(userId: string, data: any) {
   const controller = clients.get(userId);
   if (controller) {
     controller.enqueue(
