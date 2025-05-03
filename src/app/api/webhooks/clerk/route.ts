@@ -149,8 +149,12 @@ export async function POST(req: Request) {
       );
     }
 
+    const userByEmail = await prisma.user.findUnique({
+      where: { email: email_addresses?.[0]?.email_address },
+    });
+
     // Handle metadata updates properly
-    let role = public_metadata.role ? public_metadata.role : "user";
+    let role = userByEmail?.role || ("user" as string);
     let isVerified = true;
 
     if (unsafe_metadata && typeof unsafe_metadata === "object") {
