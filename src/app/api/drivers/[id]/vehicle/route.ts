@@ -7,10 +7,11 @@ const prisma = new PrismaClient();
 // GET handler - Fetch vehicle info by driver ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
+    const { id } = await params;
 
     // Check if the user is authenticated
     if (!userId) {
@@ -18,7 +19,7 @@ export async function GET(
     }
 
     // Check if the user is accessing their own vehicle info or is an admin
-    if (userId !== params.id) {
+    if (userId !== id) {
       // Add admin check logic here if needed
       return NextResponse.json(
         {
@@ -30,7 +31,7 @@ export async function GET(
 
     // Fetch the vehicle info
     const vehicle = await prisma.vehicle.findUnique({
-      where: { userId: params.id },
+      where: { userId: id },
     });
 
     if (!vehicle) {
