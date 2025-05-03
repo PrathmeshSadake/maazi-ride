@@ -22,6 +22,8 @@ export default async function UsersLayout({
     redirect("/admin");
   }
 
+  console.log("User is a user", user.publicMetadata.role);
+
   const navItems = [
     {
       label: "Home",

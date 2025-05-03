@@ -79,11 +79,11 @@ export default async function DriverDashboard() {
               </div>
               <div className="bg-purple-50 p-4 rounded-md text-center">
                 <p className="text-sm text-purple-700">Total Earnings</p>
-                <p className="text-2xl font-bold text-purple-800">$0.00</p>
+                <p className="text-2xl font-bold text-purple-800">₹0.00</p>
               </div>
               <div className="bg-amber-50 p-4 rounded-md text-center">
                 <p className="text-sm text-amber-700">This Month</p>
-                <p className="text-2xl font-bold text-amber-800">$0.00</p>
+                <p className="text-2xl font-bold text-amber-800">₹0.00</p>
               </div>
             </div>
           </div>

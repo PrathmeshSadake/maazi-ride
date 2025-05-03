@@ -55,6 +55,7 @@ export default async function DriversLayout({
   }
 
   if (user && user.publicMetadata.role !== "driver") {
+    console.log("User is not a driver");
     redirect("/");
   }
 
