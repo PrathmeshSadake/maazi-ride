@@ -205,9 +205,18 @@ export async function POST(req: Request) {
           `User ${id} updated successfully in the database with role: ${role}, isVerified: ${isVerified}`
         );
       } else {
-        // Create the user if they don't exist (this can happen if the webhook fails on creation)
-        await prisma.user.create({
-          data: {
+        // Create the user if they don't exist, using upsert to handle potential conflicts
+        await prisma.user.upsert({
+          where: { id },
+          update: {
+            email,
+            phoneNumber,
+            firstName: first_name || null,
+            lastName: last_name || null,
+            role: role as any,
+            isVerified,
+          },
+          create: {
             id,
             email,
             phoneNumber,
@@ -219,7 +228,7 @@ export async function POST(req: Request) {
         });
 
         console.log(
-          `User ${id} created successfully in the database during update webhook with role: ${role}, isVerified: ${isVerified}`
+          `User ${id} upserted successfully in the database during update webhook with role: ${role}, isVerified: ${isVerified}`
         );
       }
     } catch (error) {
