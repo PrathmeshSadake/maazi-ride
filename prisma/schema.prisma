@@ -50,6 +50,8 @@ model User {
   drivingLicenseUrl String?
   vehicleRegistrationUrl String?
   insuranceUrl String?
+  // Payment information
+  upiId         String?
 
   // Relations
   offeredRides  Ride[]         @relation("DriverRides")

@@ -130,144 +130,146 @@ export async function POST(req: Request) {
         { status: 500 }
       );
     }
-  } else if (eventType === "user.updated") {
-    const {
-      id,
-      email_addresses,
-      phone_numbers,
-      first_name,
-      last_name,
-      public_metadata,
-      unsafe_metadata,
-    } = evt.data;
+  }
+  // else if (eventType === "user.updated") {
+  //   const {
+  //     id,
+  //     email_addresses,
+  //     phone_numbers,
+  //     first_name,
+  //     last_name,
+  //     public_metadata,
+  //     unsafe_metadata,
+  //   } = evt.data;
 
-    if (!id) {
-      console.error("Error: Missing user ID in webhook data");
-      return NextResponse.json(
-        { error: "Missing user ID in webhook data" },
-        { status: 422 }
-      );
-    }
+  //   if (!id) {
+  //     console.error("Error: Missing user ID in webhook data");
+  //     return NextResponse.json(
+  //       { error: "Missing user ID in webhook data" },
+  //       { status: 422 }
+  //     );
+  //   }
 
-    const userByEmail = await prisma.user.findUnique({
-      where: { email: email_addresses?.[0]?.email_address },
-    });
+  //   const userByEmail = await prisma.user.findUnique({
+  //     where: { email: email_addresses?.[0]?.email_address },
+  //   });
 
-    // Handle metadata updates properly
-    let role = userByEmail?.role || ("user" as string);
-    let isVerified = true;
+  //   // Handle metadata updates properly
+  //   let role = userByEmail?.role || ("user" as string);
+  //   let isVerified = true;
 
-    if (unsafe_metadata && typeof unsafe_metadata === "object") {
-      // Check for role in unsafe metadata
-      if (unsafe_metadata.role) {
-        role = unsafe_metadata.role as string;
+  //   if (unsafe_metadata && typeof unsafe_metadata === "object") {
+  //     // Check for role in unsafe metadata
+  //     if (unsafe_metadata.role) {
+  //       role = unsafe_metadata.role as string;
 
-        // Set isVerified based on role (only users are verified by default)
-        isVerified = role === "user" ? true : false;
-      }
-    }
+  //       // Set isVerified based on role (only users are verified by default)
+  //       isVerified = role === "user" ? true : false;
+  //     }
+  //   }
 
-    // Check if isVerified is explicitly set in public metadata
-    if (
-      public_metadata &&
-      typeof public_metadata === "object" &&
-      public_metadata.isVerified !== undefined
-    ) {
-      isVerified = public_metadata.isVerified as boolean;
-    }
+  //   // Check if isVerified is explicitly set in public metadata
+  //   if (
+  //     public_metadata &&
+  //     typeof public_metadata === "object" &&
+  //     public_metadata.isVerified !== undefined
+  //   ) {
+  //     isVerified = public_metadata.isVerified as boolean;
+  //   }
 
-    const email = email_addresses?.[0]?.email_address || undefined;
-    const phoneNumber = phone_numbers?.[0]?.phone_number || undefined;
+  //   const email = email_addresses?.[0]?.email_address || undefined;
+  //   const phoneNumber = phone_numbers?.[0]?.phone_number || undefined;
 
-    try {
-      // Update the Clerk metadata
-      await clerkClient.users.updateUserMetadata(id, {
-        publicMetadata: {
-          role,
-          isVerified,
-        },
-      });
+  //   try {
+  //     // Update the Clerk metadata
+  //     await clerkClient.users.updateUserMetadata(id, {
+  //       publicMetadata: {
+  //         role,
+  //         isVerified,
+  //       },
+  //     });
 
-      // Try to find user by ID first
-      const existingUser = await prisma.user.findUnique({
-        where: { id },
-      });
+  //     // Try to find user by ID first
+  //     const existingUser = await prisma.user.findUnique({
+  //       where: { id },
+  //     });
 
-      if (existingUser) {
-        // User exists, update it
-        await prisma.user.update({
-          where: { id },
-          data: {
-            firstName: first_name || undefined,
-            lastName: last_name || undefined,
-            role: role as any,
-            isVerified,
-            ...(email && { email }), // Only include if email exists
-            ...(phoneNumber && { phoneNumber }), // Only include if phoneNumber exists
-          },
-        });
-        console.log(`User ${id} updated successfully in the database`);
-      } else {
-        // User doesn't exist by ID
-        // If email is provided, check if a user with this email already exists
-        if (email) {
-          const userByEmail = await prisma.user.findUnique({
-            where: { email },
-          });
+  //     if (existingUser) {
+  //       // User exists, update it
+  //       await prisma.user.update({
+  //         where: { id },
+  //         data: {
+  //           firstName: first_name || undefined,
+  //           lastName: last_name || undefined,
+  //           role: role as any,
+  //           isVerified,
+  //           ...(email && { email }), // Only include if email exists
+  //           ...(phoneNumber && { phoneNumber }), // Only include if phoneNumber exists
+  //         },
+  //       });
+  //       console.log(`User ${id} updated successfully in the database`);
+  //     } else {
+  //       // User doesn't exist by ID
+  //       // If email is provided, check if a user with this email already exists
+  //       if (email) {
+  //         const userByEmail = await prisma.user.findUnique({
+  //           where: { email },
+  //         });
 
-          if (userByEmail) {
-            // Update the existing user with this email to use the new ID
-            await prisma.user.update({
-              where: { email },
-              data: {
-                id, // Update to current Clerk ID
-                firstName: first_name || undefined,
-                lastName: last_name || undefined,
-                role: role as any,
-                isVerified,
-                ...(phoneNumber && { phoneNumber }),
-              },
-            });
-            console.log(
-              `Updated existing user with email ${email} to have ID ${id}`
-            );
-          } else {
-            // No user with this ID or email, create a new one
-            await prisma.user.create({
-              data: {
-                id,
-                email,
-                phoneNumber,
-                firstName: first_name || null,
-                lastName: last_name || null,
-                role: role as any,
-                isVerified,
-              },
-            });
-            console.log(`Created new user with ID ${id}`);
-          }
-        } else {
-          // No email provided, just create with ID
-          await prisma.user.create({
-            data: {
-              id,
-              firstName: first_name || null,
-              lastName: last_name || null,
-              role: role as any,
-              isVerified,
-            },
-          });
-          console.log(`Created new user with ID ${id} (no email provided)`);
-        }
-      }
-    } catch (error) {
-      console.error("Error updating user in database:", error);
-      return NextResponse.json(
-        { error: "Error updating user", details: error },
-        { status: 500 }
-      );
-    }
-  } else if (eventType === "user.deleted") {
+  //         if (userByEmail) {
+  //           // Update the existing user with this email to use the new ID
+  //           await prisma.user.update({
+  //             where: { email },
+  //             data: {
+  //               id, // Update to current Clerk ID
+  //               firstName: first_name || undefined,
+  //               lastName: last_name || undefined,
+  //               role: role as any,
+  //               isVerified,
+  //               ...(phoneNumber && { phoneNumber }),
+  //             },
+  //           });
+  //           console.log(
+  //             `Updated existing user with email ${email} to have ID ${id}`
+  //           );
+  //         } else {
+  //           // No user with this ID or email, create a new one
+  //           await prisma.user.create({
+  //             data: {
+  //               id,
+  //               email,
+  //               phoneNumber,
+  //               firstName: first_name || null,
+  //               lastName: last_name || null,
+  //               role: role as any,
+  //               isVerified,
+  //             },
+  //           });
+  //           console.log(`Created new user with ID ${id}`);
+  //         }
+  //       } else {
+  //         // No email provided, just create with ID
+  //         await prisma.user.create({
+  //           data: {
+  //             id,
+  //             firstName: first_name || null,
+  //             lastName: last_name || null,
+  //             role: role as any,
+  //             isVerified,
+  //           },
+  //         });
+  //         console.log(`Created new user with ID ${id} (no email provided)`);
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating user in database:", error);
+  //     return NextResponse.json(
+  //       { error: "Error updating user", details: error },
+  //       { status: 500 }
+  //     );
+  //   }
+  // }
+  else if (eventType === "user.deleted") {
     const { id } = evt.data;
 
     if (!id) {
