@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { auth } from "@clerk/nextjs/server";
+import prisma from "@/lib/db";
 
 // GET handler - Fetch driver's reviews and ratings
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
+    const { id } = await params;
 
     // Check if the user is authenticated
     if (!userId) {
@@ -19,7 +18,7 @@ export async function GET(
 
     // Fetch the user's reviews
     const reviews = await prisma.review.findMany({
-      where: { userId: params.id },
+      where: { userId: id },
       select: {
         id: true,
         rating: true,
@@ -37,7 +36,7 @@ export async function GET(
 
     // Fetch the user's average rating
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: { driverRating: true },
     });
 

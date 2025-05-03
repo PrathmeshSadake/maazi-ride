@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/db";
 
 // GET handler - Fetch driver's payment info
 export async function GET() {
@@ -35,7 +33,7 @@ export async function GET() {
 // POST handler - Update driver's UPI ID
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -66,7 +64,7 @@ export async function POST(request: NextRequest) {
 // DELETE handler - Remove driver's UPI ID
 export async function DELETE() {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

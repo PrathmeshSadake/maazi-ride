@@ -7,9 +7,10 @@ const prisma = new PrismaClient();
 // GET handler - Fetch driver's document information
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { userId } = await auth();
 
     // Check if the user is authenticated
@@ -18,7 +19,7 @@ export async function GET(
     }
 
     // Check if the user is accessing their own documents or is an admin
-    if (userId !== params.id) {
+    if (userId !== id) {
       // Add admin check logic here if needed
       return NextResponse.json(
         { error: "Forbidden: You can only access your own documents" },
@@ -28,7 +29,7 @@ export async function GET(
 
     // Fetch the document info
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: {
         drivingLicenseUrl: true,
         vehicleRegistrationUrl: true,
