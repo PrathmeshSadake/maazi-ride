@@ -172,64 +172,89 @@ export async function POST(req: Request) {
       isVerified = public_metadata.isVerified as boolean;
     }
 
-    const email = email_addresses?.[0]?.email_address || null;
-    const phoneNumber = phone_numbers?.[0]?.phone_number || null;
+    const email = email_addresses?.[0]?.email_address || undefined;
+    const phoneNumber = phone_numbers?.[0]?.phone_number || undefined;
 
     try {
+      // Update the Clerk metadata
       await clerkClient.users.updateUserMetadata(id, {
         publicMetadata: {
           role,
           isVerified,
         },
       });
-      // Check if user exists
+
+      // Try to find user by ID first
       const existingUser = await prisma.user.findUnique({
         where: { id },
       });
 
       if (existingUser) {
-        // Update the user in the database
+        // User exists, update it
         await prisma.user.update({
           where: { id },
           data: {
-            email,
-            phoneNumber,
-            firstName: first_name || null,
-            lastName: last_name || null,
+            firstName: first_name || undefined,
+            lastName: last_name || undefined,
             role: role as any,
             isVerified,
+            ...(email && { email }), // Only include if email exists
+            ...(phoneNumber && { phoneNumber }), // Only include if phoneNumber exists
           },
         });
-
-        console.log(
-          `User ${id} updated successfully in the database with role: ${role}, isVerified: ${isVerified}`
-        );
+        console.log(`User ${id} updated successfully in the database`);
       } else {
-        // Create the user if they don't exist, using upsert to handle potential conflicts
-        await prisma.user.upsert({
-          where: { id },
-          update: {
-            email,
-            phoneNumber,
-            firstName: first_name || null,
-            lastName: last_name || null,
-            role: role as any,
-            isVerified,
-          },
-          create: {
-            id,
-            email,
-            phoneNumber,
-            firstName: first_name || null,
-            lastName: last_name || null,
-            role: role as any,
-            isVerified,
-          },
-        });
+        // User doesn't exist by ID
+        // If email is provided, check if a user with this email already exists
+        if (email) {
+          const userByEmail = await prisma.user.findUnique({
+            where: { email },
+          });
 
-        console.log(
-          `User ${id} upserted successfully in the database during update webhook with role: ${role}, isVerified: ${isVerified}`
-        );
+          if (userByEmail) {
+            // Update the existing user with this email to use the new ID
+            await prisma.user.update({
+              where: { email },
+              data: {
+                id, // Update to current Clerk ID
+                firstName: first_name || undefined,
+                lastName: last_name || undefined,
+                role: role as any,
+                isVerified,
+                ...(phoneNumber && { phoneNumber }),
+              },
+            });
+            console.log(
+              `Updated existing user with email ${email} to have ID ${id}`
+            );
+          } else {
+            // No user with this ID or email, create a new one
+            await prisma.user.create({
+              data: {
+                id,
+                email,
+                phoneNumber,
+                firstName: first_name || null,
+                lastName: last_name || null,
+                role: role as any,
+                isVerified,
+              },
+            });
+            console.log(`Created new user with ID ${id}`);
+          }
+        } else {
+          // No email provided, just create with ID
+          await prisma.user.create({
+            data: {
+              id,
+              firstName: first_name || null,
+              lastName: last_name || null,
+              role: role as any,
+              isVerified,
+            },
+          });
+          console.log(`Created new user with ID ${id} (no email provided)`);
+        }
       }
     } catch (error) {
       console.error("Error updating user in database:", error);
