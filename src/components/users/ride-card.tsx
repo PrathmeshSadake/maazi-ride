@@ -5,8 +5,8 @@ import {
   Clock,
   MapPin,
   Users,
-  DollarSign,
   ChevronRight,
+  IndianRupee,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
@@ -111,7 +111,7 @@ const RideCard = ({
         </div>
         <div className="flex flex-col items-end">
           <div className="flex items-center gap-1 text-green-700 font-semibold">
-            <DollarSign size={16} />
+            <IndianRupee size={16} />
             <span>{formattedPrice}</span>
           </div>
           {driverName && (

@@ -28,7 +28,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  DollarSign,
   Users,
   Calendar as CalendarIcon,
   IndianRupee,

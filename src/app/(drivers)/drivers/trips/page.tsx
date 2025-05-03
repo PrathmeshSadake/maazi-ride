@@ -11,7 +11,6 @@ import {
   CalendarPlus,
   Car,
   Clock,
-  CircleDollarSign,
   MapPin,
   Calendar,
   IndianRupee,

@@ -1,7 +1,7 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, DollarSign, TrendingUp, Car, Clock } from "lucide-react";
+import { Calendar, IndianRupee, TrendingUp, Car, Clock } from "lucide-react";
 import { useState } from "react";
 
 type EarningsPeriod = "daily" | "weekly" | "monthly";
@@ -108,7 +108,7 @@ export default function EarningsPage() {
             </div>
           </div>
           <div className='h-10 w-10 rounded-full bg-green-100 flex items-center justify-center'>
-            <DollarSign size={20} className='text-green-800' />
+            <IndianRupee size={20} className='text-green-800' />
           </div>
         </div>
 

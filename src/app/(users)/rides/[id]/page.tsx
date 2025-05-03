@@ -8,11 +8,11 @@ import {
   Clock,
   MapPin,
   Users,
-  DollarSign,
   Car,
   Star,
   MessageSquare,
   Share2,
+  IndianRupee,
 } from "lucide-react";
 import { formatDistanceToNow, format, parseISO } from "date-fns";
 import { useUser } from "@clerk/nextjs";
@@ -173,7 +173,7 @@ export default function RideDetailsPage() {
           </div>
 
           <div className="flex items-center text-green-700 font-semibold text-xl">
-            <DollarSign size={20} />
+            <IndianRupee size={20} />
             <span>{ride.price.toFixed(2)}</span>
           </div>
         </div>

@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import {
   CalendarPlus,
   Car,
-  CircleDollarSign,
+  IndianRupee,
   Calendar,
   Clock,
   MapPin,
@@ -105,7 +105,7 @@ export default async function DriverDashboard() {
               </Link>
               <Link href="/drivers/earnings">
                 <Button variant="outline" className="flex items-center gap-2">
-                  <CircleDollarSign className="h-4 w-4" />
+                  <IndianRupee className="h-4 w-4" />
                   View Earnings
                 </Button>
               </Link>
@@ -171,7 +171,7 @@ export default async function DriverDashboard() {
 
                       <div className="flex justify-between pt-2">
                         <div className="flex items-center gap-2">
-                          <CircleDollarSign className="h-4 w-4 text-gray-500" />
+                          <IndianRupee className="h-4 w-4 text-gray-500" />
                           <span className="font-semibold">
                             ${ride.price.toFixed(2)}
                           </span>
