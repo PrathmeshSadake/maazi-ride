@@ -5,6 +5,7 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, Send, User } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { format } from "date-fns";
+import { pusherClient } from "@/lib/pusher";
 
 interface Message {
   id: string;
@@ -12,6 +13,7 @@ interface Message {
   senderId: string;
   receiverId: string;
   createdAt: string;
+  bookingId?: string;
   sender: {
     firstName: string;
     lastName: string;
@@ -33,7 +35,6 @@ export default function DriverConversationPage() {
   const [sending, setSending] = useState(false);
   const [otherUserName, setOtherUserName] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const sseRef = useRef<EventSource | null>(null);
 
   const userId = params.userId as string;
   const bookingId = searchParams.get("bookingId");
@@ -44,46 +45,56 @@ export default function DriverConversationPage() {
         router.push("/sign-in");
       } else {
         fetchMessages();
-        setupSSE();
+        setupPusher();
       }
     }
 
     return () => {
-      // Clean up SSE connection when component unmounts
-      if (sseRef.current) {
-        sseRef.current.close();
+      // Clean up Pusher subscription when component unmounts
+      if (user) {
+        pusherClient.unsubscribe(`user-${user.id}`);
       }
     };
   }, [isLoaded, user, router, userId, bookingId]);
 
-  const setupSSE = () => {
-    if (!user || sseRef.current) return;
+  const setupPusher = () => {
+    if (!user) return;
 
-    const eventSource = new EventSource("/api/messages/sse");
+    // Enable Pusher client logging
+    pusherClient.connection.bind("error", (err: any) => {
+      console.error("Pusher connection error:", err);
+    });
 
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+    pusherClient.connection.bind("connected", () => {
+      console.log("Pusher connected successfully");
+    });
 
-      if (data.event === "newMessage") {
-        const message = data.message;
-        // Add the new message if it's from the current conversation
-        if (
-          (message.senderId === userId && message.receiverId === user.id) ||
-          (message.senderId === user.id && message.receiverId === userId)
-        ) {
-          setMessages((prev) => [...prev, message]);
-        }
+    const channel = pusherClient.subscribe(`user-${user.id}`);
+
+    channel.bind("pusher:subscription_succeeded", () => {
+      console.log(`Successfully subscribed to user-${user.id} channel`);
+    });
+
+    channel.bind("pusher:subscription_error", (error: any) => {
+      console.error(`Error subscribing to user-${user.id} channel:`, error);
+    });
+
+    channel.bind("new-message", (data: { message: Message }) => {
+      console.log("Received new message via Pusher:", data);
+      const message = data.message;
+      // Add the new message if it's from the current conversation
+      if (
+        (message.senderId === userId && message.receiverId === user.id) ||
+        (message.senderId === user.id && message.receiverId === userId)
+      ) {
+        setMessages((prev) => [...prev, message]);
       }
-    };
+    });
 
-    eventSource.onerror = () => {
-      // Close and retry connection after 5 seconds
-      eventSource.close();
-      sseRef.current = null;
-      setTimeout(setupSSE, 5000);
+    return () => {
+      channel.unbind_all();
+      channel.unsubscribe();
     };
-
-    sseRef.current = eventSource;
   };
 
   const fetchMessages = async () => {

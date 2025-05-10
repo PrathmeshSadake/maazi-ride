@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, Send, User } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { format } from "date-fns";
+import { pusherClient } from "@/lib/pusher";
 
 interface Message {
   id: string;
@@ -12,6 +13,7 @@ interface Message {
   senderId: string;
   receiverId: string;
   createdAt: string;
+  bookingId?: string;
   sender: {
     firstName: string;
     lastName: string;
@@ -31,55 +33,70 @@ export default function MessagesPage() {
   const [messageText, setMessageText] = useState("");
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const sseRef = useRef<EventSource | null>(null);
 
   // Get driver and ride info from query params
   const driverName = searchParams.get("driver");
   const rideId = searchParams.get("rideId");
   const bookingId = searchParams.get("bookingId");
+  const driverId = searchParams.get("driverId");
 
   useEffect(() => {
     if (isLoaded) {
       if (!user) {
         router.push("/sign-in");
       } else {
-        fetchMessages();
-        setupSSE();
+        if (bookingId) {
+          fetchMessages();
+        } else if (driverId) {
+          // For direct driver messages without booking
+          fetchDriverMessages();
+        }
+        setupPusher();
       }
     }
 
     return () => {
-      // Clean up SSE connection when component unmounts
-      if (sseRef.current) {
-        sseRef.current.close();
+      // Clean up Pusher subscription when component unmounts
+      if (user) {
+        pusherClient.unsubscribe(`user-${user.id}`);
       }
     };
-  }, [isLoaded, user, router, bookingId]);
+  }, [isLoaded, user, router, bookingId, driverId]);
 
-  const setupSSE = () => {
-    if (!user || sseRef.current) return;
+  const setupPusher = () => {
+    if (!user) return;
 
-    const eventSource = new EventSource("/api/messages/sse");
+    // Enable Pusher client logging
+    pusherClient.connection.bind("error", (err: any) => {
+      console.error("Pusher connection error:", err);
+    });
 
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+    pusherClient.connection.bind("connected", () => {
+      console.log("Pusher connected successfully");
+    });
 
-      if (data.event === "newMessage") {
-        if (bookingId && data.message.bookingId === bookingId) {
-          // Add the new message to the list if it belongs to this booking
-          setMessages((prev) => [...prev, data.message]);
-        }
+    const channel = pusherClient.subscribe(`user-${user.id}`);
+
+    channel.bind("pusher:subscription_succeeded", () => {
+      console.log(`Successfully subscribed to user-${user.id} channel`);
+    });
+
+    channel.bind("pusher:subscription_error", (error: any) => {
+      console.error(`Error subscribing to user-${user.id} channel:`, error);
+    });
+
+    channel.bind("new-message", (data: { message: Message }) => {
+      console.log("Received new message via Pusher:", data);
+      if (bookingId && data.message.bookingId === bookingId) {
+        // Add the new message to the list if it belongs to this booking
+        setMessages((prev) => [...prev, data.message]);
       }
-    };
+    });
 
-    eventSource.onerror = () => {
-      // Close and retry connection after 5 seconds
-      eventSource.close();
-      sseRef.current = null;
-      setTimeout(setupSSE, 5000);
+    return () => {
+      channel.unbind_all();
+      channel.unsubscribe();
     };
-
-    sseRef.current = eventSource;
   };
 
   const fetchMessages = async () => {
@@ -102,28 +119,87 @@ export default function MessagesPage() {
     }
   };
 
+  const fetchDriverMessages = async () => {
+    if (!driverId) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/messages?userId=${driverId}`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch messages");
+      }
+
+      const data = await response.json();
+      setMessages(data);
+    } catch (err) {
+      console.error("Error fetching messages:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const sendMessage = async () => {
-    if (!messageText.trim() || !user || !bookingId) return;
+    console.log("sendMessage called with:", {
+      messageText,
+      user: !!user,
+      bookingId,
+      driverId,
+    });
+
+    if (!messageText.trim() || !user) {
+      console.log("Send message aborted due to missing message or user:", {
+        noMessageText: !messageText.trim(),
+        noUser: !user,
+      });
+      return;
+    }
+
+    // We need either a bookingId or driverId
+    if (!bookingId && !driverId) {
+      console.log(
+        "Send message aborted due to missing both bookingId and driverId"
+      );
+      return;
+    }
 
     setSending(true);
     try {
+      console.log("Sending message to API...");
+
+      // Prepare request payload
+      const payload: any = {
+        content: messageText,
+      };
+
+      // Add either bookingId or receiverId depending on what we have
+      if (bookingId) {
+        payload.bookingId = bookingId;
+      } else if (driverId) {
+        payload.receiverId = driverId;
+      }
+
+      console.log("Request payload:", payload);
+
       const response = await fetch("/api/messages", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          content: messageText,
-          bookingId,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to send message");
+        const errorText = await response.text();
+        console.error("API response not OK:", response.status, errorText);
+        throw new Error(
+          `Failed to send message: ${response.status} ${errorText}`
+        );
       }
 
       // Add the new message to the list
       const data = await response.json();
+      console.log("Message sent successfully:", data);
       setMessages((prev) => [...prev, data]);
       setMessageText("");
     } catch (err) {
@@ -189,6 +265,14 @@ export default function MessagesPage() {
               <p className="text-xs text-gray-500">
                 Ride #{rideId.slice(0, 8)}
               </p>
+            )}
+            {bookingId && !rideId && (
+              <p className="text-xs text-gray-500">
+                Booking #{bookingId.slice(0, 8)}
+              </p>
+            )}
+            {driverId && !bookingId && !rideId && (
+              <p className="text-xs text-gray-500">Direct message</p>
             )}
           </div>
         </div>
@@ -256,7 +340,10 @@ export default function MessagesPage() {
           />
 
           <button
-            onClick={sendMessage}
+            onClick={() => {
+              console.log("Send button clicked");
+              sendMessage();
+            }}
             disabled={sending || !messageText.trim()}
             className={`ml-2 p-2 rounded-full ${
               sending || !messageText.trim()

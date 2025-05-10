@@ -2,18 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-
-const clients = new Map<string, ReadableStreamController<Uint8Array>>();
-
-// Function to send message to a specific user
-function sendMessageToUser(userId: string, data: any) {
-  const controller = clients.get(userId);
-  if (controller) {
-    controller.enqueue(
-      new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`)
-    );
-  }
-}
+import { pusherServer } from "@/lib/pusher";
 
 // Schema for creating a message
 const createMessageSchema = z.object({
@@ -145,24 +134,24 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Send real-time update to receiver
-    sendMessageToUser(actualReceiverId, {
-      event: "newMessage",
-      message,
-    });
+    // Send real-time update using Pusher
+    try {
+      await pusherServer.trigger(`user-${actualReceiverId}`, "new-message", {
+        message,
+      });
+      console.log(
+        `Pusher message triggered successfully to user-${actualReceiverId}`
+      );
+    } catch (error) {
+      console.error("Error triggering Pusher event:", error);
+      // Continue execution even if Pusher fails
+    }
 
     return NextResponse.json(message, { status: 201 });
   } catch (error) {
-    console.error("Error creating message:", error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: "Invalid data", errors: error.errors },
-        { status: 400 }
-      );
-    }
-
+    console.error("Error sending message:", error);
     return NextResponse.json(
-      { message: "Failed to create message" },
+      { message: "Failed to send message" },
       { status: 500 }
     );
   }

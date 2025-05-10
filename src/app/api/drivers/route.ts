@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
 
 // GET /api/drivers - Get all drivers
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const user = await currentUser();
 
@@ -11,15 +11,41 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin
+    const searchParams = req.nextUrl.searchParams;
+    const forMessaging = searchParams.get("forMessaging") === "true";
+
+    // Get database user to check role
     const databaseUser = await prisma.user.findUnique({
       where: { id: user.id },
     });
 
-    // if (!databaseUser || databaseUser.role !== "admin") {
-    //   return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    // }
+    // For regular users - limit info and only return verified drivers if requesting for messaging
+    if (databaseUser?.role !== "admin") {
+      const query: any = {
+        role: "driver",
+      };
 
+      // If requesting for messaging purposes, only return verified active drivers
+      if (forMessaging) {
+        query.verified = true;
+        query.active = true;
+      }
+
+      const drivers = await prisma.user.findMany({
+        where: query,
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          // Only include vehicle info if not for messaging
+          ...(forMessaging ? {} : { vehicle: true }),
+        },
+      });
+
+      return NextResponse.json(drivers);
+    }
+
+    // For admin - return full driver information
     const drivers = await prisma.user.findMany({
       where: {
         role: "driver",
