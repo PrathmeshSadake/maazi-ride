@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, Filter, Calendar, Clock } from "lucide-react";
+import { ArrowLeft, Filter, Calendar, Clock, Search } from "lucide-react";
 import RideCard from "@/components/users/ride-card";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 interface Ride {
   id: string;
@@ -29,6 +29,9 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [fromLocationName, setFromLocationName] = useState<string>("");
+  const [toLocationName, setToLocationName] = useState<string>("");
 
   // Parse search parameters
   useEffect(() => {
@@ -55,6 +58,14 @@ export default function ExplorePage() {
     try {
       if (fromParam) fromLocation = JSON.parse(decodeURIComponent(fromParam));
       if (toParam) toLocation = JSON.parse(decodeURIComponent(toParam));
+
+      // Set location names
+      setFromLocationName(
+        typeof fromLocation === "string" ? fromLocation : fromLocation.name
+      );
+      setToLocationName(
+        typeof toLocation === "string" ? toLocation : toLocation.name
+      );
     } catch (e) {
       console.error("Error parsing location data:", e);
       setError("Invalid search parameters");
@@ -76,20 +87,22 @@ export default function ExplorePage() {
       // Build query params
       const queryParams = new URLSearchParams();
 
-      // Ensure we have proper location objects with name property
-      const fromLocationName =
-        typeof fromLocation === "string" ? fromLocation : fromLocation.name;
-      const toLocationName =
-        typeof toLocation === "string" ? toLocation : toLocation.name;
+      // Get location names from state or extract from parameters
+      const fromName =
+        fromLocationName ||
+        (typeof fromLocation === "string" ? fromLocation : fromLocation.name);
+      const toName =
+        toLocationName ||
+        (typeof toLocation === "string" ? toLocation : toLocation.name);
 
       // Add from and to location names - encode as JSON and then URL encode
       queryParams.append(
         "from",
-        encodeURIComponent(JSON.stringify({ name: fromLocationName }))
+        encodeURIComponent(JSON.stringify({ name: fromName }))
       );
       queryParams.append(
         "to",
-        encodeURIComponent(JSON.stringify({ name: toLocationName }))
+        encodeURIComponent(JSON.stringify({ name: toName }))
       );
 
       // Add date if available
@@ -164,24 +177,145 @@ export default function ExplorePage() {
     router.back();
   };
 
+  // Function to update search with new date
+  const updateSearchWithDate = (newDate: Date) => {
+    // Get current params
+    const params = new URLSearchParams(searchParams.toString());
+    // Update date param
+    params.set("date", newDate.toISOString());
+    // Navigate with new params
+    router.push(`/explore?${params.toString()}`);
+  };
+
   return (
-    <div className="p-4 max-w-md mx-auto">
+    <div className="p-4 max-w-md mx-auto pb-20">
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <button onClick={goBack} className="p-2 rounded-full hover:bg-gray-100">
           <ArrowLeft size={20} />
         </button>
         <h1 className="text-lg font-semibold">Available Rides</h1>
-        <button className="p-2 rounded-full hover:bg-gray-100">
-          <Filter size={20} />
+        <button
+          onClick={() => setIsFilterOpen(!isFilterOpen)}
+          className="p-2 rounded-full hover:bg-gray-100 relative"
+        >
+          <Filter size={20} className={isFilterOpen ? "text-blue-600" : ""} />
         </button>
       </div>
 
-      {selectedDate && (
-        <div className="flex items-center bg-blue-50 p-3 rounded-lg mb-4">
-          <Calendar size={16} className="text-blue-600 mr-2" />
-          <span className="text-sm text-blue-700">
-            {format(selectedDate, "dd MMMM yyyy")}
-          </span>
+      {/* Search Info */}
+      <div className="bg-white rounded-lg shadow-md mb-4 p-4">
+        <div className="flex items-start mb-3">
+          <div className="w-10 flex-shrink-0 flex justify-center">
+            <div className="w-2.5 h-2.5 mt-1.5 rounded-full bg-green-500"></div>
+          </div>
+          <div className="flex-1">
+            <p className="font-medium">{fromLocationName}</p>
+          </div>
+        </div>
+        <div className="flex items-start">
+          <div className="w-10 flex-shrink-0 flex justify-center">
+            <div className="w-2.5 h-2.5 mt-1.5 rounded-full bg-red-500"></div>
+          </div>
+          <div className="flex-1">
+            <p className="font-medium">{toLocationName}</p>
+          </div>
+        </div>
+
+        {/* Date filter */}
+        <div className="mt-4 pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Calendar size={16} />
+              <span>
+                {selectedDate
+                  ? format(selectedDate, "dd MMMM yyyy")
+                  : "Any date"}
+              </span>
+            </div>
+
+            {selectedDate && (
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.delete("date");
+                  router.push(`/explore?${params.toString()}`);
+                }}
+                className="text-xs text-blue-600"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Date Filter UI - Conditional */}
+      {isFilterOpen && (
+        <div className="bg-white rounded-lg shadow-md mb-4 p-4">
+          <h3 className="font-medium mb-3 flex items-center gap-2">
+            <Calendar size={16} />
+            Choose travel date
+          </h3>
+          <div className="grid grid-cols-4 gap-2">
+            {[0, 1, 2, 3, 4, 5, 6].map((dayOffset) => {
+              const date = new Date();
+              date.setDate(date.getDate() + dayOffset);
+              const isSelected =
+                selectedDate &&
+                format(date, "yyyy-MM-dd") ===
+                  format(selectedDate, "yyyy-MM-dd");
+
+              return (
+                <button
+                  key={dayOffset}
+                  onClick={() => updateSearchWithDate(date)}
+                  className={`p-2 rounded-lg text-center ${
+                    isSelected
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 hover:bg-gray-200"
+                  }`}
+                >
+                  <p className="text-xs mb-1">{format(date, "EEE")}</p>
+                  <p
+                    className={`font-medium ${isSelected ? "text-white" : ""}`}
+                  >
+                    {format(date, "d")}
+                  </p>
+                </button>
+              );
+            })}
+            <button
+              onClick={() => {
+                const datePicker = document.getElementById("date-picker");
+                if (datePicker) datePicker.click();
+              }}
+              className="p-2 rounded-lg text-center bg-gray-100 hover:bg-gray-200"
+            >
+              <p className="text-xs mb-1">More</p>
+              <p className="font-medium">...</p>
+            </button>
+          </div>
+
+          <input
+            id="date-picker"
+            type="date"
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.value) {
+                updateSearchWithDate(new Date(e.target.value));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Results count */}
+      {!loading && !error && (
+        <div className="mb-4 px-1">
+          <p className="text-sm text-gray-600">
+            {rides.length} {rides.length === 1 ? "ride" : "rides"} available
+          </p>
         </div>
       )}
 

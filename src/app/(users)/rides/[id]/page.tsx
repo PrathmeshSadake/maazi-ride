@@ -31,6 +31,13 @@ interface RideDetails {
     lastName: string | null;
     driverRating: number | null;
     ridesCompleted: number;
+    vehicle?: {
+      make: string;
+      model: string;
+      year?: number;
+      color?: string;
+      vehicleImages: string[];
+    };
   };
 }
 
@@ -54,6 +61,14 @@ export default function RideDetailsPage() {
     }
   }, [id]);
 
+  // Debug hook to monitor vehicle data
+  useEffect(() => {
+    if (ride?.driver?.vehicle) {
+      console.log("Vehicle data in state:", ride.driver.vehicle);
+      console.log("Vehicle images:", ride.driver.vehicle.vehicleImages);
+    }
+  }, [ride]);
+
   const fetchRideDetails = async () => {
     setLoading(true);
     try {
@@ -64,6 +79,26 @@ export default function RideDetailsPage() {
       }
 
       const data = await response.json();
+      console.log("Ride details data:", JSON.stringify(data, null, 2));
+
+      // Ensure vehicle data is properly accessed
+      if (data.driver && !data.driver.vehicle) {
+        // Try to fetch vehicle separately with public mode
+        try {
+          const vehicleResponse = await fetch(
+            `/api/drivers/${data.driver.id}/vehicle?mode=public`
+          );
+          if (vehicleResponse.ok) {
+            const vehicleData = await vehicleResponse.json();
+            console.log("Fetched vehicle data separately:", vehicleData);
+            // Modify the data object to include vehicle
+            data.driver.vehicle = vehicleData;
+          }
+        } catch (vehicleError) {
+          console.error("Error fetching vehicle data:", vehicleError);
+        }
+      }
+
       setRide(data);
     } catch (err) {
       console.error("Error fetching ride details:", err);
@@ -212,9 +247,53 @@ export default function RideDetailsPage() {
 
           <div className="flex items-center">
             <Car size={18} className="text-gray-500 mr-2" />
-            <span className="text-sm font-medium">Standard car</span>
+            <span className="text-sm font-medium">
+              {ride.driver.vehicle
+                ? `${ride.driver.vehicle.make} ${ride.driver.vehicle.model}`
+                : "Standard car"}
+              {ride.driver.vehicle?.color && ` • ${ride.driver.vehicle.color}`}
+            </span>
           </div>
         </div>
+
+        {/* Vehicle Images */}
+        {ride.driver.vehicle?.vehicleImages &&
+          Array.isArray(ride.driver.vehicle.vehicleImages) &&
+          ride.driver.vehicle.vehicleImages.length > 0 && (
+            <div className="mb-4 overflow-hidden">
+              <h3 className="text-sm font-medium mb-2">Vehicle Photos</h3>
+              <div className="flex overflow-x-auto pb-2 gap-2 -mx-4 px-4">
+                {ride.driver.vehicle.vehicleImages.map((image, index) => {
+                  // Ensure the image URL is absolute
+                  const imageUrl = image.startsWith("http")
+                    ? image
+                    : image.startsWith("/")
+                    ? `${window.location.origin}${image}`
+                    : `${window.location.origin}/${image}`;
+
+                  return (
+                    <div
+                      key={index}
+                      className="min-w-[220px] h-[140px] rounded-lg overflow-hidden border border-gray-200 flex-shrink-0"
+                    >
+                      <img
+                        src={imageUrl}
+                        alt={`${ride.driver.vehicle?.make || "Vehicle"} ${
+                          ride.driver.vehicle?.model || "image"
+                        }`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error(`Error loading image: ${imageUrl}`);
+                          e.currentTarget.src =
+                            "https://via.placeholder.com/220x140?text=Vehicle+Image";
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
         {ride.description && (
           <div className="mb-4">

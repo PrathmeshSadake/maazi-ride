@@ -42,6 +42,7 @@ export async function GET(
             lastName: true,
             driverRating: true,
             ridesCompleted: true,
+            vehicle: true,
           },
         },
         bookings:
@@ -161,21 +162,14 @@ export async function PATCH(
         id: rideId,
       },
       data: updateData,
-      select: {
-        id: true,
-        fromLocation: true,
-        toLocation: true,
-        departureDate: true,
-        departureTime: true,
-        price: true,
-        availableSeats: true,
-        description: true,
-        createdAt: true,
+      include: {
         driver: {
           select: {
+            id: true,
             firstName: true,
             lastName: true,
             driverRating: true,
+            vehicle: true,
           },
         },
         bookings: {

@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
 
 // GET handler - Fetch vehicle info by driver ID
 export async function GET(
@@ -10,23 +8,30 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
+    const user = await currentUser();
     const { id } = await params;
 
-    // Check if the user is authenticated
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Get the mode from query parameters
+    const mode = request.nextUrl.searchParams.get("mode");
 
-    // Check if the user is accessing their own vehicle info or is an admin
-    if (userId !== id) {
-      // Add admin check logic here if needed
-      return NextResponse.json(
-        {
-          error: "Forbidden: You can only access your own vehicle information",
-        },
-        { status: 403 }
-      );
+    // Only check permissions for non-public mode
+    if (mode !== "public") {
+      // Check if the user is authenticated
+      if (!user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      // Check if the user is accessing their own vehicle info or is an admin
+      if (user.id !== id) {
+        // Add admin check logic here if needed
+        return NextResponse.json(
+          {
+            error:
+              "Forbidden: You can only access your own vehicle information",
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Fetch the vehicle info

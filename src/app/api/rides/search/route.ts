@@ -74,11 +74,30 @@ export async function GET(req: NextRequest) {
         }
 
         // Set start of day and end of day for the search date
-        const startOfDay = new Date(searchDate);
-        startOfDay.setHours(0, 0, 0, 0);
+        // Using UTC methods to avoid timezone issues
+        const startOfDay = new Date(
+          Date.UTC(
+            searchDate.getUTCFullYear(),
+            searchDate.getUTCMonth(),
+            searchDate.getUTCDate(),
+            0,
+            0,
+            0,
+            0
+          )
+        );
 
-        const endOfDay = new Date(searchDate);
-        endOfDay.setHours(23, 59, 59, 999);
+        const endOfDay = new Date(
+          Date.UTC(
+            searchDate.getUTCFullYear(),
+            searchDate.getUTCMonth(),
+            searchDate.getUTCDate(),
+            23,
+            59,
+            59,
+            999
+          )
+        );
 
         console.log("DEBUG - Valid date range:", {
           date: searchDate.toISOString(),
