@@ -35,9 +35,9 @@ export default function AccountPage() {
 
   if (!isLoaded) {
     return (
-      <div className='p-4 max-w-md mx-auto flex flex-col items-center justify-center min-h-[60vh]'>
-        <div className='w-10 h-10 border-2 border-t-blue-600 border-r-transparent border-b-blue-600 border-l-transparent rounded-full animate-spin mb-4'></div>
-        <p className='text-gray-500'>Loading your profile...</p>
+      <div className="p-4 max-w-md mx-auto flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="w-10 h-10 border-2 border-t-blue-600 border-r-transparent border-b-blue-600 border-l-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-500">Loading your profile...</p>
       </div>
     );
   }
@@ -49,37 +49,37 @@ export default function AccountPage() {
 
   const menuItems = [
     {
-      icon: <MessageSquare size={20} className='text-blue-600' />,
+      icon: <MessageSquare size={20} className="text-blue-600" />,
       title: "Messages",
       description: "Your conversations with drivers",
       onClick: () => router.push("/messages"),
     },
     {
-      icon: <Clock size={20} className='text-purple-600' />,
+      icon: <Clock size={20} className="text-purple-600" />,
       title: "Ride History",
       description: "Your past and upcoming rides",
       onClick: () => router.push("/activity"),
     },
     {
-      icon: <Star size={20} className='text-yellow-600' />,
+      icon: <Star size={20} className="text-yellow-600" />,
       title: "Reviews",
       description: "Your ratings and reviews",
       onClick: () => router.push("/reviews"),
     },
     {
-      icon: <Bell size={20} className='text-green-600' />,
+      icon: <Bell size={20} className="text-green-600" />,
       title: "Notifications",
       description: "Manage your notifications",
       onClick: () => router.push("/notifications"),
     },
     {
-      icon: <CreditCard size={20} className='text-indigo-600' />,
+      icon: <CreditCard size={20} className="text-indigo-600" />,
       title: "Payment Methods",
       description: "Manage your payment options",
       onClick: () => router.push("/payment-methods"),
     },
     {
-      icon: <Settings size={20} className='text-gray-600' />,
+      icon: <Settings size={20} className="text-gray-600" />,
       title: "Settings",
       description: "App preferences and more",
       onClick: () => router.push("/settings"),
@@ -87,42 +87,36 @@ export default function AccountPage() {
   ];
 
   return (
-    <div className='p-4 max-w-md mx-auto'>
-      <h1 className='text-xl font-bold mb-6'>Account</h1>
+    <div className="p-4 max-w-md mx-auto">
+      <h1 className="text-xl font-bold mb-6">Account</h1>
 
       {/* User Profile Section */}
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6'>
-        <div className='flex items-center'>
-          <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 mr-4 overflow-hidden'>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="flex items-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 mr-4 overflow-hidden">
             {user.imageUrl ? (
               <img
                 src={user.imageUrl}
                 alt={user.fullName || "User"}
-                className='w-full h-full object-cover'
+                className="w-full h-full object-cover"
               />
             ) : (
               <User size={30} />
             )}
           </div>
           <div>
-            <h2 className='text-lg font-semibold'>
+            <h2 className="text-lg font-semibold">
               {user.fullName || user.firstName || "User"}
             </h2>
-            <p className='text-gray-500 text-sm'>
+            <p className="text-gray-500 text-sm">
               {user.primaryEmailAddress?.emailAddress}
             </p>
-            <button
-              className='text-blue-600 text-sm mt-1'
-              onClick={() => router.push("/account/edit")}
-            >
-              Edit Profile
-            </button>
           </div>
         </div>
       </div>
 
       {/* Menu */}
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6'>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
         {menuItems.map((item, index) => (
           <div
             key={index}
@@ -131,16 +125,16 @@ export default function AccountPage() {
             }`}
             onClick={item.onClick}
           >
-            <div className='flex items-center'>
-              <div className='w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mr-3'>
+            <div className="flex items-center">
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mr-3">
                 {item.icon}
               </div>
               <div>
-                <h3 className='font-medium'>{item.title}</h3>
-                <p className='text-xs text-gray-500'>{item.description}</p>
+                <h3 className="font-medium">{item.title}</h3>
+                <p className="text-xs text-gray-500">{item.description}</p>
               </div>
             </div>
-            <ChevronRight size={20} className='text-gray-400' />
+            <ChevronRight size={20} className="text-gray-400" />
           </div>
         ))}
       </div>
@@ -149,13 +143,13 @@ export default function AccountPage() {
       <button
         onClick={handleSignOut}
         disabled={loading}
-        className='w-full flex items-center justify-center gap-2 py-3 bg-red-50 text-red-600 font-medium rounded-lg hover:bg-red-100 transition-colors'
+        className="w-full flex items-center justify-center gap-2 py-3 bg-red-50 text-red-600 font-medium rounded-lg hover:bg-red-100 transition-colors"
       >
         <LogOut size={18} />
         {loading ? "Signing out..." : "Sign Out"}
       </button>
 
-      <p className='text-xs text-gray-500 text-center mt-6'>
+      <p className="text-xs text-gray-500 text-center mt-6">
         App Version 1.0.0
       </p>
     </div>
