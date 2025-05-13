@@ -1,15 +1,17 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 // Function to get the current user's role from Clerk metadata
 export async function getUserRole(): Promise<UserRole | null> {
   try {
-    const user = await currentUser();
+    const session = await auth();
+    const user = session?.user;
 
     if (!user) return null;
 
-    const role = user.publicMetadata.role as UserRole | undefined;
+    const role = user.role as UserRole | undefined;
     return role || null;
   } catch (error) {
     console.error("Error getting user role:", error);
@@ -19,13 +21,14 @@ export async function getUserRole(): Promise<UserRole | null> {
 
 // Check if the current user is authenticated
 export async function requireAuth() {
-  const { userId } = await auth();
+  const session = await auth();
+  const user = session?.user;
 
-  if (!userId) {
+  if (!user) {
     redirect("/sign-in");
   }
 
-  return userId;
+  return user.id;
 }
 
 // Check if user has required role and redirect if not
@@ -34,13 +37,14 @@ export async function requireRole(
   redirectPath = "/"
 ) {
   const userId = await requireAuth();
-  const user = await currentUser();
+  const session = await auth();
+  const user = session?.user;
 
   if (!user) {
     redirect("/sign-in");
   }
 
-  const userRole = user.publicMetadata.role as UserRole | undefined;
+  const userRole = user.role as UserRole | undefined;
 
   // Check if the user's role is allowed
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
@@ -57,13 +61,14 @@ export async function requireVerifiedDriver(
   redirectPath = "/drivers/onboarding"
 ) {
   const { userId } = await requireRole("driver", "/");
-  const user = await currentUser();
+  const session = await auth();
+  const user = session?.user;
 
   if (!user) {
     redirect("/sign-in");
   }
 
-  const isVerified = user.publicMetadata.isVerified as boolean | undefined;
+  const isVerified = user.isVerified as boolean | undefined;
 
   if (!isVerified) {
     redirect(redirectPath);
@@ -74,11 +79,12 @@ export async function requireVerifiedDriver(
 
 // Get verification status of current user
 export async function getVerificationStatus(): Promise<boolean> {
-  const user = await currentUser();
+  const session = await auth();
+  const user = session?.user;
 
   if (!user) return false;
 
-  return (user.publicMetadata.isVerified as boolean) || false;
+  return (user.isVerified as boolean) || false;
 }
 
 // Check if current user is admin
