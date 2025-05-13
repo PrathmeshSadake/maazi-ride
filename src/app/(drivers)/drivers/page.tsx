@@ -12,9 +12,17 @@ import {
   Calendar,
   Clock,
   MapPin,
+  Users,
+  ArrowRight,
 } from "lucide-react";
 import { format } from "date-fns";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 // Helper function to format dates
 function formatDate(dateString: string) {
@@ -138,60 +146,73 @@ export default async function DriverDashboard() {
             {rides.length > 0 ? (
               <div className="grid grid-cols-1 gap-4">
                 {rides.map((ride) => (
-                  <Card key={ride.id} className="h-full">
+                  <Card className="h-full flex flex-col overflow-hidden transition-shadow hover:shadow-md">
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
-                        <CardTitle className="text-xl">
-                          {ride.fromLocation.split(",")[0]} to{" "}
+                        <CardTitle className="text-lg font-semibold line-clamp-1">
+                          {ride.fromLocation.split(",")[0]}
+                          <ArrowRight className="inline h-4 w-4 mx-1" />
                           {ride.toLocation.split(",")[0]}
                         </CardTitle>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex gap-4">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Calendar className="h-4 w-4" />
-                          <span>
-                            {formatDate(ride.departureDate.toString())}
+                    <CardContent className="pb-0 flex-1">
+                      <div className="flex flex-wrap gap-3 mb-3">
+                        <div className="flex items-center gap-1 text-gray-600 text-sm">
+                          <Calendar className="h-4 w-4 flex-shrink-0" />
+                          <span className="whitespace-nowrap">
+                            {format(ride.departureDate, "MMM d, yyyy")}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Clock className="h-4 w-4" />
-                          <span>{ride.departureTime}</span>
+                        <div className="flex items-center gap-1 text-gray-600 text-sm">
+                          <Clock className="h-4 w-4 flex-shrink-0" />
+                          <span className="whitespace-nowrap">
+                            {ride.departureTime}
+                          </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <MapPin className="h-4 w-4 text-gray-500" />
-                        <div className="text-sm">
-                          <p className="truncate">{ride.fromLocation}</p>
-                          <p className="truncate">{ride.toLocation}</p>
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-1 text-gray-600">
+                          <MapPin className="h-4 w-4 mt-1 flex-shrink-0 text-gray-500" />
+                          <div className="text-sm">
+                            <p className="line-clamp-1 font-medium">
+                              {ride.fromLocation}
+                            </p>
+                            <p className="line-clamp-1 text-gray-500">
+                              {ride.toLocation}
+                            </p>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex justify-between pt-2">
-                        <div className="flex items-center gap-2">
-                          <IndianRupee className="h-4 w-4 text-gray-500" />
+                      <div className="flex justify-between mt-4">
+                        <div className="flex items-center gap-1">
+                          <IndianRupee className="h-4 w-4 text-gray-500 flex-shrink-0" />
                           <span className="font-semibold">
-                            {ride.price.toFixed(2)}
+                            ₹{ride.price.toLocaleString("en-IN")}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Car className="h-4 w-4 text-gray-500" />
+                        <div className="flex items-center gap-1">
+                          <Users className="h-4 w-4 text-gray-500 flex-shrink-0" />
                           <span>{ride.availableSeats} seats</span>
                         </div>
                       </div>
-
-                      <div className="pt-2">
-                        <Link href={`/drivers/trips/${ride.id}`}>
-                          <Button variant="outline" className="w-full">
-                            View Details
-                          </Button>
-                        </Link>
-                      </div>
                     </CardContent>
+
+                    <CardFooter className="pt-4 mt-auto">
+                      <Link
+                        href={`/drivers/trips/${ride.id}`}
+                        className="w-full"
+                      >
+                        <Button variant="outline" className="w-full">
+                          View Details
+                        </Button>
+                      </Link>
+                    </CardFooter>
                   </Card>
                 ))}
+
                 <div className="text-center mt-4">
                   <Link href="/drivers/trips">
                     <Button variant="link">View all rides</Button>

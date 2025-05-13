@@ -30,11 +30,12 @@ import {
   Check,
   X,
   MessageSquare,
+  ChevronLeft,
+  MoreVertical,
+  Menu,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { format } from "date-fns";
-import { SourceProvider } from "@/context/source-context";
-import { DestinationProvider } from "@/context/destination-context";
 import Link from "next/link";
 import {
   AlertDialog,
@@ -46,6 +47,65 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { GoogleMapsPreview } from "@/components/ui/google-maps-preview";
+
+interface Booking {
+  id: string;
+  status: string;
+  numSeats: number;
+  createdAt: string;
+  userId: string;
+  user: {
+    firstName: string;
+    lastName: string;
+  };
+}
+
+interface Driver {
+  firstName: string;
+  lastName: string;
+  driverRating?: number;
+}
+
+interface Trip {
+  id: string;
+  fromLocation: string;
+  toLocation: string;
+  fromLatitude: number;
+  fromLongitude: number;
+  toLatitude: number;
+  toLongitude: number;
+  departureDate: string;
+  departureTime: string;
+  price: number;
+  availableSeats: number;
+  description?: string;
+  status: string;
+  createdAt: string;
+  approvedAt?: string;
+  bookings: Booking[];
+  driver: Driver;
+}
+
+interface Location {
+  name: string;
+  lat: number;
+  lng: number;
+}
 
 // Helper to format status badges
 const getStatusBadge = (status: string) => {
@@ -68,61 +128,39 @@ const getStatusBadge = (status: string) => {
           Cancelled
         </Badge>
       );
+    case "CONFIRMED":
+      return (
+        <Badge variant="outline" className="bg-green-50 text-green-700">
+          Confirmed
+        </Badge>
+      );
+    case "PENDING":
+    case "PENDING_APPROVAL":
+      return (
+        <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
+          Pending
+        </Badge>
+      );
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
 };
 
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-}
-
-interface Booking {
-  id: string;
-  userId: string;
-  status: string;
-  numSeats: number;
-  createdAt: string;
-  user: User;
-}
-
-interface Ride {
-  id: string;
-  fromLocation: string;
-  toLocation: string;
-  departureDate: string;
-  departureTime: string;
-  price: number;
-  availableSeats: number;
-  status: string;
-  description: string;
-  createdAt: string;
-  driver: {
-    firstName: string | null;
-    lastName: string | null;
-    driverRating: number | null;
-  };
-  bookings: Booking[];
-  approvedById?: string | null;
-  approvedAt?: string | null;
-  isScheduled: boolean;
-}
-
 export default function TripDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const [trip, setTrip] = useState<Ride | null>(null);
+  const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [source, setSource] = useState<any>(null);
-  const [destination, setDestination] = useState<any>(null);
+  const [source, setSource] = useState<Location | null>(null);
+  const [destination, setDestination] = useState<Location | null>(null);
   const [bookingsCount, setBookingsCount] = useState(0);
   const [totalConfirmedBookings, setTotalConfirmedBookings] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-
+  const [activeTab, setActiveTab] = useState("details");
+  console.log(source, destination);
+  console.log(trip);
   useEffect(() => {
     const fetchTripDetails = async () => {
       try {
@@ -135,23 +173,27 @@ export default function TripDetailPage() {
           );
         }
 
-        const data = await response.json();
+        const data: Trip = await response.json();
         setTrip(data);
 
         // Set up source and destination for maps
         if (data) {
           setSource({
             name: data.fromLocation,
+            lat: data.fromLatitude,
+            lng: data.fromLongitude,
           });
 
           setDestination({
             name: data.toLocation,
+            lat: data.toLatitude,
+            lng: data.toLongitude,
           });
 
           // Count bookings
           const totalBookings = data.bookings.length;
           const confirmed = data.bookings.filter(
-            (booking: Booking) => booking.status === "CONFIRMED"
+            (booking) => booking.status === "CONFIRMED"
           ).length;
           setBookingsCount(totalBookings);
           setTotalConfirmedBookings(confirmed);
@@ -261,22 +303,22 @@ export default function TripDetailPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <Skeleton className="h-10 w-48 mb-2" />
-          <Skeleton className="h-6 w-64" />
+      <div className="container max-w-md mx-auto px-4 py-4">
+        <div className="mb-4">
+          <Skeleton className="h-8 w-36 mb-2" />
+          <Skeleton className="h-5 w-48" />
         </div>
         <Card>
           <CardHeader>
-            <Skeleton className="h-8 w-48 mb-2" />
-            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-6 w-36 mb-2" />
+            <Skeleton className="h-4 w-24" />
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
               <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-48 w-full" />
             </div>
           </CardContent>
         </Card>
@@ -286,7 +328,7 @@ export default function TripDetailPage() {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container max-w-md mx-auto px-4 py-4">
         <Card className="border-red-200 bg-red-50">
           <CardHeader>
             <CardTitle className="text-red-700">Error</CardTitle>
@@ -295,7 +337,7 @@ export default function TripDetailPage() {
             <p>{error}</p>
           </CardContent>
           <CardFooter>
-            <Button onClick={handleBack} variant="outline">
+            <Button onClick={handleBack} variant="outline" className="w-full">
               Go Back
             </Button>
           </CardFooter>
@@ -324,346 +366,426 @@ export default function TripDetailPage() {
     (booking) => booking.status === "REJECTED" || booking.status === "CANCELLED"
   );
 
+  // Mobile optimized trip details view
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Trip Details</h1>
-          <p className="text-gray-500">
-            Manage your scheduled trip from {trip.fromLocation} to{" "}
-            {trip.toLocation}
-          </p>
-        </div>
-        <Button onClick={handleBack} variant="outline">
-          Back to Trips
+    <div className="container max-w-md mx-auto px-4 py-4 pb-16">
+      {/* Top navigation with back button */}
+      <div className="flex justify-between items-center mb-4 sticky top-0 bg-white z-10 py-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleBack}
+          className="rounded-full"
+        >
+          <ChevronLeft className="h-5 w-5" />
         </Button>
+        <h1 className="text-xl font-semibold">Trip Details</h1>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <MoreVertical className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {canCancel && (
+              <DropdownMenuItem
+                className="text-red-600"
+                onClick={() => setShowCancelDialog(true)}
+              >
+                Cancel Trip
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={() => router.push("/drivers/trips")}>
+              All Trips
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Route Information</CardTitle>
-                {getStatusBadge(trip.status)}
+      {/* Status Card with Route Info */}
+      <Card className="mb-4 shadow-sm">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-lg">
+              {trip.fromLocation} to {trip.toLocation}
+            </CardTitle>
+            {getStatusBadge(trip.status)}
+          </div>
+          <CardDescription className="text-xs">
+            ID: {trip.id.substring(0, 8)}...
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="flex flex-col space-y-3 mt-2">
+            <div className="flex items-start">
+              <MapPin className="w-4 h-4 text-green-600 mt-1 mr-2 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-gray-500">From</p>
+                <p className="text-sm font-medium">{trip.fromLocation}</p>
               </div>
-              <CardDescription>Trip ID: {trip.id}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex flex-col space-y-4">
-                <div className="flex items-start">
-                  <MapPin className="w-5 h-5 text-green-600 mt-1 mr-2" />
-                  <div>
-                    <p className="text-sm text-gray-500">Pickup Location</p>
-                    <p className="font-medium">{trip.fromLocation}</p>
-                  </div>
-                </div>
+            </div>
 
-                <div className="ml-3 border-l-2 border-dashed border-gray-300 h-8"></div>
+            <div className="ml-3 border-l-2 border-dashed border-gray-300 h-4"></div>
 
-                <div className="flex items-start">
-                  <MapPin className="w-5 h-5 text-red-600 mt-1 mr-2" />
-                  <div>
-                    <p className="text-sm text-gray-500">Dropoff Location</p>
-                    <p className="font-medium">{trip.toLocation}</p>
-                  </div>
-                </div>
+            <div className="flex items-start">
+              <MapPin className="w-4 h-4 text-red-600 mt-1 mr-2 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-gray-500">To</p>
+                <p className="text-sm font-medium">{trip.toLocation}</p>
               </div>
+            </div>
+          </div>
 
-              {source && destination && (
-                <SourceProvider initialValue={source}>
-                  <DestinationProvider initialValue={destination}>
-                    {null /* Or any appropriate content */}
-                  </DestinationProvider>
-                </SourceProvider>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Schedule & Pricing</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 gap-4">
-                <div className="flex items-center">
-                  <Calendar className="w-5 h-5 text-gray-500 mr-3" />
-                  <div>
-                    <p className="text-sm text-gray-500">Departure Date</p>
-                    <p className="font-medium">
-                      {format(new Date(trip.departureDate), "PPP")}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <Clock className="w-5 h-5 text-gray-500 mr-3" />
-                  <div>
-                    <p className="text-sm text-gray-500">Departure Time</p>
-                    <p className="font-medium">{trip.departureTime}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <IndianRupee className="w-5 h-5 text-gray-500 mr-3" />
-                  <div>
-                    <p className="text-sm text-gray-500">Price per Seat</p>
-                    <p className="font-medium">₹{trip.price.toFixed(2)}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <Users className="w-5 h-5 text-gray-500 mr-3" />
-                  <div>
-                    <p className="text-sm text-gray-500">Available Seats</p>
-                    <p className="font-medium">
-                      {trip.availableSeats - confirmedBookings.length} of{" "}
-                      {trip.availableSeats}
-                    </p>
-                  </div>
-                </div>
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            <div className="flex items-center">
+              <Calendar className="w-4 h-4 text-gray-500 mr-2 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-gray-500">Date</p>
+                <p className="text-sm font-medium">
+                  {format(new Date(trip.departureDate), "MMM d, yyyy")}
+                </p>
               </div>
+            </div>
 
-              {trip.description && (
-                <div className="mt-5">
-                  <p className="text-sm text-gray-500 mb-1">Trip Description</p>
-                  <p className="text-gray-700">{trip.description}</p>
-                </div>
-              )}
-            </CardContent>
-            <CardFooter>
-              {canCancel && (
-                <Button
-                  variant="destructive"
-                  onClick={() => setShowCancelDialog(true)}
-                  className="w-full sm:w-auto"
-                >
-                  Cancel Trip
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Booking Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Total Bookings</span>
-                  <Badge variant="outline">{bookingsCount}</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Confirmed Bookings</span>
-                  <Badge
-                    variant="outline"
-                    className="bg-green-50 text-green-700"
-                  >
-                    {confirmedBookings.length}
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Remaining Seats</span>
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                    {trip.availableSeats - confirmedBookings.length}
-                  </Badge>
-                </div>
+            <div className="flex items-center">
+              <Clock className="w-4 h-4 text-gray-500 mr-2 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-gray-500">Time</p>
+                <p className="text-sm font-medium">{trip.departureTime}</p>
               </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-              <Separator className="my-4" />
+      {/* Mobile Tab Navigation */}
+      <div className="mb-4">
+        <Tabs
+          defaultValue="details"
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="w-full"
+        >
+          <TabsList className="grid grid-cols-3 w-full">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="bookings">
+              Bookings{" "}
+              {trip.bookings.length > 0 ? `(${trip.bookings.length})` : ""}
+            </TabsTrigger>
+            <TabsTrigger value="driver">Driver</TabsTrigger>
+          </TabsList>
 
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Created On</span>
-                  <span className="text-sm">
-                    {format(new Date(trip.createdAt), "PPP")}
-                  </span>
-                </div>
-
-                {trip.status === "APPROVED" && trip.approvedAt && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Approved On</span>
-                    <span className="text-sm">
-                      {format(new Date(trip.approvedAt), "PPP")}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Driver Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                  <User className="w-6 h-6 text-gray-500" />
-                </div>
-                <div className="ml-4">
-                  <p className="font-medium">
-                    {trip.driver.firstName || ""} {trip.driver.lastName || ""}
-                  </p>
+          {/* Details Tab */}
+          <TabsContent value="details" className="space-y-4 mt-4">
+            <Card className="shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Trip Information</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="flex items-center">
-                    <span className="text-sm text-gray-500 mr-2">Rating:</span>
-                    <span className="text-sm font-medium">
-                      {trip.driver.driverRating?.toFixed(1) || "N/A"}
-                    </span>
+                    <IndianRupee className="w-4 h-4 text-gray-500 mr-2 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-gray-500">Price</p>
+                      <p className="text-sm font-medium">
+                        ₹{trip.price.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center">
+                    <Users className="w-4 h-4 text-gray-500 mr-2 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-gray-500">Seats</p>
+                      <p className="text-sm font-medium">
+                        {trip.availableSeats - confirmedBookings.length}/
+                        {trip.availableSeats}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+
+                {trip.description && (
+                  <div className="mt-4">
+                    <p className="text-xs text-gray-500 mb-1">Description</p>
+                    <p className="text-sm text-gray-700">{trip.description}</p>
+                  </div>
+                )}
+
+                {/* Add Google Maps Preview */}
+                {source && destination && (
+                  <div className="mt-4">
+                    <GoogleMapsPreview
+                      source={source}
+                      destination={destination}
+                      className="w-full h-48 rounded-lg overflow-hidden"
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Status Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">
+                      Total Bookings
+                    </span>
+                    <Badge variant="outline">{bookingsCount}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">Confirmed</span>
+                    <Badge
+                      variant="outline"
+                      className="bg-green-50 text-green-700"
+                    >
+                      {confirmedBookings.length}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">Remaining</span>
+                    <Badge
+                      variant="outline"
+                      className="bg-blue-50 text-blue-700"
+                    >
+                      {trip.availableSeats - confirmedBookings.length}
+                    </Badge>
+                  </div>
+                </div>
+
+                <Separator className="my-3" />
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">Created</span>
+                    <span className="text-xs">
+                      {format(new Date(trip.createdAt), "MMM d, yyyy")}
+                    </span>
+                  </div>
+
+                  {trip.status === "APPROVED" && trip.approvedAt && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Approved</span>
+                      <span className="text-xs">
+                        {format(new Date(trip.approvedAt), "MMM d, yyyy")}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+              {canCancel && (
+                <CardFooter className="pt-0">
+                  <Button
+                    variant="destructive"
+                    onClick={() => setShowCancelDialog(true)}
+                    className="w-full text-sm"
+                    size="sm"
+                  >
+                    Cancel Trip
+                  </Button>
+                </CardFooter>
+              )}
+            </Card>
+          </TabsContent>
+
+          {/* Bookings Tab */}
+          <TabsContent value="bookings" className="mt-4">
+            <Card className="shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Booking Requests</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Tabs defaultValue="pending" className="w-full">
+                  <TabsList className="grid grid-cols-3 w-full mb-3 h-8">
+                    <TabsTrigger value="pending" className="text-xs">
+                      Pending ({pendingBookings.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="confirmed" className="text-xs">
+                      Confirmed ({confirmedBookings.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="rejected" className="text-xs">
+                      Rejected ({rejectedBookings.length})
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="pending">
+                    {pendingBookings.length > 0 ? (
+                      <div className="space-y-3">
+                        {pendingBookings.map((booking) => (
+                          <div
+                            key={booking.id}
+                            className="border rounded-lg p-3"
+                          >
+                            <div className="flex justify-between mb-2">
+                              <div>
+                                <div className="font-medium text-sm">
+                                  {booking.user.firstName}{" "}
+                                  {booking.user.lastName}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {booking.numSeats} seat(s) •{" "}
+                                  {new Date(
+                                    booking.createdAt
+                                  ).toLocaleDateString()}
+                                </div>
+                              </div>
+                              {getStatusBadge(booking.status)}
+                            </div>
+                            <div className="flex space-x-2 mt-3">
+                              <Button
+                                size="sm"
+                                onClick={() => handleApproveRequest(booking.id)}
+                                disabled={isProcessing}
+                                className="bg-green-600 hover:bg-green-700 text-xs h-8 px-2"
+                              >
+                                <Check className="h-3 w-3 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleRejectRequest(booking.id)}
+                                disabled={isProcessing}
+                                className="text-red-600 border-red-600 hover:bg-red-50 text-xs h-8 px-2"
+                              >
+                                <X className="h-3 w-3 mr-1" />
+                                Reject
+                              </Button>
+                              <Link href={`/messages?userId=${booking.userId}`}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs h-8 ml-auto px-2"
+                                >
+                                  <MessageSquare className="h-3 w-3 mr-1" />
+                                  Message
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-6 text-center text-gray-500 text-sm">
+                        No pending booking requests
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="confirmed">
+                    {confirmedBookings.length > 0 ? (
+                      <div className="space-y-3">
+                        {confirmedBookings.map((booking) => (
+                          <div
+                            key={booking.id}
+                            className="border rounded-lg p-3"
+                          >
+                            <div className="flex justify-between mb-2">
+                              <div>
+                                <div className="font-medium text-sm">
+                                  {booking.user.firstName}{" "}
+                                  {booking.user.lastName}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {booking.numSeats} seat(s)
+                                </div>
+                              </div>
+                              {getStatusBadge(booking.status)}
+                            </div>
+                            <div className="flex mt-3">
+                              <Link href={`/messages?userId=${booking.userId}`}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs h-8"
+                                >
+                                  <MessageSquare className="h-3 w-3 mr-1" />
+                                  Message
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-6 text-center text-gray-500 text-sm">
+                        No confirmed bookings
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="rejected">
+                    {rejectedBookings.length > 0 ? (
+                      <div className="space-y-3">
+                        {rejectedBookings.map((booking) => (
+                          <div
+                            key={booking.id}
+                            className="border rounded-lg p-3"
+                          >
+                            <div className="flex justify-between mb-2">
+                              <div>
+                                <div className="font-medium text-sm">
+                                  {booking.user.firstName}{" "}
+                                  {booking.user.lastName}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {booking.numSeats} seat(s)
+                                </div>
+                              </div>
+                              {getStatusBadge(booking.status)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-6 text-center text-gray-500 text-sm">
+                        No rejected bookings
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Driver Tab */}
+          <TabsContent value="driver" className="mt-4">
+            <Card className="shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Driver Information</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-2">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-6 h-6 text-gray-500" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="font-medium text-sm">
+                      {trip.driver.firstName || ""} {trip.driver.lastName || ""}
+                    </p>
+                    <div className="flex items-center">
+                      <span className="text-xs text-gray-500 mr-1">
+                        Rating:
+                      </span>
+                      <span className="text-xs font-medium">
+                        {trip.driver.driverRating?.toFixed(1) || "N/A"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
-      {trip.isScheduled && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Booking Requests</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="pending">
-              <TabsList className="mb-4">
-                <TabsTrigger value="pending">
-                  Pending ({pendingBookings.length})
-                </TabsTrigger>
-                <TabsTrigger value="confirmed">
-                  Confirmed ({confirmedBookings.length})
-                </TabsTrigger>
-                <TabsTrigger value="rejected">
-                  Rejected ({rejectedBookings.length})
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="pending">
-                {pendingBookings.length > 0 ? (
-                  <div className="space-y-4">
-                    {pendingBookings.map((booking) => (
-                      <div key={booking.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between mb-2">
-                          <div>
-                            <div className="font-medium">
-                              {booking.user.firstName} {booking.user.lastName}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              Requested {booking.numSeats} seat(s) on{" "}
-                              {new Date(booking.createdAt).toLocaleDateString()}
-                            </div>
-                          </div>
-                          {getStatusBadge(booking.status)}
-                        </div>
-                        <div className="flex space-x-2 mt-4">
-                          <Button
-                            size="sm"
-                            onClick={() => handleApproveRequest(booking.id)}
-                            disabled={isProcessing}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <Check className="h-4 w-4 mr-2" />
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleRejectRequest(booking.id)}
-                            disabled={isProcessing}
-                            className="text-red-600 border-red-600 hover:bg-red-50"
-                          >
-                            <X className="h-4 w-4 mr-2" />
-                            Reject
-                          </Button>
-                          <Link href={`/messages?userId=${booking.userId}`}>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="ml-auto"
-                            >
-                              <MessageSquare className="h-4 w-4 mr-2" />
-                              Message
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-6 text-center text-gray-500">
-                    No pending booking requests
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="confirmed">
-                {confirmedBookings.length > 0 ? (
-                  <div className="space-y-4">
-                    {confirmedBookings.map((booking) => (
-                      <div key={booking.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between mb-2">
-                          <div>
-                            <div className="font-medium">
-                              {booking.user.firstName} {booking.user.lastName}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              Booked {booking.numSeats} seat(s)
-                            </div>
-                          </div>
-                          {getStatusBadge(booking.status)}
-                        </div>
-                        <div className="flex mt-4">
-                          <Link href={`/messages?userId=${booking.userId}`}>
-                            <Button size="sm" variant="outline">
-                              <MessageSquare className="h-4 w-4 mr-2" />
-                              Message
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-6 text-center text-gray-500">
-                    No confirmed bookings
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="rejected">
-                {rejectedBookings.length > 0 ? (
-                  <div className="space-y-4">
-                    {rejectedBookings.map((booking) => (
-                      <div key={booking.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between mb-2">
-                          <div>
-                            <div className="font-medium">
-                              {booking.user.firstName} {booking.user.lastName}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              Requested {booking.numSeats} seat(s)
-                            </div>
-                          </div>
-                          {getStatusBadge(booking.status)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-6 text-center text-gray-500">
-                    No rejected bookings
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      )}
-
+      {/* Cancel Dialog */}
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[90%] max-w-md mx-auto">
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel Trip</AlertDialogTitle>
             <AlertDialogDescription>
@@ -671,11 +793,13 @@ export default function TripDetailPage() {
               undone. All pending and confirmed bookings will be cancelled.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="flex flex-col sm:flex-row gap-2">
+            <AlertDialogCancel className="w-full sm:w-auto mt-0">
+              Keep Trip
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleCancelTrip}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto"
             >
               Yes, Cancel Trip
             </AlertDialogAction>

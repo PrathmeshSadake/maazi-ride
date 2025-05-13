@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await currentUser();
+    const session = await auth();
+    const user = session?.user;
 
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -38,8 +39,7 @@ export async function GET(
         driver: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
             driverRating: true,
             ridesCompleted: true,
             vehicle: true,
@@ -52,8 +52,7 @@ export async function GET(
                   user: {
                     select: {
                       id: true,
-                      firstName: true,
-                      lastName: true,
+                      name: true,
                     },
                   },
                 },
@@ -114,9 +113,10 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
+    const session = await auth();
+    const user = session?.user;
 
-    if (!userId) {
+    if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -139,10 +139,13 @@ export async function PATCH(
     }
 
     // Only the driver can update their own ride
-    if (ride.driverId !== userId) {
-      return NextResponse.json({
-        message: "You don't have permission to update this ride",
-      });
+    if (ride.driverId !== user.id) {
+      return NextResponse.json(
+        {
+          message: "You don't have permission to update this ride",
+        },
+        { status: 403 }
+      );
     }
 
     // Parse the update data from the request
@@ -166,8 +169,7 @@ export async function PATCH(
         driver: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
             driverRating: true,
             vehicle: true,
           },

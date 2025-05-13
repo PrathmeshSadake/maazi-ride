@@ -120,7 +120,11 @@ model Ride {
   driverId      String
   driver        User        @relation("DriverRides", fields: [driverId], references: [id])
   fromLocation  String
+  fromLatitude  Float
+  fromLongitude Float
   toLocation    String
+  toLatitude    Float
+  toLongitude   Float
   departureDate DateTime
   departureTime String
   price         Float

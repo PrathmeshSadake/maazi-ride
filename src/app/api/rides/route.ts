@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { auth } from "@/auth";
 
 const rideSchema = z.object({
   fromLocation: z.string(),
+  fromLatitude: z.number(),
+  fromLongitude: z.number(),
   toLocation: z.string(),
+  toLatitude: z.number(),
+  toLongitude: z.number(),
   departureDate: z.string().or(z.date()),
   departureTime: z.string(),
   price: z.number().positive(),
@@ -16,31 +20,11 @@ const rideSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await currentUser();
+    const session = await auth();
+    const user = session?.user;
 
-    if (!user) {
+    if (!user || user.role !== "driver") {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    console.log("user", user);
-
-    // Get user record from our database
-    const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
-    });
-
-    if (!dbUser || dbUser.role !== "driver") {
-      return NextResponse.json(
-        { message: "Only drivers can create rides" },
-        { status: 403 }
-      );
-    }
-
-    if (!dbUser.isVerified) {
-      return NextResponse.json(
-        { message: "You must be verified to create rides" },
-        { status: 403 }
-      );
     }
 
     const body = await req.json();
@@ -57,7 +41,11 @@ export async function POST(req: NextRequest) {
       data: {
         driverId: user.id,
         fromLocation: validatedData.fromLocation,
+        fromLatitude: validatedData.fromLatitude,
+        fromLongitude: validatedData.fromLongitude,
         toLocation: validatedData.toLocation,
+        toLatitude: validatedData.toLatitude,
+        toLongitude: validatedData.toLongitude,
         departureDate,
         departureTime: validatedData.departureTime,
         price: validatedData.price,
@@ -86,7 +74,8 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await currentUser();
+    const session = await auth();
+    const user = session?.user;
 
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -119,8 +108,7 @@ export async function GET(req: NextRequest) {
               user: {
                 select: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
+                  name: true,
                 },
               },
             },
@@ -157,8 +145,7 @@ export async function GET(req: NextRequest) {
           driver: {
             select: {
               id: true,
-              firstName: true,
-              lastName: true,
+              name: true,
               driverRating: true,
               ridesCompleted: true,
             },

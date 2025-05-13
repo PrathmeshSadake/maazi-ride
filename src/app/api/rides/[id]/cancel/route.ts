@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-
+import { auth } from "@/auth";
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { userId } = await auth();
+    const session = await auth();
+    const user = session?.user;
 
-    if (!userId) {
+    if (!user) {
       return new NextResponse(JSON.stringify({ message: "Unauthorized" }), {
         status: 401,
       });
@@ -27,7 +27,7 @@ export async function PATCH(
     }
 
     // Check if the user is the driver of this ride
-    if (ride.driverId !== userId) {
+    if (ride.driverId !== user.id) {
       return new NextResponse(
         JSON.stringify({
           message: "You are not authorized to cancel this ride",
