@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Home, Car, User, Clock, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
 import {
@@ -12,9 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { FileCheck, Shield } from "lucide-react";
-
+import { auth } from "@/auth";
 export default async function DriversLayout({
   children,
 }: {
@@ -48,13 +46,14 @@ export default async function DriversLayout({
     },
   ];
 
-  const user = await currentUser();
+  const session = await auth();
+  const user = session?.user;
 
   if (!user) {
     redirect("/sign-in");
   }
 
-  if (user && user.publicMetadata.role !== "driver") {
+  if (user && user.role !== "driver") {
     console.log("User is not a driver");
     redirect("/");
   }
@@ -66,7 +65,7 @@ export default async function DriversLayout({
   });
 
   if (
-    (!driver?.isVerified || !user.publicMetadata.isVerified) &&
+    (!driver?.isVerified || !user.isVerified) &&
     driver?.drivingLicenseUrl &&
     driver?.vehicleRegistrationUrl &&
     driver?.insuranceUrl

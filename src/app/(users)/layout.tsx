@@ -2,27 +2,28 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Home, Search, User, Clock, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 
 export default async function UsersLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await currentUser();
+  const session = await auth();
+  const user = session?.user;
 
   if (!user) {
     redirect("/sign-in");
   }
 
-  if (user && user.publicMetadata.role === "driver") {
+  if (user && user.role === "driver") {
     redirect("/drivers");
   }
-  if (user && user.publicMetadata.role === "admin") {
+  if (user && user.role === "admin") {
     redirect("/admin");
   }
 
-  console.log("User is a user", user.publicMetadata.role);
+  console.log("User is a user", user.role);
 
   const navItems = [
     {
@@ -34,11 +35,6 @@ export default async function UsersLayout({
       label: "Activity",
       href: "/activity",
       icon: Clock,
-    },
-    {
-      label: "Messages",
-      href: "/messages",
-      icon: MessageSquare,
     },
     {
       label: "Account",

@@ -13,9 +13,9 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useUser } from "@clerk/nextjs";
 import { redirect, useRouter } from "next/navigation";
 import axios from "axios";
+import { useSession } from "next-auth/react";
 // Types
 interface VehicleData {
   make: string;
@@ -47,7 +47,8 @@ interface UploadingState {
 type FileType = "drivingLicense" | "vehicleRegistration" | "insurance";
 
 export default function DriverOnboarding() {
-  const { user, isLoaded } = useUser();
+  const { data: session, status } = useSession();
+
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [isVerified, setIsVerified] = useState(false);
@@ -93,10 +94,10 @@ export default function DriverOnboarding() {
   const [vehicleImageUrls, setVehicleImageUrls] = useState<string[]>([]);
 
   useEffect(() => {
-    if (isLoaded && user) {
-      setIsVerified((user.publicMetadata?.isVerified as boolean) || false);
+    if (status === "authenticated" && session?.user) {
+      setIsVerified(session?.user?.isVerified || false);
     }
-  }, [isLoaded, user]);
+  }, [status, session]);
 
   const handleNextStep = () => {
     setStep((prev) => prev + 1);
@@ -200,12 +201,20 @@ export default function DriverOnboarding() {
     setIsSubmitting(true);
 
     try {
+      console.log("formData", formData);
+      console.log("vehicleImageUrls", vehicleImageUrls);
       const response = await fetch("/api/drivers/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          vehicle: {
+            ...formData.vehicle,
+            images: vehicleImageUrls,
+          },
+        }),
       });
 
       if (!response.ok) {
@@ -243,24 +252,38 @@ export default function DriverOnboarding() {
     if (!files) return;
 
     const newFiles = Array.from(files);
-    // Append new files to the existing list
     setVehicleImages((prev) => [...prev, ...newFiles]);
 
-    // Upload each file and update URLs
-    const newUrls = await Promise.all(
-      newFiles.map(async (file) => {
-        const formDataObj = new FormData();
-        formDataObj.append("file", file);
-        const { data } = await axios.post("/api/upload-docs", formDataObj);
-        if (!data.url) {
-          throw new Error("Server response missing URL for uploaded file");
-        }
-        return data.url;
-      })
-    );
+    try {
+      // Upload each file and update URLs
+      const newUrls = await Promise.all(
+        newFiles.map(async (file) => {
+          const formData = new FormData();
+          formData.append("file", file);
 
-    // Append new URLs to the existing list
-    setVehicleImageUrls((prev) => [...prev, ...newUrls]);
+          const response = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to upload image");
+          }
+
+          const data = await response.json();
+          return data.url;
+        })
+      );
+
+      // Append new URLs to the existing list
+      setVehicleImageUrls((prev) => [...prev, ...newUrls]);
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      toast.error("Failed to upload one or more images");
+
+      // Remove the failed uploads from the vehicleImages array
+      setVehicleImages((prev) => prev.slice(0, prev.length - newFiles.length));
+    }
   };
 
   // Remove a vehicle image

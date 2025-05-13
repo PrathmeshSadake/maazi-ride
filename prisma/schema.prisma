@@ -16,9 +16,7 @@ enum UserRole {
 }
 
 enum RideStatus {
-  PENDING_APPROVAL
-  APPROVED
-  REJECTED
+  PENDING
   COMPLETED
   CANCELLED
 }
@@ -33,15 +31,19 @@ enum BookingStatus {
 }
 
 model User {
-  id            String         @id @unique  // External ID from Clerk
-  email         String?        @unique
-  phoneNumber   String?        @unique
-  firstName      String?
-  lastName      String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  role          UserRole       @default(user)
-  // Driver specific fields
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  role          UserRole  @default(user)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+
+
+
+   // Driver specific fields
   driverRating  Float?         // Out of 5
   ridesCompleted Int           @default(0)
   isVerified    Boolean        @default(false)
@@ -62,6 +64,42 @@ model User {
   reviews       Review[]       @relation("UserReviews")
   reviewsGiven  Review[]       @relation("ReviewsGiven")
 }
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
 
 model Vehicle {
   id            String   @id @default(cuid())
@@ -91,6 +129,7 @@ model Ride {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   isScheduled   Boolean     @default(false)
+  status        RideStatus  @default(PENDING)
   
   // Admin approval info
   approvedById  String?

@@ -12,8 +12,37 @@ export async function POST(req: Request) {
 
     const userId = user.id;
     const data = await req.json();
-    const { vehicleMake, vehicleModel, vehicleYear, licensePlate, documents } =
-      data;
+    const {
+      vehicleMake,
+      vehicleModel,
+      vehicleYear,
+      licensePlate,
+      documents,
+      vehicleImages,
+    } = data;
+
+    // Validate required fields
+    if (
+      !vehicleMake ||
+      !vehicleModel ||
+      !vehicleYear ||
+      !licensePlate ||
+      !documents ||
+      !vehicleImages
+    ) {
+      return NextResponse.json(
+        { error: "All fields including vehicle images are required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate vehicle images
+    if (!Array.isArray(vehicleImages) || vehicleImages.length === 0) {
+      return NextResponse.json(
+        { error: "Vehicle images are required" },
+        { status: 400 }
+      );
+    }
 
     // Check if the user exists in the database
     const existingUser = await prisma.user.findUnique({
@@ -32,6 +61,7 @@ export async function POST(req: Request) {
         model: vehicleModel,
         year: parseInt(vehicleYear),
         licensePlate,
+        vehicleImages,
       },
       create: {
         userId,
@@ -39,6 +69,7 @@ export async function POST(req: Request) {
         model: vehicleModel,
         year: parseInt(vehicleYear),
         licensePlate,
+        vehicleImages,
       },
     });
 

@@ -173,7 +173,7 @@ export default async function DriverDashboard() {
                         <div className="flex items-center gap-2">
                           <IndianRupee className="h-4 w-4 text-gray-500" />
                           <span className="font-semibold">
-                            ${ride.price.toFixed(2)}
+                            {ride.price.toFixed(2)}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">

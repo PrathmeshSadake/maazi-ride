@@ -36,6 +36,16 @@ import { format } from "date-fns";
 import { SourceProvider } from "@/context/source-context";
 import { DestinationProvider } from "@/context/destination-context";
 import Link from "next/link";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Helper to format status badges
 const getStatusBadge = (status: string) => {
@@ -111,6 +121,7 @@ export default function TripDetailPage() {
   const [bookingsCount, setBookingsCount] = useState(0);
   const [totalConfirmedBookings, setTotalConfirmedBookings] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   useEffect(() => {
     const fetchTripDetails = async () => {
@@ -162,8 +173,6 @@ export default function TripDetailPage() {
   };
 
   const handleCancelTrip = async () => {
-    if (!confirm("Are you sure you want to cancel this trip?")) return;
-
     try {
       const response = await fetch(`/api/rides/${params.id}/cancel`, {
         method: "PATCH",
@@ -426,7 +435,7 @@ export default function TripDetailPage() {
               {canCancel && (
                 <Button
                   variant="destructive"
-                  onClick={handleCancelTrip}
+                  onClick={() => setShowCancelDialog(true)}
                   className="w-full sm:w-auto"
                 >
                   Cancel Trip
@@ -652,6 +661,27 @@ export default function TripDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Trip</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this trip? This action cannot be
+              undone. All pending and confirmed bookings will be cancelled.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelTrip}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Yes, Cancel Trip
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

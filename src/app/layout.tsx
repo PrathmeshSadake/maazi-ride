@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
+
 import QueryProvider from "@/providers/QueryProvider";
 import SplashScreenWrapper from "@/components/SplashScreenWrapper";
+import { Providers } from "@/context/providers";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -22,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <Providers>
       <html lang="en">
         <body className={`${poppins.variable}`}>
           <QueryProvider>
@@ -30,6 +31,6 @@ export default function RootLayout({
           </QueryProvider>
         </body>
       </html>
-    </ClerkProvider>
+    </Providers>
   );
 }

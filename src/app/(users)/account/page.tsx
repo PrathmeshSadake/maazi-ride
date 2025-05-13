@@ -48,12 +48,12 @@ export default function AccountPage() {
   }
 
   const menuItems = [
-    {
-      icon: <MessageSquare size={20} className="text-blue-600" />,
-      title: "Messages",
-      description: "Your conversations with drivers",
-      onClick: () => router.push("/messages"),
-    },
+    // {
+    //   icon: <MessageSquare size={20} className="text-blue-600" />,
+    //   title: "Messages",
+    //   description: "Your conversations with drivers",
+    //   onClick: () => router.push("/messages"),
+    // },
     {
       icon: <Clock size={20} className="text-purple-600" />,
       title: "Ride History",
