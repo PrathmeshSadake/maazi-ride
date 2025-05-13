@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 // GET /api/drivers - Get all drivers
 export async function GET(req: NextRequest) {
   try {
-    const user = await currentUser();
+    const session = await auth();
+    const user = session?.user;
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -35,8 +37,7 @@ export async function GET(req: NextRequest) {
         where: query,
         select: {
           id: true,
-          firstName: true,
-          lastName: true,
+          name: true,
           // Only include vehicle info if not for messaging
           ...(forMessaging ? {} : { vehicle: true }),
         },

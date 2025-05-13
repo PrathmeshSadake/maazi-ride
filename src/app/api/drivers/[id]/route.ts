@@ -1,24 +1,18 @@
-import { createClerkClient } from "@clerk/backend";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 
-const clerkClient = createClerkClient({
-  secretKey: process.env.CLERK_SECRET_KEY,
-});
-
-// GET /api/drivers/[id] - Get a single driver by ID
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await currentUser();
+    const session = await auth();
+    const user = session?.user;
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
     // Check if user is admin
     const databaseUser = await prisma.user.findUnique({
       where: { id: user.id },
@@ -55,7 +49,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await currentUser();
+    const session = await auth();
+    const user = session?.user;
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -66,9 +61,9 @@ export async function PATCH(
       where: { id: user.id },
     });
 
-    // if (!databaseUser || databaseUser.role !== "admin") {
-    //   return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    // }
+    if (!databaseUser || databaseUser.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const body = await req.json();
     const { verified } = body;
@@ -89,12 +84,6 @@ export async function PATCH(
         id: (await params).id,
       },
       data: {
-        isVerified: verified,
-      },
-    });
-
-    clerkClient.users.updateUserMetadata(updatedDriver.id, {
-      publicMetadata: {
         isVerified: verified,
       },
     });

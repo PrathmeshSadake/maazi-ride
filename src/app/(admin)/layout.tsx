@@ -1,17 +1,23 @@
+import { auth } from "@/auth";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { currentUser } from "@clerk/nextjs/server";
+
 import { redirect } from "next/navigation";
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await currentUser();
+  const session = await auth();
+  const user = session?.user;
 
   if (!user) {
     redirect("/sign-in");
+  }
+
+  if (user && user.role !== "admin") {
+    redirect("/");
   }
 
   return (
@@ -23,7 +29,7 @@ export default async function AdminLayout({
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant='inset' />
+      <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />
         {children}
