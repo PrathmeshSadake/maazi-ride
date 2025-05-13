@@ -2,9 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, Filter, Calendar, Clock, Search } from "lucide-react";
+import {
+  ArrowLeft,
+  Filter,
+  Calendar,
+  Clock,
+  Search,
+  Edit,
+  Check,
+} from "lucide-react";
 import RideCard from "@/components/users/ride-card";
 import { format, parseISO } from "date-fns";
+import { GoogleMapsAutocomplete } from "@/components/ui/google-maps-autocomplete";
 
 interface Ride {
   id: string;
@@ -16,10 +25,20 @@ interface Ride {
   availableSeats: number;
   hasBooking?: boolean;
   driver: {
-    firstName: string;
-    lastName: string;
+    name: string;
     driverRating: number | null;
   };
+  fromLatitude: number;
+  fromLongitude: number;
+  toLatitude: number;
+  toLongitude: number;
+}
+
+// Define Location type to match GoogleMapsAutocomplete component
+interface Location {
+  name: string;
+  lat: number;
+  lng: number;
 }
 
 export default function ExplorePage() {
@@ -32,6 +51,9 @@ export default function ExplorePage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [fromLocationName, setFromLocationName] = useState<string>("");
   const [toLocationName, setToLocationName] = useState<string>("");
+  const [isEditingLocations, setIsEditingLocations] = useState(false);
+  const [fromLocation, setFromLocation] = useState<Location | null>(null);
+  const [toLocation, setToLocation] = useState<Location | null>(null);
 
   // Parse search parameters
   useEffect(() => {
@@ -54,18 +76,23 @@ export default function ExplorePage() {
     }
 
     // Parse the JSON from the URL params
-    let fromLocation, toLocation;
     try {
-      if (fromParam) fromLocation = JSON.parse(decodeURIComponent(fromParam));
-      if (toParam) toLocation = JSON.parse(decodeURIComponent(toParam));
+      if (fromParam) {
+        const parsedFrom = JSON.parse(decodeURIComponent(fromParam));
+        setFromLocation(parsedFrom);
+        // Set location names
+        setFromLocationName(
+          typeof parsedFrom === "string" ? parsedFrom : parsedFrom.name
+        );
+      }
 
-      // Set location names
-      setFromLocationName(
-        typeof fromLocation === "string" ? fromLocation : fromLocation.name
-      );
-      setToLocationName(
-        typeof toLocation === "string" ? toLocation : toLocation.name
-      );
+      if (toParam) {
+        const parsedTo = JSON.parse(decodeURIComponent(toParam));
+        setToLocation(parsedTo);
+        setToLocationName(
+          typeof parsedTo === "string" ? parsedTo : parsedTo.name
+        );
+      }
     } catch (e) {
       console.error("Error parsing location data:", e);
       setError("Invalid search parameters");
@@ -74,53 +101,24 @@ export default function ExplorePage() {
     }
 
     // Fetch rides
-    fetchRides(fromLocation, toLocation, dateParam);
+    fetchRides(fromParam, toParam, dateParam);
   }, [searchParams, router]);
 
   const fetchRides = async (
-    fromLocation: any,
-    toLocation: any,
+    fromParam: string,
+    toParam: string,
     dateParam: string | null
   ) => {
     setLoading(true);
     try {
-      // Build query params
+      // Build query params - just reuse the existing params
       const queryParams = new URLSearchParams();
-
-      // Get location names from state or extract from parameters
-      const fromName =
-        fromLocationName ||
-        (typeof fromLocation === "string" ? fromLocation : fromLocation.name);
-      const toName =
-        toLocationName ||
-        (typeof toLocation === "string" ? toLocation : toLocation.name);
-
-      // Add from and to location names - encode as JSON and then URL encode
-      queryParams.append(
-        "from",
-        encodeURIComponent(JSON.stringify({ name: fromName }))
-      );
-      queryParams.append(
-        "to",
-        encodeURIComponent(JSON.stringify({ name: toName }))
-      );
+      queryParams.append("from", fromParam);
+      queryParams.append("to", toParam);
 
       // Add date if available
       if (dateParam) {
-        try {
-          // Parse the date first to ensure it's valid
-          const date = new Date(decodeURIComponent(dateParam));
-          if (isNaN(date.getTime())) {
-            throw new Error("Invalid date");
-          }
-          // Format as ISO string to ensure consistent format
-          const formattedDate = date.toISOString();
-          queryParams.append("date", formattedDate);
-          console.log("Using formatted date for search:", formattedDate);
-        } catch (err) {
-          console.error("Error formatting date parameter:", err);
-          // If date is invalid, don't include it in the request
-        }
+        queryParams.append("date", dateParam);
       }
 
       console.log(
@@ -140,6 +138,23 @@ export default function ExplorePage() {
 
       const data = await response.json();
       console.log(`Received API response with ${data.length} rides`);
+
+      // Log the first ride data for debugging
+      if (data.length > 0) {
+        console.log("First ride data sample:", {
+          id: data[0].id,
+          fromLocation: data[0].fromLocation,
+          toLocation: data[0].toLocation,
+          fromLatitude: data[0].fromLatitude,
+          fromLongitude: data[0].fromLongitude,
+          toLatitude: data[0].toLatitude,
+          toLongitude: data[0].toLongitude,
+          departureDate: data[0].departureDate,
+          departureTime: data[0].departureTime,
+          price: data[0].price,
+          availableSeats: data[0].availableSeats,
+        });
+      }
 
       // Validate response data
       if (!Array.isArray(data)) {
@@ -187,6 +202,36 @@ export default function ExplorePage() {
     router.push(`/explore?${params.toString()}`);
   };
 
+  // Function to update search with new locations
+  const updateLocations = () => {
+    if (!fromLocation || !toLocation) return;
+
+    // Validation: check if from and to are the same
+    if (fromLocation.name === toLocation.name) {
+      alert("Pickup and destination cannot be the same location");
+      return;
+    }
+
+    // Show loading state
+    setLoading(true);
+
+    // Get current params
+    const params = new URLSearchParams(searchParams.toString());
+    // Update location params
+    params.set("from", encodeURIComponent(JSON.stringify(fromLocation)));
+    params.set("to", encodeURIComponent(JSON.stringify(toLocation)));
+
+    // Keep the date if it exists
+    if (selectedDate) {
+      params.set("date", selectedDate.toISOString());
+    }
+
+    // Navigate with new params
+    router.push(`/explore?${params.toString()}`);
+    // Exit editing mode
+    setIsEditingLocations(false);
+  };
+
   return (
     <div className="p-4 max-w-md mx-auto pb-20">
       {/* Header */}
@@ -205,22 +250,58 @@ export default function ExplorePage() {
 
       {/* Search Info */}
       <div className="bg-white rounded-lg shadow-md mb-4 p-4">
-        <div className="flex items-start mb-3">
-          <div className="w-10 flex-shrink-0 flex justify-center">
-            <div className="w-2.5 h-2.5 mt-1.5 rounded-full bg-green-500"></div>
+        {isEditingLocations ? (
+          <div className="space-y-4">
+            <GoogleMapsAutocomplete
+              label="From"
+              placeholder="Enter pickup location"
+              value={fromLocation}
+              onChange={setFromLocation}
+            />
+            <GoogleMapsAutocomplete
+              label="To"
+              placeholder="Enter destination"
+              value={toLocation}
+              onChange={setToLocation}
+            />
+            <div className="flex justify-end">
+              <button
+                onClick={updateLocations}
+                className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm"
+                disabled={!fromLocation || !toLocation}
+              >
+                <Check size={16} />
+                Update
+              </button>
+            </div>
           </div>
-          <div className="flex-1">
-            <p className="font-medium">{fromLocationName}</p>
-          </div>
-        </div>
-        <div className="flex items-start">
-          <div className="w-10 flex-shrink-0 flex justify-center">
-            <div className="w-2.5 h-2.5 mt-1.5 rounded-full bg-red-500"></div>
-          </div>
-          <div className="flex-1">
-            <p className="font-medium">{toLocationName}</p>
-          </div>
-        </div>
+        ) : (
+          <>
+            <div className="flex items-start mb-3">
+              <div className="w-10 flex-shrink-0 flex justify-center">
+                <div className="w-2.5 h-2.5 mt-1.5 rounded-full bg-green-500"></div>
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">{fromLocationName}</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="w-10 flex-shrink-0 flex justify-center">
+                <div className="w-2.5 h-2.5 mt-1.5 rounded-full bg-red-500"></div>
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">{toLocationName}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsEditingLocations(true)}
+              className="flex items-center gap-1 mt-2 text-xs text-blue-600"
+            >
+              <Edit size={12} />
+              Edit locations
+            </button>
+          </>
+        )}
 
         {/* Date filter */}
         <div className="mt-4 pt-3 border-t border-gray-100">
@@ -358,11 +439,13 @@ export default function ExplorePage() {
               departureTime={ride.departureTime}
               price={ride.price}
               availableSeats={ride.availableSeats}
-              driverName={`${
-                ride.driver.firstName
-              } ${ride.driver.lastName.charAt(0)}.`}
+              driverName={ride.driver.name}
               driverRating={ride.driver.driverRating || undefined}
               hasBooking={ride.hasBooking}
+              fromLatitude={ride.fromLatitude}
+              fromLongitude={ride.fromLongitude}
+              toLatitude={ride.toLatitude}
+              toLongitude={ride.toLongitude}
             />
           ))}
         </div>

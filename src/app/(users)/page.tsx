@@ -1,22 +1,25 @@
 "use client";
 
 import { useState, useEffect, createContext } from "react";
-import { Calendar, Car, Search } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Calendar, Car, Search, AlertCircle } from "lucide-react";
 import DatePicker from "@/components/users/date-picker";
 import { useRouter } from "next/navigation";
+import { GoogleMapsAutocomplete } from "@/components/ui/google-maps-autocomplete";
+
+// Define Location type to match GoogleMapsAutocomplete component
+interface Location {
+  name: string;
+  lat: number;
+  lng: number;
+}
 
 export default function HomePage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [source, setSource] = useState<{ name: string } | null>(null);
-  const [destination, setDestination] = useState<{ name: string } | null>(null);
+  const [source, setSource] = useState<Location | null>(null);
+  const [destination, setDestination] = useState<Location | null>(null);
   const [isFormValid, setIsFormValid] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   // Check if both locations are set and form is valid
@@ -45,15 +48,31 @@ export default function HomePage() {
     setIsFormValid(
       hasSource && hasDestination && hasDifferentLocations && hasDate
     );
+
+    // Clear validation errors when input changes
+    setValidationError(null);
   }, [source, destination, selectedDate]);
 
   const handleSearch = () => {
+    setIsSubmitting(true);
+
+    // Validate inputs
+    if (!source) {
+      setValidationError("Please enter a pickup location");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!destination) {
+      setValidationError("Please enter a destination");
+      setIsSubmitting(false);
+      return;
+    }
+
     // Double-check that source and destination are not the same
     if (source?.name === destination?.name) {
-      console.log("Source:", source);
-      console.log("Destination:", destination);
-      console.log("Source and destination are the same");
-      console.error("Source and destination cannot be the same");
+      setValidationError("Pickup and destination cannot be the same location");
+      setIsSubmitting(false);
       return;
     }
 
@@ -90,64 +109,21 @@ export default function HomePage() {
 
       <div className="space-y-4">
         <div>
-          <div className="mb-1.5 text-sm font-medium">From</div>
-          <div id="fromLocation">
-            <Select
-              onValueChange={(value) => {
-                console.log("From location selected:", value);
-                const locationData = { name: value };
-                setSource(locationData);
-              }}
-              value={source?.name || ""}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Enter pickup location" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  value="Paithan"
-                  disabled={destination?.name === "Paithan"}
-                >
-                  Paithan
-                </SelectItem>
-                <SelectItem
-                  value="Pune"
-                  disabled={destination?.name === "Pune"}
-                >
-                  Pune
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <GoogleMapsAutocomplete
+            label="From"
+            placeholder="Enter pickup location"
+            value={source}
+            onChange={setSource}
+          />
         </div>
 
         <div>
-          <div className="mb-1.5 text-sm font-medium">To</div>
-          <div id="toLocation">
-            <Select
-              onValueChange={(value) => {
-                console.log("To location selected:", value);
-                const locationData = { name: value };
-                setDestination(locationData);
-              }}
-              value={destination?.name || ""}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Enter destination" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  value="Paithan"
-                  disabled={source?.name === "Paithan"}
-                >
-                  Paithan
-                </SelectItem>
-                <SelectItem value="Pune" disabled={source?.name === "Pune"}>
-                  Pune
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <GoogleMapsAutocomplete
+            label="To"
+            placeholder="Enter destination"
+            value={destination}
+            onChange={setDestination}
+          />
         </div>
 
         <div>
@@ -162,14 +138,37 @@ export default function HomePage() {
             initialDate={selectedDate}
           />
         </div>
+
+        {validationError && (
+          <div className="flex items-start gap-2 p-2 rounded bg-red-50 text-red-600 text-sm">
+            <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+            <span>{validationError}</span>
+          </div>
+        )}
       </div>
 
       <button
         onClick={handleSearch}
-        className="w-full py-3 rounded-lg mt-6 font-medium flex items-center justify-center gap-2 bg-blue-600 text-white"
+        disabled={isSubmitting || (!isFormValid && !validationError)}
+        className={`w-full py-3 rounded-lg mt-6 font-medium flex items-center justify-center gap-2 ${
+          isSubmitting
+            ? "bg-blue-400 text-white cursor-not-allowed"
+            : isFormValid
+            ? "bg-blue-600 text-white"
+            : "bg-gray-300 text-gray-600 cursor-not-allowed"
+        }`}
       >
-        <Search size={18} />
-        Find Rides
+        {isSubmitting ? (
+          <>
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            Searching...
+          </>
+        ) : (
+          <>
+            <Search size={18} />
+            Find Rides
+          </>
+        )}
       </button>
     </div>
   );

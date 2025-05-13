@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import {
   Calendar,
   Clock,
@@ -7,9 +7,11 @@ import {
   Users,
   ChevronRight,
   IndianRupee,
+  Map,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
+import { GoogleMapsPreview } from "@/components/ui/google-maps-preview";
 
 interface RideCardProps {
   id: string;
@@ -22,6 +24,17 @@ interface RideCardProps {
   driverName?: string;
   driverRating?: number;
   hasBooking?: boolean;
+  fromLatitude?: number;
+  fromLongitude?: number;
+  toLatitude?: number;
+  toLongitude?: number;
+}
+
+// Define Location type for GoogleMapsPreview
+interface Location {
+  name: string;
+  lat: number;
+  lng: number;
 }
 
 const RideCard = ({
@@ -35,12 +48,48 @@ const RideCard = ({
   driverName,
   driverRating,
   hasBooking,
+  fromLatitude,
+  fromLongitude,
+  toLatitude,
+  toLongitude,
 }: RideCardProps) => {
   const router = useRouter();
+  const [showMap, setShowMap] = useState(false);
 
   const viewRideDetails = () => {
     router.push(`/rides/${id}`);
   };
+
+  // Generate simple coordinates for map preview based on location strings
+  // Only used as fallback if exact coordinates are not available
+  const generateSimpleCoordinates = (locationString: string) => {
+    // Use a hash function to generate predictable "random" coordinates
+    const hash = locationString.split("").reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
+
+    // Generate latitude between 18 and 23 (approximate range for central India)
+    const lat = 18 + Math.abs(hash % 500) / 100;
+    // Generate longitude between 72 and 78 (approximate range for central India)
+    const lng = 72 + Math.abs((hash >> 8) % 600) / 100;
+
+    return {
+      name: locationString,
+      lat,
+      lng,
+    };
+  };
+
+  // Use actual coordinates if available, otherwise generate from location names
+  const sourceLocation: Location =
+    fromLatitude && fromLongitude
+      ? { name: fromLocation, lat: fromLatitude, lng: fromLongitude }
+      : generateSimpleCoordinates(fromLocation);
+
+  const destinationLocation: Location =
+    toLatitude && toLongitude
+      ? { name: toLocation, lat: toLatitude, lng: toLongitude }
+      : generateSimpleCoordinates(toLocation);
 
   // Ensure departureDate is a valid Date object
   const parsedDate = (() => {
@@ -84,10 +133,7 @@ const RideCard = ({
   })();
 
   return (
-    <div
-      className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-3 hover:shadow-md transition-shadow"
-      onClick={viewRideDetails}
-    >
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-3 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-3">
         <div>
           <div className="flex items-center gap-1.5 text-gray-700 mb-1">
@@ -138,13 +184,27 @@ const RideCard = ({
         </div>
       </div>
 
-      <div className="mt-3 flex justify-end">
+      {showMap && (
+        <div className="mt-2 mb-3">
+          <GoogleMapsPreview
+            source={sourceLocation}
+            destination={destinationLocation}
+          />
+        </div>
+      )}
+
+      <div className="mt-3 flex justify-between items-center">
+        <button
+          className="text-xs text-gray-600 flex items-center gap-1"
+          onClick={() => setShowMap(!showMap)}
+        >
+          <Map size={14} />
+          {showMap ? "Hide map" : "Show map"}
+        </button>
+
         <button
           className="text-xs text-blue-600 flex items-center"
-          onClick={(e) => {
-            e.stopPropagation();
-            viewRideDetails();
-          }}
+          onClick={viewRideDetails}
         >
           View details
           <ChevronRight size={14} />
