@@ -5,10 +5,11 @@ import { auth } from "@/auth";
 // GET handler - Fetch driver's reviews and ratings
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
+    const id = (await params).id;
 
     // Check if user is authenticated
     if (!session?.user) {
@@ -16,14 +17,14 @@ export async function GET(
     }
 
     // Check if the authenticated user is requesting their own data
-    if (session.user.id !== params.id) {
+    if (session.user.id !== id) {
       return new NextResponse("Forbidden", { status: 403 });
     }
 
     // Fetch reviews from database
     const reviews = await prisma.review.findMany({
       where: {
-        userId: params.id,
+        userId: id,
       },
       include: {
         author: {
