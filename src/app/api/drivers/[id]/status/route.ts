@@ -4,10 +4,11 @@ import { auth } from "@/auth";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
+    const id = (await params).id;
 
     // Check if user is authenticated
     if (!session?.user) {
@@ -15,13 +16,13 @@ export async function GET(
     }
 
     // Check if the authenticated user is requesting their own data
-    if (session.user.id !== params.id) {
+    if (session.user.id !== id) {
       return new NextResponse("Forbidden", { status: 403 });
     }
 
     // Fetch user data from database
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         isVerified: true,
