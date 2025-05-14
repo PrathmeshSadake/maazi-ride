@@ -1,22 +1,21 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { authOptions } from "@/lib/auth";
 
 // Update a review
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const userId = session.user.id;
-    const reviewId = params.id;
+    const reviewId = (await params).id;
     const body = await request.json();
     const { rating, comment } = body;
 
@@ -60,17 +59,17 @@ export async function PUT(
 // Delete a review
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const userId = session.user.id;
-    const reviewId = params.id;
+    const reviewId = (await params).id;
 
     // Check if the review exists and belongs to the user
     const existingReview = await prisma.review.findUnique({
