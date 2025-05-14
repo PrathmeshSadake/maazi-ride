@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { auth } from "@/auth";
 
 // Schema for creating a booking
 const createBookingSchema = z.object({
@@ -16,9 +16,10 @@ const updateBookingSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await currentUser();
+    const session = await auth();
+    const user = session?.user;
 
-    if (!user) {
+    if (!session || !user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -42,12 +43,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if the ride is scheduled
-    if (!ride.isScheduled) {
-      return NextResponse.json(
-        { message: "This ride is not available for booking" },
-        { status: 400 }
-      );
-    }
+    // if (!ride.isScheduled) {
+    //   return NextResponse.json(
+    //     { message: "This ride is not available for booking" },
+    //     { status: 400 }
+    //   );
+    // }
 
     // Check if user is trying to book their own ride
     if (ride.driverId === user.id) {
@@ -120,7 +121,8 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await currentUser();
+    const session = await auth();
+    const user = session?.user;
 
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -153,8 +155,7 @@ export async function GET(req: NextRequest) {
           user: {
             select: {
               id: true,
-              firstName: true,
-              lastName: true,
+              name: true,
             },
           },
           ride: true,
@@ -176,8 +177,7 @@ export async function GET(req: NextRequest) {
               driver: {
                 select: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
+                  name: true,
                 },
               },
             },
@@ -215,7 +215,8 @@ export async function GET(req: NextRequest) {
 // PATCH endpoint to update booking status
 export async function PATCH(req: NextRequest) {
   try {
-    const user = await currentUser();
+    const session = await auth();
+    const user = session?.user;
 
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -240,8 +241,7 @@ export async function PATCH(req: NextRequest) {
         user: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
           },
         },
       },
@@ -314,8 +314,7 @@ export async function PATCH(req: NextRequest) {
         user: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
           },
         },
       },

@@ -257,7 +257,7 @@ export async function GET(req: NextRequest) {
     // Fetch matching rides with the simplified where clause first
     console.log("Trying simplified query first...");
     const rides = await prisma.ride.findMany({
-      where: whereClauseBase, // Start with basic query that should return results
+      // where: whereClauseBase, // Start with basic query that should return results
       include: {
         driver: {
           select: {

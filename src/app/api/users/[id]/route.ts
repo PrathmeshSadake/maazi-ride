@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -10,7 +10,8 @@ export async function GET(
     const id = (await params).id;
 
     // Check if user is authenticated and is admin
-    const { userId } = await auth();
+    const session = await auth();
+    const userId = session?.user?.id;
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -31,10 +32,8 @@ export async function GET(
       where: { id },
       select: {
         id: true,
-        firstName: true,
-        lastName: true,
+        name: true,
         email: true,
-        phoneNumber: true,
         role: true,
         createdAt: true,
         isVerified: true,

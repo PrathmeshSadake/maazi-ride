@@ -15,7 +15,7 @@ import {
   IndianRupee,
 } from "lucide-react";
 import { formatDistanceToNow, format, parseISO } from "date-fns";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 
 interface RideDetails {
   id: string;
@@ -44,7 +44,7 @@ interface RideDetails {
 export default function RideDetailsPage() {
   const router = useRouter();
   const params = useParams();
-  const { user, isLoaded } = useUser();
+  const { data: session, status } = useSession();
   const id = params.id as string;
 
   const [ride, setRide] = useState<RideDetails | null>(null);
@@ -109,8 +109,8 @@ export default function RideDetailsPage() {
   };
 
   const handleBooking = async () => {
-    if (!isLoaded || !user) {
-      router.push("/sign-in");
+    if (!session || !session.user) {
+      router.push("/auth/sign-in");
       return;
     }
 

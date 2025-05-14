@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 
-// GET handler - Fetch driver's document information
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -27,8 +26,11 @@ export async function GET(
         id: true,
         isVerified: true,
         drivingLicenseUrl: true,
-        vehicleRegistrationUrl: true,
-        insuranceUrl: true,
+        vehicle: {
+          select: {
+            id: true,
+          },
+        },
       },
     });
 
@@ -36,15 +38,24 @@ export async function GET(
       return new NextResponse("User not found", { status: 404 });
     }
 
-    // Return the document data
+    // Check if all required documents are uploaded
+    const hasAllDocuments = Boolean(
+      user.isVerified && user.drivingLicenseUrl && user.vehicle
+    );
+
+    // Return the user status data
     return NextResponse.json({
-      drivingLicenseUrl: user.drivingLicenseUrl,
-      vehicleRegistrationUrl: user.vehicleRegistrationUrl,
-      insuranceUrl: user.insuranceUrl,
       isVerified: user.isVerified,
+      hasAllDocuments: hasAllDocuments,
+      missingDocuments: !hasAllDocuments
+        ? {
+            drivingLicense: !user.drivingLicenseUrl,
+            vehicle: !user.vehicle,
+          }
+        : null,
     });
   } catch (error) {
-    console.error("Error fetching driver documents:", error);
+    console.error("Error fetching driver status:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

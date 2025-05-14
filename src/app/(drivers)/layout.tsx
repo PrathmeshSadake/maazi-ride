@@ -34,11 +34,7 @@ export default async function DriversLayout({
       href: "/drivers/messages",
       icon: MessageSquare,
     },
-    {
-      label: "Earnings",
-      href: "/drivers/earnings",
-      icon: Clock,
-    },
+    
     {
       label: "Account",
       href: "/drivers/account",

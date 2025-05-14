@@ -1,70 +1,65 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import prisma from "@/lib/db";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 // GET handler - Fetch driver's reviews and ratings
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  req: NextRequest,
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { userId } = await auth();
-    const { id } = await params;
+    const session = await auth();
 
-    // Check if the user is authenticated
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Check if user is authenticated
+    if (!session?.user) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Fetch the user's reviews
+    // Check if the authenticated user is requesting their own data
+    if (session.user.id !== params.id) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+
+    // Fetch reviews from database
     const reviews = await prisma.review.findMany({
-      where: { userId: id },
-      select: {
-        id: true,
-        rating: true,
-        comment: true,
-        createdAt: true,
+      where: {
+        userId: params.id,
+      },
+      include: {
         author: {
           select: {
-            firstName: true,
-            lastName: true,
+            name: true,
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
 
-    // Fetch the user's average rating
-    const user = await prisma.user.findUnique({
-      where: { id: id },
-      select: { driverRating: true },
-    });
+    // Calculate average rating
+    const averageRating =
+      reviews.length > 0
+        ? reviews.reduce((sum, review) => sum + review.rating, 0) /
+          reviews.length
+        : null;
 
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    // Transform the data into the expected format
+    // Format reviews for response
     const formattedReviews = reviews.map((review) => ({
       id: review.id,
       rating: review.rating,
       comment: review.comment,
-      authorName:
-        review.author.firstName && review.author.lastName
-          ? `${review.author.firstName} ${review.author.lastName}`
-          : "Anonymous",
+      authorName: review.author.name || "Anonymous User",
       createdAt: review.createdAt.toISOString(),
     }));
 
+    // Return the reviews data
     return NextResponse.json({
-      averageRating: user.driverRating || null,
+      averageRating,
       reviews: formattedReviews,
     });
   } catch (error) {
-    console.error("Error fetching reviews:", error);
-    return NextResponse.json(
-      { error: "Error fetching review information" },
-      { status: 500 }
-    );
+    console.error("Error fetching driver reviews:", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

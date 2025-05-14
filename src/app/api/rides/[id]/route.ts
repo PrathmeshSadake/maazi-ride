@@ -76,17 +76,17 @@ export async function GET(
     }
 
     // If the user is neither the driver nor has a booking, and the ride is not scheduled
-    if (
-      dbUser.role !== "driver" &&
-      ride.driverId !== user.id &&
-      ride.bookings.length === 0 &&
-      !ride.isScheduled
-    ) {
-      return NextResponse.json(
-        { message: "You don't have access to this ride" },
-        { status: 403 }
-      );
-    }
+    // if (
+    //   dbUser.role !== "driver" &&
+    //   ride.driverId !== user.id &&
+    //   ride.bookings.length === 0 &&
+    //   !ride.isScheduled
+    // ) {
+    //   return NextResponse.json(
+    //     { message: "You don't have access to this ride" },
+    //     { status: 403 }
+    //   );
+    // }
 
     // Format dates to ISO strings for consistent client-side handling
     const formattedRide = {

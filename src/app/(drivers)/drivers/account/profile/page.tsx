@@ -1,21 +1,58 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, User, Phone, Mail } from "lucide-react";
 
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  phoneNumber?: string;
+  driverRating?: number;
+  ridesCompleted: number;
+  profileImage?: string;
+}
+
 export default function ProfilePage() {
-  const { user, isLoaded } = useUser();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Check if user is loaded from Clerk
+  // Fetch user profile data
   useEffect(() => {
-    if (isLoaded) {
-      setIsLoading(false);
-    }
-  }, [isLoaded]);
+    const fetchProfileData = async () => {
+      if (status === "loading") return;
+
+      if (status === "unauthenticated") {
+        router.push("/auth/signin");
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/drivers/${session?.user.id}/profile`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load profile information");
+        }
+
+        const data = await response.json();
+        setProfile(data);
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        setError("Failed to load profile information. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [status, session, router]);
 
   if (isLoading) {
     return (
@@ -39,33 +76,35 @@ export default function ProfilePage() {
 
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center mb-8">
-          {user?.imageUrl ? (
+          {profile?.profileImage ? (
             <img
-              src={user.imageUrl}
+              src={profile.profileImage}
               alt="Profile picture"
               className="w-24 h-24 rounded-full object-cover border-4 border-green-100"
             />
           ) : (
             <div className="w-24 h-24 rounded-full overflow-hidden bg-green-100 flex items-center justify-center text-green-800 text-2xl font-bold">
-              {user?.firstName?.[0] || "D"}
+              {session?.user?.name?.[0] || "D"}
             </div>
           )}
 
           <div className="ml-4">
             <h2 className="text-xl font-semibold">
-              {user?.firstName && user?.lastName
-                ? `${user.firstName} ${user.lastName}`
-                : "Your Name"}
+              {session?.user?.name || "Your Name"}
             </h2>
             <p className="text-gray-500 mt-1">Driver</p>
 
+            {profile?.driverRating && (
+              <div className="mt-1 flex items-center">
+                <span className="text-yellow-500">★</span>
+                <span className="ml-1">{profile.driverRating.toFixed(1)}</span>
+                <span className="mx-1">•</span>
+                <span>{profile.ridesCompleted} rides</span>
+              </div>
+            )}
+
             <button
-              onClick={() =>
-                window.open(
-                  "https://accounts.maaziride.com/user/profile/picture",
-                  "_blank"
-                )
-              }
+              onClick={() => router.push("/drivers/account/settings")}
               className="mt-2 px-3 py-1 text-sm bg-green-50 text-green-700 rounded-full hover:bg-green-100"
             >
               Update Photo
@@ -82,19 +121,10 @@ export default function ProfilePage() {
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
                   <User size={14} />
-                  <span>First Name</span>
+                  <span>Full Name</span>
                 </div>
                 <p className="font-medium">
-                  {user?.firstName || "Not provided"}
-                </p>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                  <User size={14} />
-                  <span>Last Name</span>
-                </div>
-                <p className="font-medium">
-                  {user?.lastName || "Not provided"}
+                  {session?.user?.name || "Not provided"}
                 </p>
               </div>
             </div>
@@ -111,7 +141,7 @@ export default function ProfilePage() {
                   <span>Email Address</span>
                 </div>
                 <p className="font-medium">
-                  {user?.emailAddresses?.[0]?.emailAddress || "Not provided"}
+                  {session?.user?.email || "Not provided"}
                 </p>
               </div>
               <div className="p-3 bg-gray-50 rounded-lg">
@@ -120,7 +150,7 @@ export default function ProfilePage() {
                   <span>Phone Number</span>
                 </div>
                 <p className="font-medium">
-                  {user?.phoneNumbers?.[0]?.phoneNumber || "Not provided"}
+                  {profile?.phoneNumber || "Not provided"}
                 </p>
               </div>
             </div>
@@ -129,19 +159,13 @@ export default function ProfilePage() {
 
         <div className="mt-8 pt-6 border-t border-gray-200">
           <button
-            onClick={() =>
-              window.open(
-                "https://accounts.maaziride.com/user/profile",
-                "_blank"
-              )
-            }
+            onClick={() => router.push("/drivers/account/settings")}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
           >
             Edit Profile
           </button>
           <p className="mt-2 text-sm text-gray-500">
-            You will be redirected to the Maazi Ride account management page to
-            update your information.
+            You can update your personal information in the settings page.
           </p>
         </div>
       </div>

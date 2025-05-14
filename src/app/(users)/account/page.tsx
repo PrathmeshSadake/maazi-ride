@@ -13,12 +13,12 @@ import {
   Clock,
   Star,
 } from "lucide-react";
-import { useUser, useClerk } from "@clerk/nextjs";
+import { signOut, useSession } from "next-auth/react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export default function AccountPage() {
   const router = useRouter();
-  const { user, isLoaded } = useUser();
-  const { signOut } = useClerk();
+  const { data: session, status } = useSession();
   const [loading, setLoading] = useState(false);
 
   const handleSignOut = async () => {
@@ -33,7 +33,7 @@ export default function AccountPage() {
     }
   };
 
-  if (!isLoaded) {
+  if (status === "loading") {
     return (
       <div className="p-4 max-w-md mx-auto flex flex-col items-center justify-center min-h-[60vh]">
         <div className="w-10 h-10 border-2 border-t-blue-600 border-r-transparent border-b-blue-600 border-l-transparent rounded-full animate-spin mb-4"></div>
@@ -42,18 +42,12 @@ export default function AccountPage() {
     );
   }
 
-  if (!user) {
+  if (!session?.user) {
     router.push("/sign-in");
     return null;
   }
 
   const menuItems = [
-    // {
-    //   icon: <MessageSquare size={20} className="text-blue-600" />,
-    //   title: "Messages",
-    //   description: "Your conversations with drivers",
-    //   onClick: () => router.push("/messages"),
-    // },
     {
       icon: <Clock size={20} className="text-purple-600" />,
       title: "Ride History",
@@ -64,25 +58,13 @@ export default function AccountPage() {
       icon: <Star size={20} className="text-yellow-600" />,
       title: "Reviews",
       description: "Your ratings and reviews",
-      onClick: () => router.push("/reviews"),
+      onClick: () => router.push("/account/reviews"),
     },
     {
       icon: <Bell size={20} className="text-green-600" />,
       title: "Notifications",
       description: "Manage your notifications",
-      onClick: () => router.push("/notifications"),
-    },
-    {
-      icon: <CreditCard size={20} className="text-indigo-600" />,
-      title: "Payment Methods",
-      description: "Manage your payment options",
-      onClick: () => router.push("/payment-methods"),
-    },
-    {
-      icon: <Settings size={20} className="text-gray-600" />,
-      title: "Settings",
-      description: "App preferences and more",
-      onClick: () => router.push("/settings"),
+      onClick: () => router.push("/account/notifications"),
     },
   ];
 
@@ -93,24 +75,16 @@ export default function AccountPage() {
       {/* User Profile Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
         <div className="flex items-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 mr-4 overflow-hidden">
-            {user.imageUrl ? (
-              <img
-                src={user.imageUrl}
-                alt={user.fullName || "User"}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <User size={30} />
-            )}
+          <div>
+            <Avatar className="w-14 h-14 mr-5">
+              <AvatarFallback>{session?.user?.name?.charAt(0)}</AvatarFallback>
+            </Avatar>
           </div>
           <div>
             <h2 className="text-lg font-semibold">
-              {user.fullName || user.firstName || "User"}
+              {session?.user?.name || "User"}
             </h2>
-            <p className="text-gray-500 text-sm">
-              {user.primaryEmailAddress?.emailAddress}
-            </p>
+            <p className="text-gray-500 text-sm">{session?.user?.email}</p>
           </div>
         </div>
       </div>

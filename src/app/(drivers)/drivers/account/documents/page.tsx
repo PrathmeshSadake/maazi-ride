@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -28,7 +28,7 @@ interface DocumentStatus {
 }
 
 export default function DocumentsPage() {
-  const { user, isLoaded } = useUser();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -41,10 +41,17 @@ export default function DocumentsPage() {
   // Fetch document status
   useEffect(() => {
     const fetchDocuments = async () => {
-      if (!isLoaded || !user) return;
+      if (status === "loading") return;
+
+      if (status === "unauthenticated") {
+        router.push("/auth/signin");
+        return;
+      }
 
       try {
-        const response = await fetch(`/api/drivers/${user.id}/documents`);
+        const response = await fetch(
+          `/api/drivers/${session?.user.id}/documents`
+        );
         if (!response.ok)
           throw new Error("Failed to fetch document information");
 
@@ -71,7 +78,7 @@ export default function DocumentsPage() {
     };
 
     fetchDocuments();
-  }, [isLoaded, user]);
+  }, [status, session, router]);
 
   // Go to document upload page
   const handleUpload = (documentType: string) => {
@@ -248,26 +255,19 @@ export default function DocumentsPage() {
             />
 
             <DocumentCard
-              title="Insurance Documents"
-              description="Upload your valid vehicle insurance policy document."
+              title="Insurance"
+              description="Upload your valid vehicle insurance document."
               documentUrl={documents.insurance.url}
               isVerified={documents.insurance.verified}
               documentType="insurance"
             />
           </div>
 
-          <div className="mt-8 bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
-            <div className="flex items-start">
-              <AlertCircle
-                size={16}
-                className="text-gray-500 mt-0.5 mr-2 flex-shrink-0"
-              />
-              <p>
-                All documents must be valid, clearly visible, and in JPG, PNG,
-                or PDF format. Documents will be verified by our team, which may
-                take 1-2 business days.
-              </p>
-            </div>
+          <div className="mt-8 text-sm text-gray-500">
+            <p>
+              * All documents must be clearly visible and not expired. Our team
+              will review your documents within 1-2 business days.
+            </p>
           </div>
         </>
       )}

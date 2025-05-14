@@ -2,10 +2,9 @@
 
 import { useEffect, useState, useRef } from "react";
 import { Search, ArrowRight, User } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { format, formatDistanceToNow } from "date-fns";
-
+import { useSession } from "next-auth/react";
 interface Conversation {
   user: {
     id: string;
@@ -23,15 +22,15 @@ interface Conversation {
 
 export default function MessagesPage() {
   const router = useRouter();
-  const { user, isLoaded } = useUser();
+  const { data: session, status } = useSession();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const sseRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    if (isLoaded) {
-      if (!user) {
+    if (status === "authenticated") {
+      if (!session) {
         router.push("/sign-in");
       } else {
         fetchConversations();
@@ -45,10 +44,10 @@ export default function MessagesPage() {
         sseRef.current.close();
       }
     };
-  }, [isLoaded, user, router]);
+  }, [status, session, router]);
 
   const setupSSE = () => {
-    if (!user || sseRef.current) return;
+    if (!session || sseRef.current) return;
 
     const eventSource = new EventSource("/api/messages/sse");
 

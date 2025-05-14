@@ -1,12 +1,43 @@
-// import { ChartAreaInteractive } from "@/components/chart-area-interactive";
+"use client";
 import { DataTable } from "@/components/data-table";
 import { SectionCards } from "@/components/section-cards";
 import { BookingStatusPieChart } from "@/components/booking-status-pie-chart";
 import { DriverVerificationBarChart } from "@/components/driver-verification-bar-chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import data from "./data.json";
+import { useEffect, useState } from "react";
+import { fetchDashboardData } from "@/utils/api";
+
+// Define a type for the dashboard data
+interface DashboardData {
+  bookingStatus: any; // Replace 'any' with the actual type
+  driverVerification: any; // Replace 'any' with the actual type
+  tableData: any; // Replace 'any' with the actual type
+}
 
 const AdminDashboard = () => {
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await fetchDashboardData();
+        setDashboardData(data);
+      } catch (err: any) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error loading data</div>;
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
@@ -32,18 +63,22 @@ const AdminDashboard = () => {
 
               <TabsContent value="status" className="mt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <BookingStatusPieChart />
-                  <DriverVerificationBarChart />
+                  <BookingStatusPieChart data={dashboardData?.bookingStatus} />
+                  <DriverVerificationBarChart
+                    data={dashboardData?.driverVerification}
+                  />
                 </div>
               </TabsContent>
 
               <TabsContent value="drivers" className="mt-0">
-                <DriverVerificationBarChart />
+                <DriverVerificationBarChart
+                  data={dashboardData?.driverVerification}
+                />
               </TabsContent>
             </Tabs>
           </div>
 
-          <DataTable data={data} />
+          {/* <DataTable data={dashboardData?.tableData} /> */}
         </div>
       </div>
     </div>

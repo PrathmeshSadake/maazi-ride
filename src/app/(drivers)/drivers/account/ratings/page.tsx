@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -21,7 +21,7 @@ interface Review {
 }
 
 export default function RatingsPage() {
-  const { user, isLoaded } = useUser();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -39,10 +39,17 @@ export default function RatingsPage() {
   // Fetch ratings data
   useEffect(() => {
     const fetchRatings = async () => {
-      if (!isLoaded || !user) return;
+      if (status === "loading") return;
+
+      if (status === "unauthenticated") {
+        router.push("/auth/signin");
+        return;
+      }
 
       try {
-        const response = await fetch(`/api/drivers/${user.id}/reviews`);
+        const response = await fetch(
+          `/api/drivers/${session?.user.id}/reviews`
+        );
         if (!response.ok)
           throw new Error("Failed to fetch ratings information");
 
@@ -68,7 +75,7 @@ export default function RatingsPage() {
     };
 
     fetchRatings();
-  }, [isLoaded, user]);
+  }, [status, session, router]);
 
   // Render star rating
   const StarRating = ({ rating }: { rating: number }) => {

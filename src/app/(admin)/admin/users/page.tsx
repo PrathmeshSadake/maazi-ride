@@ -6,10 +6,8 @@ import React, { useState } from "react";
 
 interface User {
   id: string;
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
-  phoneNumber: string;
   role: string;
   createdAt: string;
 }
@@ -107,11 +105,8 @@ const UsersPage = () => {
                 key={user.id}
                 className="border-b border-gray-200 hover:bg-gray-50"
               >
-                <td className="py-3 px-4">
-                  {user.firstName} {user.lastName}
-                </td>
+                <td className="py-3 px-4">{user.name}</td>
                 <td className="py-3 px-4">{user.email || "N/A"}</td>
-                <td className="py-3 px-4">{user.phoneNumber || "N/A"}</td>
                 <td className="py-3 px-4">
                   <span
                     className={`px-2 py-1 rounded-full text-xs ${

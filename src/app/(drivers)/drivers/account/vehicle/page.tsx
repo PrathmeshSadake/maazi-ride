@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Car, FileText, AlertTriangle } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 
-// Temporary type for vehicle data
+// Type for vehicle data from database
 interface Vehicle {
   id: string;
   make: string;
@@ -18,18 +18,25 @@ interface Vehicle {
 
 export default function VehiclePage() {
   const router = useRouter();
-  const { user, isLoaded } = useUser();
+  const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(true);
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchVehicleData = async () => {
-      if (!isLoaded || !user) return;
+      if (status === "loading") return;
+
+      if (status === "unauthenticated") {
+        router.push("/auth/signin");
+        return;
+      }
 
       try {
-        // Fetch vehicle data from your API
-        const response = await fetch(`/api/drivers/${user.id}/vehicle`);
+        // Fetch vehicle data from API
+        const response = await fetch(
+          `/api/drivers/${session?.user.id}/vehicle`
+        );
 
         if (!response.ok) {
           if (response.status === 404) {
@@ -51,7 +58,7 @@ export default function VehiclePage() {
     };
 
     fetchVehicleData();
-  }, [isLoaded, user]);
+  }, [status, session, router]);
 
   return (
     <div className="p-4 max-w-3xl mx-auto">

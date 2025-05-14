@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Pencil, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 
 export default function PaymentPage() {
-  const { user, isLoaded } = useUser();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -18,7 +18,8 @@ export default function PaymentPage() {
   // Fetch the driver's UPI ID when the component mounts
   useEffect(() => {
     const fetchUpiId = async () => {
-      if (!isLoaded || !user) return;
+      if (status === "loading") return;
+      if (!session) return;
 
       try {
         const response = await fetch("/api/drivers/payment");
@@ -36,7 +37,7 @@ export default function PaymentPage() {
     };
 
     fetchUpiId();
-  }, [isLoaded, user]);
+  }, [status, session]);
 
   // Handle adding/updating UPI ID
   const handleSaveUpiId = async () => {
