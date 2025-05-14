@@ -22,11 +22,11 @@ import { Textarea } from "@/components/ui/textarea";
 export default function ReviewsPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [receivedReviews, setReceivedReviews] = useState([]);
-  const [givenReviews, setGivenReviews] = useState([]);
+  const [receivedReviews, setReceivedReviews] = useState<any>([]);
+  const [givenReviews, setGivenReviews] = useState<any>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("received");
-  const [editingReview, setEditingReview] = useState(null);
+  const [editingReview, setEditingReview] = useState<any>(null);
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(0);
 
@@ -59,7 +59,7 @@ export default function ReviewsPage() {
     }
   };
 
-  const handleEditReview = (review) => {
+  const handleEditReview = (review: any) => {
     setEditingReview(review);
     setReviewText(review.comment || "");
     setReviewRating(review.rating);
@@ -90,7 +90,9 @@ export default function ReviewsPage() {
       };
 
       setGivenReviews(
-        givenReviews.map((r) => (r.id === editingReview.id ? updatedReview : r))
+        givenReviews.map((r: any) =>
+          r.id === editingReview.id ? updatedReview : r
+        )
       );
 
       setEditingReview(null);
@@ -99,7 +101,7 @@ export default function ReviewsPage() {
     }
   };
 
-  const handleDeleteReview = async (id) => {
+  const handleDeleteReview = async (id: string) => {
     try {
       const response = await fetch(`/api/reviews/${id}`, {
         method: "DELETE",
@@ -108,13 +110,13 @@ export default function ReviewsPage() {
       if (!response.ok) throw new Error("Failed to delete review");
 
       // Update the UI
-      setGivenReviews(givenReviews.filter((r) => r.id !== id));
+      setGivenReviews(givenReviews.filter((r: any) => r.id !== id));
     } catch (error) {
       console.error("Error deleting review:", error);
     }
   };
 
-  const renderStars = (rating) => {
+  const renderStars = (rating: number) => {
     return Array(5)
       .fill(0)
       .map((_, i) => (
@@ -210,7 +212,7 @@ export default function ReviewsPage() {
               <p className="text-gray-500">No reviews received yet</p>
             </div>
           ) : (
-            receivedReviews.map((review) => (
+            receivedReviews.map((review: any) => (
               <div key={review.id} className="p-4 border-b border-gray-100">
                 <div className="flex items-start">
                   <Avatar className="w-10 h-10 mr-3">
@@ -242,7 +244,7 @@ export default function ReviewsPage() {
             <p className="text-gray-500">You haven't given any reviews yet</p>
           </div>
         ) : (
-          givenReviews.map((review) => (
+          givenReviews.map((review: any) => (
             <div key={review.id} className="p-4 border-b border-gray-100">
               <div className="flex items-start justify-between">
                 <div className="flex items-start">

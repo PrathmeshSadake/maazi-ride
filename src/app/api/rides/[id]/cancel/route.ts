@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -16,7 +16,7 @@ export async function PATCH(
     }
 
     const ride = await prisma.ride.findUnique({
-      where: { id: params.id },
+      where: { id: (await params).id },
       include: { bookings: true },
     });
 
@@ -39,7 +39,7 @@ export async function PATCH(
     // Update ride status to CANCELLED
     const updatedRide = await prisma.ride.update({
       where: {
-        id: params.id,
+        id: (await params).id,
       },
       data: { status: "CANCELLED" },
     });
@@ -48,7 +48,7 @@ export async function PATCH(
     if (ride.bookings.length > 0) {
       await prisma.booking.updateMany({
         where: {
-          rideId: params.id,
+          rideId: (await params).id,
           status: { in: ["PENDING", "PENDING_APPROVAL", "CONFIRMED"] },
         },
         data: { status: "CANCELLED" },

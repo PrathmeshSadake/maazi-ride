@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 export default function NotificationsPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<any>([]);
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState({
     rideUpdates: true,
@@ -41,7 +41,7 @@ export default function NotificationsPage() {
     }
   };
 
-  const markAsRead = async (id) => {
+  const markAsRead = async (id: string) => {
     try {
       const response = await fetch(`/api/notifications/${id}/read`, {
         method: "PUT",
@@ -50,14 +50,14 @@ export default function NotificationsPage() {
 
       // Update UI
       setNotifications(
-        notifications.map((n) => (n.id === id ? { ...n, read: true } : n))
+        notifications.map((n: any) => (n.id === id ? { ...n, read: true } : n))
       );
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
   };
 
-  const deleteNotification = async (id) => {
+  const deleteNotification = async (id: string) => {
     try {
       const response = await fetch(`/api/notifications/${id}`, {
         method: "DELETE",
@@ -65,13 +65,13 @@ export default function NotificationsPage() {
       if (!response.ok) throw new Error("Failed to delete notification");
 
       // Update UI
-      setNotifications(notifications.filter((n) => n.id !== id));
+      setNotifications(notifications.filter((n: any) => n.id !== id));
     } catch (error) {
       console.error("Error deleting notification:", error);
     }
   };
 
-  const updateSetting = (key, value) => {
+  const updateSetting = (key: string, value: boolean) => {
     setSettings({ ...settings, [key]: value });
     // Here you would also update this on the server
   };
@@ -165,7 +165,7 @@ export default function NotificationsPage() {
             <p className="text-gray-500">No notifications yet</p>
           </div>
         ) : (
-          notifications.map((notification) => (
+          notifications.map((notification: any) => (
             <div
               key={notification.id}
               className={`p-4 border-b border-gray-100 ${
