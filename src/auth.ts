@@ -1,29 +1,29 @@
 import NextAuth, { type DefaultSession, type User } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import CredentialsProvider from "next-auth/providers/credentials";
+import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { UserRole } from "@prisma/client";
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      email: string | null;
-      name: string | null;
-      role: UserRole;
-      isVerified: boolean;
-    };
-  }
+// declare module "next-auth" {
+//   interface Session {
+//     user: {
+//       id: string;
+//       email: string | null;
+//       name: string | null;
+//       role: any;
+//       isVerified: boolean;
+//     };
+//   }
 
-  interface User {
-    id: string;
-    email: string | null;
-    name: string | null;
-    role: UserRole;
-    isVerified: boolean;
-  }
-}
+//   interface User {
+//     id: string;
+//     email: string | null;
+//     name: string | null;
+//     role: any;
+//     isVerified: boolean;
+//   }
+// }
 
 export const config = {
   adapter: PrismaAdapter(prisma),
@@ -34,13 +34,12 @@ export const config = {
     error: "/auth/error",
   },
   providers: [
-    CredentialsProvider({
-      name: "Credentials",
+    Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      authorize: async (credentials): Promise<any> => {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
@@ -85,15 +84,15 @@ export const config = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
-        token.isVerified = user.isVerified;
+        token.isVerified = (user as any).isVerified;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as UserRole;
-        session.user.isVerified = token.isVerified as boolean;
+        (session.user as any).role = token.role as UserRole;
+        (session.user as any).isVerified = token.isVerified as boolean;
       }
       return session;
     },
