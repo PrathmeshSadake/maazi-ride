@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { redirect, useRouter } from "next/navigation";
 import axios from "axios";
 import { useSession } from "next-auth/react";
+import { UserRole } from "@prisma/client";
 // Types
 interface VehicleData {
   make: string;
@@ -95,7 +96,7 @@ export default function DriverOnboarding() {
 
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      setIsVerified(session?.user?.isVerified || false);
+      setIsVerified((session?.user as any).isVerified || false);
     }
   }, [status, session]);
 

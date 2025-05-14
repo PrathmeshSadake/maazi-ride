@@ -1,10 +1,12 @@
+"use client";
 import Link from "next/link";
-
+import { useSession } from "next-auth/react";
 const AuthPage = () => {
+  const { status } = useSession();
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
       <div className="z-10 max-w-5xl w-full items-center justify-center text-center">
-        <h1 className="text-4xl font-bold mb-8">Welcome to MarkAI</h1>
+        <h1 className="text-4xl font-bold mb-8">Welcome to Maazi Ride</h1>
 
         {status === "loading" ? (
           <p className="text-lg">Loading...</p>

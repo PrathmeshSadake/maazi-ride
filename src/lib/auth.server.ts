@@ -24,7 +24,7 @@ export async function requireDriver() {
     redirect("/unauthorized");
   }
 
-  if (!user.isVerified) {
+  if ((!user as any).isVerified) {
     redirect("/driver/onboarding");
   }
 

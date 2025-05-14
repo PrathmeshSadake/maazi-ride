@@ -35,7 +35,7 @@ export default function VehiclePage() {
       try {
         // Fetch vehicle data from API
         const response = await fetch(
-          `/api/drivers/${session?.user.id}/vehicle`
+          `/api/drivers/${session?.user?.id}/vehicle`
         );
 
         if (!response.ok) {

@@ -1,5 +1,4 @@
 "use client";
-import { DataTable } from "@/components/data-table";
 import { SectionCards } from "@/components/section-cards";
 import { BookingStatusPieChart } from "@/components/booking-status-pie-chart";
 import { DriverVerificationBarChart } from "@/components/driver-verification-bar-chart";

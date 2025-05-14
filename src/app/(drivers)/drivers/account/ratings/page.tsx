@@ -48,7 +48,7 @@ export default function RatingsPage() {
 
       try {
         const response = await fetch(
-          `/api/drivers/${session?.user.id}/reviews`
+          `/api/drivers/${session?.user?.id}/reviews`
         );
         if (!response.ok)
           throw new Error("Failed to fetch ratings information");

@@ -34,7 +34,7 @@ export default function ProfilePage() {
 
       try {
         const response = await fetch(
-          `/api/drivers/${session?.user.id}/profile`
+          `/api/drivers/${session?.user?.id}/profile`
         );
 
         if (!response.ok) {

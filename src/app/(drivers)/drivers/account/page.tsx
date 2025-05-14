@@ -39,7 +39,9 @@ export default function DriverAccountPage() {
     // Check driver verification status
     const checkDriverStatus = async () => {
       try {
-        const response = await fetch(`/api/drivers/${session?.user.id}/status`);
+        const response = await fetch(
+          `/api/drivers/${session?.user?.id}/status`
+        );
         if (response.ok) {
           const data = await response.json();
           setDriverStatus({

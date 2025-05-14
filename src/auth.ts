@@ -1,4 +1,4 @@
-import NextAuth, { type DefaultSession, type User } from "next-auth";
+import NextAuth, { DefaultSession } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import Credentials from "next-auth/providers/credentials";
@@ -6,21 +6,25 @@ import bcrypt from "bcryptjs";
 import { UserRole } from "@prisma/client";
 
 // declare module "next-auth" {
+//   interface User {
+//     role?: UserRole;
+//     isVerified?: boolean;
+//   }
+
 //   interface Session {
 //     user: {
 //       id: string;
-//       email: string | null;
-//       name: string | null;
-//       role: any;
+//       role: UserRole;
 //       isVerified: boolean;
-//     };
+//     } & DefaultSession["user"];
 //   }
+// }
 
-//   interface User {
+// declare module "next-auth/jwt" {
+//   /** Returned by the `jwt` callback and `getToken`, when using JWT sessions */
+//   interface JWT {
 //     id: string;
-//     email: string | null;
-//     name: string | null;
-//     role: any;
+//     role: UserRole;
 //     isVerified: boolean;
 //   }
 // }
@@ -94,7 +98,7 @@ export const config = {
         (session.user as any).role = token.role as UserRole;
         (session.user as any).isVerified = token.isVerified as boolean;
       }
-      return session;
+      return session as any;
     },
   },
 } satisfies Parameters<typeof NextAuth>[0];

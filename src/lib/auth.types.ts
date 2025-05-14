@@ -9,12 +9,14 @@ export enum UserRole {
 declare module "next-auth" {
   interface User {
     role?: UserRole;
+    isVerified?: boolean;
   }
 
   interface Session extends DefaultSession {
     user?: {
       id: string;
       role: UserRole;
+      isVerified?: boolean;
     } & DefaultSession["user"];
   }
 }
@@ -23,5 +25,6 @@ declare module "next-auth" {
   interface JWT {
     role?: UserRole;
     id?: string;
+    isVerified?: boolean;
   }
 }

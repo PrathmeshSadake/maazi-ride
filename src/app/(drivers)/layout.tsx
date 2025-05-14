@@ -61,7 +61,7 @@ export default async function DriversLayout({
   });
 
   if (
-    (!driver?.isVerified || !user.isVerified) &&
+    (!driver?.isVerified || !(user as any).isVerified) &&
     driver?.drivingLicenseUrl &&
     driver?.vehicleRegistrationUrl &&
     driver?.insuranceUrl

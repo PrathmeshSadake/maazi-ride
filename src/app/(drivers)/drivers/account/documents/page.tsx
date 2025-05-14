@@ -50,7 +50,7 @@ export default function DocumentsPage() {
 
       try {
         const response = await fetch(
-          `/api/drivers/${session?.user.id}/documents`
+          `/api/drivers/${session?.user?.id}/documents`
         );
         if (!response.ok)
           throw new Error("Failed to fetch document information");

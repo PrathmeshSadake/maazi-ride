@@ -68,7 +68,7 @@ export async function requireVerifiedDriver(
     redirect("/sign-in");
   }
 
-  const isVerified = user.isVerified as boolean | undefined;
+  const isVerified = (user as any).isVerified;
 
   if (!isVerified) {
     redirect(redirectPath);
@@ -84,7 +84,7 @@ export async function getVerificationStatus(): Promise<boolean> {
 
   if (!user) return false;
 
-  return (user.isVerified as boolean) || false;
+  return (user as any).isVerified || false;
 }
 
 // Check if current user is admin

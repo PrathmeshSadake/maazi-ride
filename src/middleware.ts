@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/auth";
+import { UserRole } from "@prisma/client";
 
 export async function middleware(request: NextRequest) {
   const session = await auth();
@@ -41,7 +42,7 @@ export async function middleware(request: NextRequest) {
 
     // If driver is not verified and not on onboarding page
     if (
-      !user.isVerified &&
+      !(user as any).isVerified &&
       !request.nextUrl.pathname.includes("/drivers/onboarding")
     ) {
       return NextResponse.redirect(new URL("/drivers/onboarding", request.url));
