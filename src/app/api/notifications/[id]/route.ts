@@ -1,21 +1,20 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { authOptions } from "@/lib/auth";
 
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const userId = session.user.id;
-    const notificationId = params.id;
+    const notificationId = (await params).id;
 
     // Check if notification exists and belongs to the user
     const notification = await prisma.notification.findUnique({
