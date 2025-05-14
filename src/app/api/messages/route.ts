@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { pusherServer } from "@/lib/pusher";
+import { auth } from "@/auth";
 
 // Schema for creating a message
 const createMessageSchema = z.object({
@@ -13,7 +13,8 @@ const createMessageSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await currentUser();
+    const session = await auth();
+    const user = session?.user;
 
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -107,15 +108,13 @@ export async function POST(req: NextRequest) {
         sender: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
           },
         },
         receiver: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
           },
         },
       },
@@ -127,9 +126,7 @@ export async function POST(req: NextRequest) {
         userId: actualReceiverId,
         type: "message",
         title: "New Message",
-        message: `You have a new message from ${user.firstName || ""} ${
-          user.lastName || ""
-        }`,
+        message: `You have a new message from ${user.name || ""}`,
         relatedId: message.id,
       },
     });
@@ -159,7 +156,8 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await currentUser();
+    const session = await auth();
+    const user = session?.user;
 
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -204,8 +202,7 @@ export async function GET(req: NextRequest) {
             where: { id },
             select: {
               id: true,
-              firstName: true,
-              lastName: true,
+              name: true,
             },
           });
 
@@ -254,15 +251,13 @@ export async function GET(req: NextRequest) {
           sender: {
             select: {
               id: true,
-              firstName: true,
-              lastName: true,
+              name: true,
             },
           },
           receiver: {
             select: {
               id: true,
-              firstName: true,
-              lastName: true,
+              name: true,
             },
           },
         },
@@ -326,15 +321,13 @@ export async function GET(req: NextRequest) {
           sender: {
             select: {
               id: true,
-              firstName: true,
-              lastName: true,
+              name: true,
             },
           },
           receiver: {
             select: {
               id: true,
-              firstName: true,
-              lastName: true,
+              name: true,
             },
           },
         },

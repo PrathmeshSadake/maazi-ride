@@ -5,9 +5,10 @@ import { auth } from "@/auth";
 // GET handler - Fetch driver's document information
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const id = (await params).id;
     const session = await auth();
 
     // Check if user is authenticated
@@ -16,13 +17,13 @@ export async function GET(
     }
 
     // Check if the authenticated user is requesting their own data
-    if (session.user.id !== params.id) {
+    if (session.user.id !== id) {
       return new NextResponse("Forbidden", { status: 403 });
     }
 
     // Fetch user data from database
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         isVerified: true,
