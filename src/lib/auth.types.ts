@@ -6,25 +6,27 @@ export enum UserRole {
   admin = "admin",
 }
 
-declare module "next-auth" {
-  interface User {
-    role?: UserRole;
-    isVerified?: boolean;
-  }
+// declare module "next-auth" {
+//   interface User {
+//     role?: UserRole;
+//     isVerified?: boolean;
+//   }
 
-  interface Session extends DefaultSession {
-    user?: {
-      id: string;
-      role: UserRole;
-      isVerified?: boolean;
-    } & DefaultSession["user"];
-  }
-}
+//   interface Session extends DefaultSession {
+//     user?: {
+//       id: string;
+//       role: UserRole;
+//       isVerified?: boolean;
+//       needsRoleSelection?: boolean;
+//     } & DefaultSession["user"];
+//   }
+// }
 
-declare module "next-auth" {
-  interface JWT {
-    role?: UserRole;
-    id?: string;
-    isVerified?: boolean;
-  }
-}
+// declare module "next-auth" {
+//   interface JWT {
+//     id: string;
+//     role?: UserRole;
+//     isVerified?: boolean;
+//     needsRoleSelection?: boolean;
+//   }
+// }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/auth";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/auth";
 
 export async function middleware(request: NextRequest) {
   const session = await auth();
@@ -12,11 +12,37 @@ export async function middleware(request: NextRequest) {
     "/auth/signin",
     "/auth/signup",
     "/auth/forgot-password",
+    "/auth/role-selection",
     "/api/auth/signup",
+    "/api/auth/set-role",
   ];
   const isPublicPath = publicPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
+
+  // If the user is not logged in and trying to access protected route
+  if (!user && !isPublicPath) {
+    return NextResponse.redirect(new URL("/auth/signin", request.url));
+  }
+
+  // If user needs role selection, redirect to role selection page
+  if (
+    user &&
+    user.needsRoleSelection &&
+    !request.nextUrl.pathname.startsWith("/auth/role-selection")
+  ) {
+    return NextResponse.redirect(new URL("/auth/role-selection", request.url));
+  }
+
+  // If the user is logged in and trying to access public route (but has role)
+  if (
+    user &&
+    !user.needsRoleSelection &&
+    isPublicPath &&
+    !request.nextUrl.pathname.startsWith("/api/auth")
+  ) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
 
   // Driver-specific paths
   const isDriverPath = request.nextUrl.pathname.startsWith("/drivers");
@@ -24,19 +50,9 @@ export async function middleware(request: NextRequest) {
   // Admin-specific paths
   const isAdminPath = request.nextUrl.pathname.startsWith("/admin");
 
-  // If the user is not logged in and trying to access protected route
-  if (!user && !isPublicPath) {
-    return NextResponse.redirect(new URL("/auth/signin", request.url));
-  }
-
-  // If the user is logged in and trying to access public route
-  if (user && isPublicPath) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
   // Handle driver routes
   if (isDriverPath) {
-    if (user?.role !== "driver") {
+    if (user?.role !== UserRole.driver) {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
 
@@ -50,7 +66,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Handle admin routes
-  if (isAdminPath && user?.role !== "admin") {
+  if (isAdminPath && user?.role !== UserRole.admin) {
     return NextResponse.redirect(new URL("/unauthorized", request.url));
   }
 

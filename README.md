@@ -2,7 +2,14 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+First, set up your environment variables:
+
+1. Copy `.env.example` to `.env.local`
+2. Set up your database connection string
+3. Configure Google OAuth credentials (see Google OAuth Setup below)
+4. Set a secure `NEXTAUTH_SECRET`
+
+Then, run the development server:
 
 ```bash
 npm run dev
@@ -15,6 +22,48 @@ bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Google OAuth Setup
+
+To enable Google login with role selection:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the Google+ API
+4. Go to "Credentials" and create OAuth 2.0 Client IDs
+5. Add your domain to authorized origins:
+   - `http://localhost:3000` (for development)
+   - Your production domain
+6. Add authorized redirect URIs:
+   - `http://localhost:3000/api/auth/callback/google` (for development)
+   - `https://yourdomain.com/api/auth/callback/google` (for production)
+7. Copy the Client ID and Client Secret to your `.env.local`:
+
+```env
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+NEXTAUTH_SECRET="your-secret-key"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+## Authentication Flow
+
+The app implements a custom authentication flow with Google OAuth:
+
+1. **Google Sign-in**: Users can sign in with their Google account
+2. **Role Selection**: First-time Google users are prompted to select a role (Passenger or Driver)
+3. **Role-based Routing**: Users are redirected to appropriate dashboards based on their role
+4. **Middleware Protection**: Routes are protected based on user roles and verification status
+
+## Database Schema
+
+The project uses Prisma with PostgreSQL. Key models include:
+
+- `User`: Stores user information with role-based access
+- `Ride`: Manages ride offerings from drivers
+- `Booking`: Handles ride bookings and status
+- `Vehicle`: Driver vehicle information
+- `Review`: Rating and review system
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
