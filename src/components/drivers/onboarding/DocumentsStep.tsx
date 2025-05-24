@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@clerk/nextjs";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 
 interface DocumentsStepProps {
   formData: any;
@@ -11,11 +10,11 @@ interface DocumentsStepProps {
 }
 
 const DocumentsStep = ({ formData, setFormData }: DocumentsStepProps) => {
-  const { userId } = useAuth();
+  const { data: session, status } = useSession();
   const [uploading, setUploading] = useState(false);
 
   const handleFileUpload = async (file: File, type: string) => {
-    if (!file || !userId) return;
+    if (!file || !session?.user?.id) return;
 
     setUploading(true);
     try {
@@ -54,14 +53,14 @@ const DocumentsStep = ({ formData, setFormData }: DocumentsStepProps) => {
   };
 
   return (
-    <div className='space-y-6'>
-      <h3 className='text-lg font-medium'>Required Documents</h3>
-      <div className='space-y-6'>
-        <div className='space-y-2'>
+    <div className="space-y-6">
+      <h3 className="text-lg font-medium">Required Documents</h3>
+      <div className="space-y-6">
+        <div className="space-y-2">
           <Label>Driving License</Label>
           <Input
-            type='file'
-            accept='image/*,.pdf'
+            type="file"
+            accept="image/*,.pdf"
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) handleFileUpload(file, "drivingLicense");
@@ -69,17 +68,17 @@ const DocumentsStep = ({ formData, setFormData }: DocumentsStepProps) => {
             disabled={uploading}
           />
           {formData.documents.drivingLicense && (
-            <p className='text-sm text-green-600'>
+            <p className="text-sm text-green-600">
               Document uploaded successfully
             </p>
           )}
         </div>
 
-        <div className='space-y-2'>
+        <div className="space-y-2">
           <Label>Vehicle Registration</Label>
           <Input
-            type='file'
-            accept='image/*,.pdf'
+            type="file"
+            accept="image/*,.pdf"
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) handleFileUpload(file, "vehicleRegistration");
@@ -87,17 +86,17 @@ const DocumentsStep = ({ formData, setFormData }: DocumentsStepProps) => {
             disabled={uploading}
           />
           {formData.documents.vehicleRegistration && (
-            <p className='text-sm text-green-600'>
+            <p className="text-sm text-green-600">
               Document uploaded successfully
             </p>
           )}
         </div>
 
-        <div className='space-y-2'>
+        <div className="space-y-2">
           <Label>Insurance Document</Label>
           <Input
-            type='file'
-            accept='image/*,.pdf'
+            type="file"
+            accept="image/*,.pdf"
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) handleFileUpload(file, "insurance");
@@ -105,7 +104,7 @@ const DocumentsStep = ({ formData, setFormData }: DocumentsStepProps) => {
             disabled={uploading}
           />
           {formData.documents.insurance && (
-            <p className='text-sm text-green-600'>
+            <p className="text-sm text-green-600">
               Document uploaded successfully
             </p>
           )}

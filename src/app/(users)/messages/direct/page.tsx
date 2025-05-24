@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 import { Search, User, ArrowRight } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 interface Driver {
   id: string;
@@ -13,20 +13,20 @@ interface Driver {
 
 export default function DirectMessagesPage() {
   const router = useRouter();
-  const { user, isLoaded } = useUser();
+  const { data: session, status } = useSession();
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    if (isLoaded) {
-      if (!user) {
+    if (status !== "loading") {
+      if (!session?.user) {
         router.push("/sign-in");
       } else {
         fetchDrivers();
       }
     }
-  }, [isLoaded, user, router]);
+  }, [status, session, router]);
 
   const fetchDrivers = async () => {
     setLoading(true);

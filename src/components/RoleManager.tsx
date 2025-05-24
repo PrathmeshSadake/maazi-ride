@@ -1,28 +1,28 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 import { Button } from "./ui/button";
 import { UserRole } from "@prisma/client";
 import { Badge } from "./ui/badge";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 
 interface RoleManagerProps {
   showSwitcher?: boolean;
 }
 
 export function RoleManager({ showSwitcher = true }: RoleManagerProps) {
-  const { user, isLoaded } = useUser();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   // Get user's role and verification status
-  const userRole = (user?.publicMetadata?.role as UserRole) || "user";
-  const isVerified = (user?.publicMetadata?.isVerified as boolean) || false;
+  const userRole = (session?.user?.role as UserRole) || "user";
+  const isVerified = (session?.user?.isVerified as boolean) || false;
 
   // Handle role change
   const handleRoleChange = async (newRole: UserRole) => {
-    if (!user) return;
+    if (!session?.user) return;
 
     setLoading(true);
     try {
@@ -48,18 +48,18 @@ export function RoleManager({ showSwitcher = true }: RoleManagerProps) {
     }
   };
 
-  if (!isLoaded) {
-    return <div className='p-2'>Loading user information...</div>;
+  if (status === "loading") {
+    return <div className="p-2">Loading user information...</div>;
   }
 
-  if (!user) {
+  if (status !== "unauthenticated" && !session) {
     return null;
   }
 
   return (
-    <div className='p-4 border rounded-lg space-y-4'>
-      <div className='flex items-center gap-2'>
-        <h3 className='font-semibold'>Current Role:</h3>
+    <div className="p-4 border rounded-lg space-y-4">
+      <div className="flex items-center gap-2">
+        <h3 className="font-semibold">Current Role:</h3>
         <Badge
           variant={
             userRole === "admin"
@@ -79,9 +79,9 @@ export function RoleManager({ showSwitcher = true }: RoleManagerProps) {
       </div>
 
       {showSwitcher && (
-        <div className='flex flex-wrap gap-2'>
+        <div className="flex flex-wrap gap-2">
           <Button
-            size='sm'
+            size="sm"
             variant={userRole === "user" ? "default" : "outline"}
             onClick={() => handleRoleChange("user")}
             disabled={userRole === "user" || loading}
@@ -89,7 +89,7 @@ export function RoleManager({ showSwitcher = true }: RoleManagerProps) {
             Switch to User
           </Button>
           <Button
-            size='sm'
+            size="sm"
             variant={userRole === "driver" ? "default" : "outline"}
             onClick={() => handleRoleChange("driver")}
             disabled={userRole === "driver" || loading}
@@ -98,8 +98,8 @@ export function RoleManager({ showSwitcher = true }: RoleManagerProps) {
           </Button>
           {userRole === "admin" && (
             <Button
-              size='sm'
-              variant='destructive'
+              size="sm"
+              variant="destructive"
               onClick={() => handleRoleChange("admin")}
               disabled={loading}
             >

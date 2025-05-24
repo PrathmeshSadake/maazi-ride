@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -13,6 +12,7 @@ import {
   Car,
   Calendar,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 interface Notification {
   id: string;
@@ -24,7 +24,7 @@ interface Notification {
 }
 
 export default function NotificationsPage() {
-  const { user, isLoaded } = useUser();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -42,7 +42,7 @@ export default function NotificationsPage() {
   // Fetch notifications when component mounts
   useEffect(() => {
     const fetchNotifications = async () => {
-      if (!isLoaded || !user) return;
+      if (status !== "loading" && !session?.user) return;
 
       try {
         // In a real app, replace this with API call
@@ -103,7 +103,7 @@ export default function NotificationsPage() {
     };
 
     fetchNotifications();
-  }, [isLoaded, user]);
+  }, [status, session]);
 
   // Mark a notification as read
   const markAsRead = async (notificationId: string) => {

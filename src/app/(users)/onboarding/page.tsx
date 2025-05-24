@@ -1,6 +1,5 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -14,9 +13,10 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useSession } from "next-auth/react";
 
 export default function UserOnboarding() {
-  const { user, isLoaded } = useUser();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -26,9 +26,9 @@ export default function UserOnboarding() {
     emergencyContact: "",
   });
 
-  if (!isLoaded) {
+  if (status === "loading") {
     return (
-      <div className='flex items-center justify-center min-h-screen'>
+      <div className="flex items-center justify-center min-h-screen">
         Loading...
       </div>
     );
@@ -69,10 +69,10 @@ export default function UserOnboarding() {
   };
 
   return (
-    <div className='flex items-center justify-center min-h-screen bg-gray-50'>
-      <Card className='w-full max-w-md shadow-lg'>
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader>
-          <CardTitle className='text-2xl font-bold'>
+          <CardTitle className="text-2xl font-bold">
             Complete Your Profile
           </CardTitle>
           <CardDescription>
@@ -80,37 +80,37 @@ export default function UserOnboarding() {
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className='space-y-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='fullName'>Full Name</Label>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name</Label>
               <Input
-                id='fullName'
-                name='fullName'
-                placeholder='Enter your full name'
+                id="fullName"
+                name="fullName"
+                placeholder="Enter your full name"
                 value={formData.fullName}
                 onChange={handleChange}
                 required
               />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='homeAddress'>Home Address</Label>
+            <div className="space-y-2">
+              <Label htmlFor="homeAddress">Home Address</Label>
               <Input
-                id='homeAddress'
-                name='homeAddress'
-                placeholder='Enter your home address'
+                id="homeAddress"
+                name="homeAddress"
+                placeholder="Enter your home address"
                 value={formData.homeAddress}
                 onChange={handleChange}
                 required
               />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='emergencyContact'>Emergency Contact</Label>
+            <div className="space-y-2">
+              <Label htmlFor="emergencyContact">Emergency Contact</Label>
               <Input
-                id='emergencyContact'
-                name='emergencyContact'
-                placeholder='Emergency contact number'
+                id="emergencyContact"
+                name="emergencyContact"
+                placeholder="Emergency contact number"
                 value={formData.emergencyContact}
                 onChange={handleChange}
                 required
@@ -119,7 +119,7 @@ export default function UserOnboarding() {
           </CardContent>
 
           <CardFooter>
-            <Button type='submit' className='w-full' disabled={isSubmitting}>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? "Processing..." : "Complete Profile"}
             </Button>
           </CardFooter>

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser, useClerk } from "@clerk/nextjs";
 import {
   ArrowLeft,
   Moon,
@@ -15,10 +14,10 @@ import {
   LogOut,
   AlertTriangle,
 } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 
 export default function SettingsPage() {
-  const { user, isLoaded } = useUser();
-  const { signOut } = useClerk();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   const [settings, setSettings] = useState({

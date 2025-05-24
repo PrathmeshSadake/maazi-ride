@@ -1,6 +1,5 @@
 import { requireRole, getVerificationStatus } from "@/lib/auth";
 import { RoleManager } from "@/components/RoleManager";
-import { UserProfile } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";

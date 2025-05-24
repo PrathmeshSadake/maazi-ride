@@ -4,7 +4,7 @@ import { useState, useEffect, JSX } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Clock, X, Calendar, MapPin, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 
 interface Booking {
   id: string;
@@ -29,7 +29,7 @@ interface Booking {
 
 export default function DriverBookingsPage() {
   const router = useRouter();
-  const { isSignedIn, isLoaded, user } = useUser();
+  const { data: session, status } = useSession();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
@@ -38,12 +38,12 @@ export default function DriverBookingsPage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isLoaded && !isSignedIn) {
+    if (status !== "loading" && !session) {
       router.push("/sign-in");
-    } else if (isSignedIn) {
+    } else if (session?.user) {
       fetchBookings();
     }
-  }, [isSignedIn, isLoaded, router, activeTab]);
+  }, [session, status, router, activeTab]);
 
   const fetchBookings = async () => {
     setLoading(true);

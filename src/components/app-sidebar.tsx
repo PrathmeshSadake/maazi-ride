@@ -32,7 +32,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { UserButton } from "@clerk/nextjs";
 import { Car } from "lucide-react";
 
 const data = {

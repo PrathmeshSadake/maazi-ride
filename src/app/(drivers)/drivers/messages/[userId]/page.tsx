@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, Send, User } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+
 import { format } from "date-fns";
 import { pusherClient } from "@/lib/pusher";
+import { useSession } from "next-auth/react";
 
 interface Message {
   id: string;
@@ -28,7 +29,7 @@ export default function DriverConversationPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const { user, isLoaded } = useUser();
+  const { data: session, status } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState("");
@@ -40,8 +41,8 @@ export default function DriverConversationPage() {
   const bookingId = searchParams.get("bookingId");
 
   useEffect(() => {
-    if (isLoaded) {
-      if (!user) {
+    if (status !== "loading") {
+      if (!session?.user) {
         router.push("/sign-in");
       } else {
         fetchMessages();
@@ -51,14 +52,14 @@ export default function DriverConversationPage() {
 
     return () => {
       // Clean up Pusher subscription when component unmounts
-      if (user) {
-        pusherClient.unsubscribe(`user-${user.id}`);
+      if (!session?.user) {
+        pusherClient.unsubscribe(`user-${session?.user!.id}`);
       }
     };
-  }, [isLoaded, user, router, userId, bookingId]);
+  }, [status, session, router, userId, bookingId]);
 
   const setupPusher = () => {
-    if (!user) return;
+    if (!!session?.user!.id) return;
 
     // Enable Pusher client logging
     pusherClient.connection.bind("error", (err: any) => {
@@ -69,14 +70,19 @@ export default function DriverConversationPage() {
       console.log("Pusher connected successfully");
     });
 
-    const channel = pusherClient.subscribe(`user-${user.id}`);
+    const channel = pusherClient.subscribe(`user-${session?.user!.id}`);
 
     channel.bind("pusher:subscription_succeeded", () => {
-      console.log(`Successfully subscribed to user-${user.id} channel`);
+      console.log(
+        `Successfully subscribed to user-${session?.user!.id} channel`
+      );
     });
 
     channel.bind("pusher:subscription_error", (error: any) => {
-      console.error(`Error subscribing to user-${user.id} channel:`, error);
+      console.error(
+        `Error subscribing to user-${session?.user!.id} channel:`,
+        error
+      );
     });
 
     channel.bind("new-message", (data: { message: Message }) => {
@@ -84,8 +90,10 @@ export default function DriverConversationPage() {
       const message = data.message;
       // Add the new message if it's from the current conversation
       if (
-        (message.senderId === userId && message.receiverId === user.id) ||
-        (message.senderId === user.id && message.receiverId === userId)
+        (message.senderId === userId &&
+          message.receiverId === session?.user!.id) ||
+        (message.senderId === session?.user!.id &&
+          message.receiverId === userId)
       ) {
         setMessages((prev) => [...prev, message]);
       }
@@ -119,7 +127,9 @@ export default function DriverConversationPage() {
       // Set other user's name from the first message
       if (data.length > 0) {
         const otherUser =
-          data[0].senderId === user?.id ? data[0].receiver : data[0].sender;
+          data[0].senderId === session?.user!.id
+            ? data[0].receiver
+            : data[0].sender;
         setOtherUserName(
           `${otherUser.firstName || ""} ${otherUser.lastName || ""}`
         );
@@ -132,7 +142,7 @@ export default function DriverConversationPage() {
   };
 
   const sendMessage = async () => {
-    if (!messageText.trim() || !user || !userId) return;
+    if (!messageText.trim() || !session?.user || !userId) return;
 
     setSending(true);
     try {
@@ -220,7 +230,7 @@ export default function DriverConversationPage() {
           </div>
         ) : (
           messages.map((message) => {
-            const isCurrentUser = message.senderId === user?.id;
+            const isCurrentUser = message.senderId === session?.user!?.id;
 
             return (
               <div

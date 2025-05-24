@@ -1,4 +1,3 @@
-import { currentUser } from "@clerk/nextjs/server";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";

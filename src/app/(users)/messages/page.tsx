@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, Send, User } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
 import { format } from "date-fns";
 import { pusherClient } from "@/lib/pusher";
+import { useSession } from "next-auth/react";
 
 interface Message {
   id: string;
@@ -27,7 +27,8 @@ interface Message {
 export default function MessagesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isLoaded } = useUser();
+  const { data: session, status } = useSession();
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState("");
@@ -41,8 +42,8 @@ export default function MessagesPage() {
   const driverId = searchParams.get("driverId");
 
   useEffect(() => {
-    if (isLoaded) {
-      if (!user) {
+    if (status !== "loading") {
+      if (!session?.user) {
         router.push("/sign-in");
       } else {
         if (bookingId) {
@@ -57,14 +58,14 @@ export default function MessagesPage() {
 
     return () => {
       // Clean up Pusher subscription when component unmounts
-      if (user) {
-        pusherClient.unsubscribe(`user-${user.id}`);
+      if (!session?.user) {
+        pusherClient.unsubscribe(`user-${session?.user!.id}`);
       }
     };
-  }, [isLoaded, user, router, bookingId, driverId]);
+  }, [status, session, router, bookingId, driverId]);
 
   const setupPusher = () => {
-    if (!user) return;
+    if (!session?.user) return;
 
     // Enable Pusher client logging
     pusherClient.connection.bind("error", (err: any) => {
@@ -75,14 +76,19 @@ export default function MessagesPage() {
       console.log("Pusher connected successfully");
     });
 
-    const channel = pusherClient.subscribe(`user-${user.id}`);
+    const channel = pusherClient.subscribe(`user-${session?.user!.id}`);
 
     channel.bind("pusher:subscription_succeeded", () => {
-      console.log(`Successfully subscribed to user-${user.id} channel`);
+      console.log(
+        `Successfully subscribed to user-${session?.user!.id} channel`
+      );
     });
 
     channel.bind("pusher:subscription_error", (error: any) => {
-      console.error(`Error subscribing to user-${user.id} channel:`, error);
+      console.error(
+        `Error subscribing to user-${session?.user!.id} channel:`,
+        error
+      );
     });
 
     channel.bind("new-message", (data: { message: Message }) => {
@@ -142,15 +148,15 @@ export default function MessagesPage() {
   const sendMessage = async () => {
     console.log("sendMessage called with:", {
       messageText,
-      user: !!user,
+      user: !session?.user!,
       bookingId,
       driverId,
     });
 
-    if (!messageText.trim() || !user) {
+    if (!messageText.trim() || !session?.user) {
       console.log("Send message aborted due to missing message or user:", {
         noMessageText: !messageText.trim(),
-        noUser: !user,
+        noUser: !session?.user,
       });
       return;
     }
@@ -232,14 +238,13 @@ export default function MessagesPage() {
           {
             id: "placeholder",
             content: `Hi! I'm interested in your ride. Is it still available?`,
-            senderId: user?.id || "",
+            senderId: !session?.user!.id,
             receiverId: "driver",
             createdAt: new Date().toISOString(),
             sender: {
-              firstName: user?.firstName || "",
-              lastName: user?.lastName || "",
+              name: !session?.user?.name,
             },
-            receiver: { firstName: driverName, lastName: "" },
+            receiver: { name: driverName },
           },
         ]
       : [];
@@ -290,7 +295,7 @@ export default function MessagesPage() {
           </div>
         ) : (
           displayMessages.map((message) => {
-            const isCurrentUser = message.senderId === user?.id;
+            const isCurrentUser = message.senderId === !session?.user!.id;
 
             return (
               <div
