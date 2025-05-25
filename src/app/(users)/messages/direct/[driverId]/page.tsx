@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, Send, Phone, Info } from "lucide-react";
+import { ArrowLeft, Send, User, Phone, Info } from "lucide-react";
 import { format } from "date-fns";
 import { pusherClient } from "@/lib/pusher";
 import { useSession } from "next-auth/react";
@@ -19,47 +19,50 @@ interface Message {
   receiverId: string;
   createdAt: string;
   bookingId?: string;
-  sender: {
-    name: string;
-  };
-  receiver: {
-    name: string;
-  };
+  read: boolean;
 }
 
-interface UserInfo {
+interface DriverInfo {
   id: string;
   name: string;
+  driverRating?: number;
+  ridesCompleted: number;
+}
+
+interface RideInfo {
+  id: string;
+  fromLocation: string;
+  toLocation: string;
+  departureDate: string;
+  departureTime: string;
+  price: number;
+  status: string;
 }
 
 interface BookingInfo {
   id: string;
   status: string;
   numSeats: number;
-  ride: {
-    fromLocation: string;
-    toLocation: string;
-    departureDate: string;
-    departureTime: string;
-    price: number;
-  };
 }
 
-export default function DriverConversationPage() {
+export default function DirectMessagePage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState("");
   const [sending, setSending] = useState(false);
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [driverInfo, setDriverInfo] = useState<DriverInfo | null>(null);
+  const [rideInfo, setRideInfo] = useState<RideInfo | null>(null);
   const [bookingInfo, setBookingInfo] = useState<BookingInfo | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const userId = params.userId as string;
+  const driverId = params.driverId as string;
   const bookingId = searchParams.get("bookingId");
+  const rideId = searchParams.get("rideId");
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -67,10 +70,9 @@ export default function DriverConversationPage() {
         router.push("/sign-in");
       } else {
         fetchMessages();
-        fetchUserInfo();
-        if (bookingId) {
-          fetchBookingInfo();
-        }
+        fetchDriverInfo();
+        if (rideId) fetchRideInfo();
+        if (bookingId) fetchBookingInfo();
         setupPusher();
       }
     }
@@ -80,7 +82,11 @@ export default function DriverConversationPage() {
         pusherClient.unsubscribe(`user-${session.user.id}`);
       }
     };
-  }, [status, session, router, userId, bookingId]);
+  }, [status, session, router, driverId, bookingId, rideId]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const setupPusher = () => {
     if (!session?.user) return;
@@ -90,34 +96,78 @@ export default function DriverConversationPage() {
     channel.bind("new-message", (data: { message: Message }) => {
       console.log("Received new message via Pusher:", data);
       const message = data.message;
+
       // Add the new message if it's from the current conversation
       if (
-        (message.senderId === userId &&
+        (message.senderId === driverId &&
           message.receiverId === session.user.id) ||
-        (message.senderId === session.user.id && message.receiverId === userId)
+        (message.senderId === session.user.id &&
+          message.receiverId === driverId)
       ) {
         setMessages((prev) => [...prev, message]);
-        // Mark as read if it's from the other user
-        if (message.senderId === userId) {
+
+        // Mark message as read if it's from the driver
+        if (message.senderId === driverId) {
           markMessageAsRead(message.id);
         }
       }
     });
-
-    channel.bind("pusher:subscription_succeeded", () => {
-      console.log(`Successfully subscribed to user-${session.user.id} channel`);
-    });
   };
 
-  const fetchUserInfo = async () => {
+  const fetchMessages = async () => {
+    setLoading(true);
     try {
-      const response = await fetch(`/api/users/${userId}/profile`);
-      if (response.ok) {
-        const data = await response.json();
-        setUserInfo(data);
+      let url = `/api/messages?driverId=${driverId}`;
+      if (bookingId) {
+        url += `&bookingId=${bookingId}`;
+      }
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch messages");
+      }
+
+      const data = await response.json();
+      setMessages(data);
+
+      // Mark all messages from driver as read
+      const unreadMessages = data.filter(
+        (msg: Message) => msg.senderId === driverId && !msg.read
+      );
+
+      for (const msg of unreadMessages) {
+        markMessageAsRead(msg.id);
       }
     } catch (err) {
-      console.error("Error fetching user info:", err);
+      console.error("Error fetching messages:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDriverInfo = async () => {
+    try {
+      const response = await fetch(`/api/drivers/${driverId}/profile`);
+      if (response.ok) {
+        const data = await response.json();
+        setDriverInfo(data);
+      }
+    } catch (err) {
+      console.error("Error fetching driver info:", err);
+    }
+  };
+
+  const fetchRideInfo = async () => {
+    if (!rideId) return;
+
+    try {
+      const response = await fetch(`/api/rides/${rideId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setRideInfo(data);
+      }
+    } catch (err) {
+      console.error("Error fetching ride info:", err);
     }
   };
 
@@ -132,39 +182,6 @@ export default function DriverConversationPage() {
       }
     } catch (err) {
       console.error("Error fetching booking info:", err);
-    }
-  };
-
-  const fetchMessages = async () => {
-    if (!userId) return;
-
-    setLoading(true);
-    try {
-      const queryParams = new URLSearchParams({ userId });
-      if (bookingId) {
-        queryParams.append("bookingId", bookingId);
-      }
-
-      const response = await fetch(`/api/messages?${queryParams.toString()}`);
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch messages");
-      }
-
-      const data = await response.json();
-      setMessages(data);
-
-      // Mark unread messages as read
-      const unreadMessages = data.filter(
-        (msg: Message) => msg.senderId === userId
-      );
-      unreadMessages.forEach((msg: Message) => {
-        markMessageAsRead(msg.id);
-      });
-    } catch (err) {
-      console.error("Error fetching messages:", err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -190,7 +207,7 @@ export default function DriverConversationPage() {
         },
         body: JSON.stringify({
           content: messageText.trim(),
-          receiverId: userId,
+          receiverId: driverId,
           bookingId: bookingId || undefined,
         }),
       });
@@ -229,10 +246,6 @@ export default function DriverConversationPage() {
     }
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -253,21 +266,22 @@ export default function DriverConversationPage() {
 
             <Avatar className="w-10 h-10">
               <AvatarFallback className="bg-primary text-primary-foreground">
-                {userInfo?.name
+                {driverInfo?.name
                   ?.split(" ")
                   .map((n) => n.charAt(0))
                   .join("")
-                  .slice(0, 2) || "P"}
+                  .slice(0, 2) || "D"}
               </AvatarFallback>
             </Avatar>
 
             <div className="flex-1">
               <h1 className="font-semibold text-foreground">
-                {userInfo?.name || "Passenger"}
+                {driverInfo?.name || "Driver"}
               </h1>
-              {bookingId && (
+              {driverInfo && (
                 <p className="text-xs text-muted-foreground">
-                  Booking #{bookingId.slice(0, 8)}
+                  ⭐ {driverInfo.driverRating?.toFixed(1) || "New"} •{" "}
+                  {driverInfo.ridesCompleted} rides
                 </p>
               )}
             </div>
@@ -284,86 +298,84 @@ export default function DriverConversationPage() {
         </div>
       </div>
 
-      {/* Booking Info */}
-      {bookingInfo && (
+      {/* Ride/Booking Info */}
+      {(rideInfo || bookingInfo) && (
         <div className="max-w-md mx-auto px-4 py-3">
           <Card>
             <CardContent className="p-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-foreground">
-                    Booking Details
-                  </h3>
-                  <Badge className={getStatusBadgeColor(bookingInfo.status)}>
-                    {bookingInfo.status.replace("_", " ")}
-                  </Badge>
+              {rideInfo && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-foreground">
+                      Ride Details
+                    </h3>
+                    {bookingInfo && (
+                      <Badge
+                        className={getStatusBadgeColor(bookingInfo.status)}
+                      >
+                        {bookingInfo.status.replace("_", " ")}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    <p>
+                      {rideInfo.fromLocation} → {rideInfo.toLocation}
+                    </p>
+                    <p>
+                      {format(new Date(rideInfo.departureDate), "PPP")} at{" "}
+                      {rideInfo.departureTime}
+                    </p>
+                    <p>
+                      ₹{rideInfo.price} per seat{" "}
+                      {bookingInfo &&
+                        `• ${bookingInfo.numSeats} seat(s) booked`}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  <p>
-                    {bookingInfo.ride.fromLocation} →{" "}
-                    {bookingInfo.ride.toLocation}
-                  </p>
-                  <p>
-                    {format(new Date(bookingInfo.ride.departureDate), "PPP")} at{" "}
-                    {bookingInfo.ride.departureTime}
-                  </p>
-                  <p>
-                    ₹{bookingInfo.ride.price} per seat • {bookingInfo.numSeats}{" "}
-                    seat(s) booked
-                  </p>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 max-w-md mx-auto w-full">
-        {messages.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <p>No messages yet. Start the conversation!</p>
-          </div>
-        ) : (
-          messages.map((message) => {
-            const isCurrentUser = message.senderId === session?.user?.id;
-
-            return (
+      <div className="flex-1 max-w-md mx-auto w-full px-4 py-4 overflow-y-auto">
+        <div className="space-y-4">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${
+                message.senderId === session?.user?.id
+                  ? "justify-end"
+                  : "justify-start"
+              }`}
+            >
               <div
-                key={message.id}
-                className={`flex ${
-                  isCurrentUser ? "justify-end" : "justify-start"
+                className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                  message.senderId === session?.user?.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-foreground"
                 }`}
               >
-                <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                    isCurrentUser
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground"
+                <p className="text-sm">{message.content}</p>
+                <p
+                  className={`text-xs mt-1 ${
+                    message.senderId === session?.user?.id
+                      ? "text-primary-foreground/70"
+                      : "text-muted-foreground"
                   }`}
                 >
-                  <div className="text-sm leading-relaxed">
-                    {message.content}
-                  </div>
-                  <div
-                    className={`text-xs mt-2 ${
-                      isCurrentUser
-                        ? "text-primary-foreground/70"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {format(new Date(message.createdAt), "HH:mm")}
-                  </div>
-                </div>
+                  {format(new Date(message.createdAt), "HH:mm")}
+                </p>
               </div>
-            );
-          })
-        )}
-        <div ref={messagesEndRef} />
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {/* Message Input */}
-      <div className="border-t bg-card">
+      <div className="bg-card border-t">
         <div className="max-w-md mx-auto p-4">
           <div className="flex items-center gap-3">
             <Input

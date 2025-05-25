@@ -13,6 +13,8 @@ import {
   MapPin,
   Users,
   ArrowRight,
+  Star,
+  TrendingUp,
 } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -64,94 +66,154 @@ export default async function DriverDashboard() {
   });
 
   return (
-    <div className="container mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Driver Dashboard</h1>
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+      {/* Page Header */}
+      <div className="p-4 pb-2">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-sm text-gray-500">
+            Welcome back, {driver?.name || "Driver"}
+          </p>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1">
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-2xl font-semibold mb-4">Your Performance</h2>
+      {/* Main Content */}
+      <div className="p-4 space-y-6">
+        {/* Performance Stats */}
+        <Card className="bg-white shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-semibold flex items-center">
+              <TrendingUp className="h-5 w-5 mr-2 text-blue-600" />
+              Your Performance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-blue-50 p-4 rounded-md text-center">
-                <p className="text-sm text-blue-700">Completed Rides</p>
-                <p className="text-2xl font-bold text-blue-800">0</p>
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 rounded-xl text-white">
+                <p className="text-sm opacity-90">Completed Rides</p>
+                <p className="text-2xl font-bold">0</p>
               </div>
-              <div className="bg-green-50 p-4 rounded-md text-center">
-                <p className="text-sm text-green-700">Rating</p>
-                <p className="text-2xl font-bold text-green-800">N/A</p>
+              <div className="bg-gradient-to-r from-green-500 to-green-600 p-4 rounded-xl text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm opacity-90">Rating</p>
+                    <p className="text-2xl font-bold">N/A</p>
+                  </div>
+                  <Star className="h-6 w-6 opacity-80" />
+                </div>
               </div>
-              <div className="bg-purple-50 p-4 rounded-md text-center">
-                <p className="text-sm text-purple-700">Total Earnings</p>
-                <p className="text-2xl font-bold text-purple-800">₹0.00</p>
+              <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-4 rounded-xl text-white">
+                <p className="text-sm opacity-90">Total Earnings</p>
+                <p className="text-2xl font-bold">₹0.00</p>
               </div>
-              <div className="bg-amber-50 p-4 rounded-md text-center">
-                <p className="text-sm text-amber-700">This Month</p>
-                <p className="text-2xl font-bold text-amber-800">₹0.00</p>
+              <div className="bg-gradient-to-r from-amber-500 to-amber-600 p-4 rounded-xl text-white">
+                <p className="text-sm opacity-90">This Month</p>
+                <p className="text-2xl font-bold">₹0.00</p>
               </div>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-2xl font-semibold mb-4">Actions</h2>
-            <div className="flex flex-wrap gap-4">
+        {/* Quick Actions */}
+        <Card className="bg-white shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-semibold">
+              Quick Actions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3">
               <Link href="/drivers/trips/new">
-                <Button className="flex items-center gap-2">
-                  <CalendarPlus className="h-4 w-4" />
-                  Schedule a Ride
+                <Button className="w-full h-16 flex flex-col items-center justify-center space-y-1 bg-blue-600 hover:bg-blue-700">
+                  <CalendarPlus className="h-6 w-6" />
+                  <span className="text-sm font-medium">Schedule Ride</span>
                 </Button>
               </Link>
+
               <Link href="/drivers/trips">
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Car className="h-4 w-4" />
-                  Manage Rides
+                <Button
+                  variant="outline"
+                  className="w-full h-16 flex flex-col items-center justify-center space-y-1 border-2 hover:bg-gray-50"
+                >
+                  <Car className="h-6 w-6" />
+                  <span className="text-sm font-medium">Manage Rides</span>
                 </Button>
               </Link>
+
               <Link href="/drivers/earnings">
-                <Button variant="outline" className="flex items-center gap-2">
-                  <IndianRupee className="h-4 w-4" />
-                  View Earnings
+                <Button
+                  variant="outline"
+                  className="w-full h-16 flex flex-col items-center justify-center space-y-1 border-2 hover:bg-gray-50"
+                >
+                  <IndianRupee className="h-6 w-6" />
+                  <span className="text-sm font-medium">View Earnings</span>
+                </Button>
+              </Link>
+
+              <Link href="/drivers/bookings">
+                <Button
+                  variant="outline"
+                  className="w-full h-16 flex flex-col items-center justify-center space-y-1 border-2 hover:bg-gray-50"
+                >
+                  <Users className="h-6 w-6" />
+                  <span className="text-sm font-medium">Bookings</span>
                 </Button>
               </Link>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-2xl font-semibold mb-4">Booking Requests</h2>
-
-            {/* Fetch pending booking requests to display count */}
-            <div className="flex items-center justify-between">
+        {/* Booking Requests */}
+        <Card className="bg-white shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-semibold">
+              Booking Requests
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
               <div>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="font-medium text-gray-900">
                   Manage your ride booking requests
                 </p>
-                <p className="font-semibold text-blue-600">
+                <p className="text-sm text-blue-600 mt-1">
                   Accept or reject passenger requests
                 </p>
               </div>
               <Link href="/drivers/bookings">
-                <Button className="flex items-center gap-2">
-                  Manage Bookings
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  Manage
                 </Button>
               </Link>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          <div className="bg-white">
-            <h2 className="text-2xl font-semibold mb-4">Upcoming Rides</h2>
+        {/* Upcoming Rides */}
+        <Card className="bg-white shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-semibold">
+              Upcoming Rides
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             {rides.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-4">
                 {rides.map((ride) => (
-                  <Card className="h-full flex flex-col overflow-hidden transition-shadow hover:shadow-md">
+                  <Card
+                    key={ride.id}
+                    className="border border-gray-200 hover:shadow-md transition-shadow"
+                  >
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg font-semibold line-clamp-1">
+                        <CardTitle className="text-base font-semibold line-clamp-1">
                           {ride.fromLocation.split(",")[0]}
                           <ArrowRight className="inline h-4 w-4 mx-1" />
                           {ride.toLocation.split(",")[0]}
                         </CardTitle>
                       </div>
                     </CardHeader>
-                    <CardContent className="pb-0 flex-1">
+                    <CardContent className="pb-2">
                       <div className="flex flex-wrap gap-3 mb-3">
                         <div className="flex items-center gap-1 text-gray-600 text-sm">
                           <Calendar className="h-4 w-4 flex-shrink-0" />
@@ -195,7 +257,7 @@ export default async function DriverDashboard() {
                       </div>
                     </CardContent>
 
-                    <CardFooter className="pt-4 mt-auto">
+                    <CardFooter className="pt-2">
                       <Link
                         href={`/drivers/trips/${ride.id}`}
                         className="w-full"
@@ -210,22 +272,28 @@ export default async function DriverDashboard() {
 
                 <div className="text-center mt-4">
                   <Link href="/drivers/trips">
-                    <Button variant="link">View all rides</Button>
+                    <Button variant="link" className="text-blue-600">
+                      View all rides
+                    </Button>
                   </Link>
                 </div>
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                <p>You have no upcoming rides</p>
+                <Car className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-lg font-medium mb-2">No upcoming rides</p>
+                <p className="text-sm mb-4">
+                  Start by scheduling your first ride
+                </p>
                 <Link href="/drivers/trips/new">
-                  <Button className="mt-4" size="sm">
+                  <Button className="bg-blue-600 hover:bg-blue-700">
                     Schedule a Ride
                   </Button>
                 </Link>
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

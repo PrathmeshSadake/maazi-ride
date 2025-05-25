@@ -13,39 +13,31 @@ export async function GET(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const driverId = (await params).id;
+    const userId = (await params).id;
 
-    // Get driver profile information
-    const driver = await prisma.user.findUnique({
+    // Get user profile information
+    const user = await prisma.user.findUnique({
       where: {
-        id: driverId,
-        role: "driver",
+        id: userId,
       },
       select: {
         id: true,
         name: true,
-        driverRating: true,
+        email: true,
+        role: true,
         ridesCompleted: true,
+        driverRating: true,
         isVerified: true,
-        vehicle: {
-          select: {
-            make: true,
-            model: true,
-            year: true,
-            color: true,
-            licensePlate: true,
-          },
-        },
       },
     });
 
-    if (!driver) {
-      return new NextResponse("Driver not found", { status: 404 });
+    if (!user) {
+      return new NextResponse("User not found", { status: 404 });
     }
 
-    return NextResponse.json(driver);
+    return NextResponse.json(user);
   } catch (error) {
-    console.error("Error fetching driver profile:", error);
+    console.error("Error fetching user profile:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

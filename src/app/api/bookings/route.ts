@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { auth } from "@/auth";
+import { pusherServer } from "@/lib/pusher";
 
 // Schema for creating a booking
 const createBookingSchema = z.object({
@@ -85,7 +86,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Create a notification for the driver
-    await prisma.notification.create({
+    const notification = await prisma.notification.create({
       data: {
         userId: ride.driverId,
         type: "booking_request",
@@ -94,6 +95,15 @@ export async function POST(req: NextRequest) {
         relatedId: booking.id,
       },
     });
+
+    // Send real-time notification via Pusher
+    try {
+      await pusherServer.trigger(`user-${ride.driverId}`, "new-notification", {
+        notification,
+      });
+    } catch (error) {
+      console.error("Error sending Pusher notification:", error);
+    }
 
     // Format date for consistent client-side handling
     const formattedBooking = {

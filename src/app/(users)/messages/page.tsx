@@ -1,364 +1,253 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, Send, User } from "lucide-react";
-import { format } from "date-fns";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { MessageSquare, Search, User, Clock, ArrowRight } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
 import { pusherClient } from "@/lib/pusher";
 import { useSession } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
-interface Message {
+interface Conversation {
   id: string;
-  content: string;
-  senderId: string;
-  receiverId: string;
-  createdAt: string;
+  driverId: string;
+  driverName: string;
+  rideId?: string;
   bookingId?: string;
-  sender: {
-    firstName: string;
-    lastName: string;
+  lastMessage: {
+    id: string;
+    content: string;
+    senderId: string;
+    createdAt: string;
   };
-  receiver: {
-    firstName: string;
-    lastName: string;
+  unreadCount: number;
+  rideDetails?: {
+    fromLocation: string;
+    toLocation: string;
+    departureDate: string;
+    status: string;
   };
 }
 
 export default function MessagesPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
-
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [messageText, setMessageText] = useState("");
-  const [sending, setSending] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
-  // Get driver and ride info from query params
-  const driverName = searchParams.get("driver");
-  const rideId = searchParams.get("rideId");
-  const bookingId = searchParams.get("bookingId");
-  const driverId = searchParams.get("driverId");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    if (status !== "loading") {
+    if (status === "authenticated") {
       if (!session?.user) {
         router.push("/sign-in");
       } else {
-        if (bookingId) {
-          fetchMessages();
-        } else if (driverId) {
-          // For direct driver messages without booking
-          fetchDriverMessages();
-        }
+        fetchConversations();
         setupPusher();
       }
     }
 
     return () => {
-      // Clean up Pusher subscription when component unmounts
-      if (!session?.user) {
-        pusherClient.unsubscribe(`user-${session?.user!.id}`);
+      if (session?.user) {
+        pusherClient.unsubscribe(`user-${session.user.id}`);
       }
     };
-  }, [status, session, router, bookingId, driverId]);
+  }, [status, session, router]);
 
   const setupPusher = () => {
     if (!session?.user) return;
 
-    // Enable Pusher client logging
-    pusherClient.connection.bind("error", (err: any) => {
-      console.error("Pusher connection error:", err);
-    });
+    const channel = pusherClient.subscribe(`user-${session.user.id}`);
 
-    pusherClient.connection.bind("connected", () => {
-      console.log("Pusher connected successfully");
+    channel.bind("new-message", (data: { message: any }) => {
+      console.log("Received new message via Pusher:", data);
+      // Refresh conversations when new message arrives
+      fetchConversations();
     });
-
-    const channel = pusherClient.subscribe(`user-${session?.user!.id}`);
 
     channel.bind("pusher:subscription_succeeded", () => {
       console.log(
-        `Successfully subscribed to user-${session?.user!.id} channel`
+        `Successfully subscribed to user-${session!.user!.id} channel`
       );
     });
-
-    channel.bind("pusher:subscription_error", (error: any) => {
-      console.error(
-        `Error subscribing to user-${session?.user!.id} channel:`,
-        error
-      );
-    });
-
-    channel.bind("new-message", (data: { message: Message }) => {
-      console.log("Received new message via Pusher:", data);
-      if (bookingId && data.message.bookingId === bookingId) {
-        // Add the new message to the list if it belongs to this booking
-        setMessages((prev) => [...prev, data.message]);
-      }
-    });
-
-    return () => {
-      channel.unbind_all();
-      channel.unsubscribe();
-    };
   };
 
-  const fetchMessages = async () => {
-    if (!bookingId) return;
-
+  const fetchConversations = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/messages?bookingId=${bookingId}`);
-
+      const response = await fetch("/api/messages/conversations");
       if (!response.ok) {
-        throw new Error("Failed to fetch messages");
+        throw new Error("Failed to fetch conversations");
       }
-
       const data = await response.json();
-      setMessages(data);
+      setConversations(data);
     } catch (err) {
-      console.error("Error fetching messages:", err);
+      console.error("Error fetching conversations:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchDriverMessages = async () => {
-    if (!driverId) return;
-
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/messages?userId=${driverId}`);
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch messages");
-      }
-
-      const data = await response.json();
-      setMessages(data);
-    } catch (err) {
-      console.error("Error fetching messages:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const sendMessage = async () => {
-    console.log("sendMessage called with:", {
-      messageText,
-      user: !session?.user!,
-      bookingId,
-      driverId,
-    });
-
-    if (!messageText.trim() || !session?.user) {
-      console.log("Send message aborted due to missing message or user:", {
-        noMessageText: !messageText.trim(),
-        noUser: !session?.user,
-      });
-      return;
-    }
-
-    // We need either a bookingId or driverId
-    if (!bookingId && !driverId) {
-      console.log(
-        "Send message aborted due to missing both bookingId and driverId"
+  const handleOpenConversation = (conversation: Conversation) => {
+    if (conversation.bookingId) {
+      router.push(
+        `/messages/direct/${conversation.driverId}?bookingId=${conversation.bookingId}&rideId=${conversation.rideId}`
       );
-      return;
-    }
-
-    setSending(true);
-    try {
-      console.log("Sending message to API...");
-
-      // Prepare request payload
-      const payload: any = {
-        content: messageText,
-      };
-
-      // Add either bookingId or receiverId depending on what we have
-      if (bookingId) {
-        payload.bookingId = bookingId;
-      } else if (driverId) {
-        payload.receiverId = driverId;
-      }
-
-      console.log("Request payload:", payload);
-
-      const response = await fetch("/api/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API response not OK:", response.status, errorText);
-        throw new Error(
-          `Failed to send message: ${response.status} ${errorText}`
-        );
-      }
-
-      // Add the new message to the list
-      const data = await response.json();
-      console.log("Message sent successfully:", data);
-      setMessages((prev) => [...prev, data]);
-      setMessageText("");
-    } catch (err) {
-      console.error("Error sending message:", err);
-    } finally {
-      setSending(false);
+    } else {
+      router.push(
+        `/messages/direct/${conversation.driverId}?rideId=${conversation.rideId}`
+      );
     }
   };
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const filteredConversations = conversations.filter(
+    (conversation) =>
+      conversation.driverName
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      conversation.rideDetails?.fromLocation
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      conversation.rideDetails?.toLocation
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
+  );
 
-  const goBack = () => {
-    router.back();
-  };
+  if (status === "loading" || loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="max-w-md mx-auto px-4 py-6">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold text-foreground">Messages</h1>
+            <MessageSquare size={24} className="text-primary" />
+          </div>
 
-  const formatMessageTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return format(date, "HH:mm");
-  };
-
-  // For UI demo, show a placeholder if no actual messages yet
-  const displayMessages =
-    messages.length > 0
-      ? messages
-      : driverName
-      ? [
-          {
-            id: "placeholder",
-            content: `Hi! I'm interested in your ride. Is it still available?`,
-            senderId: !session?.user!.id,
-            receiverId: "driver",
-            createdAt: new Date().toISOString(),
-            sender: {
-              name: !session?.user?.name,
-            },
-            receiver: { name: driverName },
-          },
-        ]
-      : [];
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} className="animate-pulse p-1">
+                <CardContent className="px-4 py-1">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-muted rounded-full"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-muted rounded w-3/4"></div>
+                      <div className="h-3 bg-muted rounded w-1/2"></div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto">
-      {/* Header */}
-      <div className="flex items-center p-4 border-b">
-        <button
-          onClick={goBack}
-          className="p-2 rounded-full hover:bg-gray-100 mr-2"
-        >
-          <ArrowLeft size={20} />
-        </button>
-
-        <div className="flex items-center">
-          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 mr-3">
-            <User size={18} />
-          </div>
-          <div>
-            <h1 className="font-medium">{driverName || "Driver"}</h1>
-            {rideId && (
-              <p className="text-xs text-gray-500">
-                Ride #{rideId.slice(0, 8)}
-              </p>
-            )}
-            {bookingId && !rideId && (
-              <p className="text-xs text-gray-500">
-                Booking #{bookingId.slice(0, 8)}
-              </p>
-            )}
-            {driverId && !bookingId && !rideId && (
-              <p className="text-xs text-gray-500">Direct message</p>
-            )}
-          </div>
+    <div className="min-h-screen bg-background pb-20">
+      <div className="max-w-md mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Messages</h1>
+          <MessageSquare size={24} className="text-primary" />
         </div>
-      </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-        {loading ? (
-          <div className="flex justify-center py-10">
-            <div className="w-8 h-8 border-2 border-t-blue-600 border-r-transparent border-b-blue-600 border-l-transparent rounded-full animate-spin"></div>
-          </div>
-        ) : displayMessages.length === 0 ? (
-          <div className="text-center py-10 text-gray-500">
-            No messages yet. Start the conversation!
+        {/* Search */}
+        <div className="relative mb-6">
+          <Search
+            size={20}
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            type="text"
+            placeholder="Search conversations..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {/* Conversations List */}
+        {filteredConversations.length === 0 ? (
+          <div className="text-center py-12">
+            <MessageSquare
+              size={48}
+              className="mx-auto text-muted-foreground mb-4"
+            />
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              No conversations yet
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              Start a conversation by booking a ride or contacting a driver
+            </p>
+            <Button onClick={() => router.push("/")}>Find Rides</Button>
           </div>
         ) : (
-          displayMessages.map((message) => {
-            const isCurrentUser = message.senderId === !session?.user!.id;
-
-            return (
-              <div
-                key={message.id}
-                className={`flex ${
-                  isCurrentUser ? "justify-end" : "justify-start"
-                }`}
+          <div className="space-y-3">
+            {filteredConversations.map((conversation) => (
+              <Card
+                key={conversation.id}
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => handleOpenConversation(conversation)}
               >
-                <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                    isCurrentUser
-                      ? "bg-blue-600 text-white"
-                      : "bg-white border border-gray-200"
-                  }`}
-                >
-                  <div className="text-sm">{message.content}</div>
-                  <div
-                    className={`text-xs mt-1 ${
-                      isCurrentUser ? "text-blue-200" : "text-gray-500"
-                    }`}
-                  >
-                    {formatMessageTime(message.createdAt)}
+                <CardContent className="px-4 py-1">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-12 h-12">
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {conversation.driverName
+                          ?.split(" ")
+                          .map((n) => n.charAt(0))
+                          .join("")
+                          .slice(0, 2) || "D"}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-semibold text-foreground truncate">
+                          {conversation.driverName}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          {conversation.unreadCount > 0 && (
+                            <Badge variant="destructive" className="text-xs">
+                              {conversation.unreadCount}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(
+                            new Date(conversation.lastMessage.createdAt),
+                            { addSuffix: true }
+                          )}
+                        </span>
+                      </div>
+
+                      {/* {conversation.rideDetails && (
+                        <div className="text-xs text-muted-foreground mb-1">
+                          {conversation.rideDetails.fromLocation} →{" "}
+                          {conversation.rideDetails.toLocation}
+                        </div>
+                      )} */}
+
+                      <p className="text-sm text-muted-foreground truncate">
+                        {conversation.lastMessage.senderId === session?.user?.id
+                          ? "You: "
+                          : ""}
+                        {conversation.lastMessage.content}
+                      </p>
+                    </div>
+
+                    <ArrowRight size={16} className="text-muted-foreground" />
                   </div>
-                </div>
-              </div>
-            );
-          })
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Message Input */}
-      <div className="border-t p-3 bg-white">
-        <div className="flex items-center">
-          <input
-            type="text"
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-              }
-            }}
-          />
-
-          <button
-            onClick={() => {
-              console.log("Send button clicked");
-              sendMessage();
-            }}
-            disabled={sending || !messageText.trim()}
-            className={`ml-2 p-2 rounded-full ${
-              sending || !messageText.trim()
-                ? "bg-gray-200 text-gray-500"
-                : "bg-blue-600 text-white"
-            }`}
-          >
-            <Send size={18} className={sending ? "animate-pulse" : ""} />
-          </button>
-        </div>
       </div>
     </div>
   );

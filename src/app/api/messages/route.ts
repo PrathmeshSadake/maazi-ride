@@ -165,9 +165,10 @@ export async function GET(req: NextRequest) {
 
     const searchParams = req.nextUrl.searchParams;
     const otherUserId = searchParams.get("userId");
+    const driverId = searchParams.get("driverId");
     const bookingId = searchParams.get("bookingId");
 
-    if (!otherUserId && !bookingId) {
+    if (!otherUserId && !driverId && !bookingId) {
       // Get all conversations (grouped by the other user)
       const sentMessages = await prisma.message.findMany({
         where: {
@@ -237,13 +238,14 @@ export async function GET(req: NextRequest) {
       );
 
       return NextResponse.json(conversations);
-    } else if (otherUserId) {
+    } else if (otherUserId || driverId) {
+      const targetUserId = otherUserId || driverId;
       // Get messages between two users
       const messages = await prisma.message.findMany({
         where: {
           OR: [
-            { senderId: user.id, receiverId: otherUserId },
-            { senderId: otherUserId, receiverId: user.id },
+            { senderId: user.id, receiverId: targetUserId },
+            { senderId: targetUserId, receiverId: user.id },
           ],
           ...(bookingId ? { bookingId } : {}),
         },
@@ -269,7 +271,7 @@ export async function GET(req: NextRequest) {
       // Mark messages as read
       await prisma.message.updateMany({
         where: {
-          senderId: otherUserId,
+          senderId: targetUserId,
           receiverId: user.id,
           read: false,
         },
