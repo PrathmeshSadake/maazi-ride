@@ -79,28 +79,28 @@ export interface FormValidationErrors {
 }
 
 // Session extensions
-declare module "next-auth" {
-  interface User {
-    role?: UserRole;
-    isVerified?: boolean;
-    needsRoleSelection?: boolean;
-  }
+// declare module "next-auth" {
+//   interface User {
+//     role?: UserRole | undefined;
+//     isVerified?: boolean;
+//     needsRoleSelection?: boolean;
+//   }
 
-  interface Session extends DefaultSession {
-    user?: {
-      id: string;
-      role: UserRole;
-      isVerified?: boolean;
-      needsRoleSelection?: boolean;
-    } & DefaultSession["user"];
-  }
-}
+//   interface Session extends DefaultSession {
+//     user?: {
+//       id: string;
+//       role: UserRole | undefined;
+//       isVerified?: boolean;
+//       needsRoleSelection?: boolean;
+//     } & DefaultSession["user"];
+//   }
+// }
 
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    role?: UserRole;
-    isVerified?: boolean;
-    needsRoleSelection?: boolean;
-  }
-}
+// declare module "next-auth" {
+//   interface JWT {
+//     id: string;
+//     role: UserRole | undefined;
+//     isVerified?: boolean;
+//     needsRoleSelection?: boolean;
+//   }
+// }

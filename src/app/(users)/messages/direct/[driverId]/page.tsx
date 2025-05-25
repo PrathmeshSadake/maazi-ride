@@ -100,8 +100,8 @@ export default function DirectMessagePage() {
       // Add the new message if it's from the current conversation
       if (
         (message.senderId === driverId &&
-          message.receiverId === session.user.id) ||
-        (message.senderId === session.user.id &&
+          message.receiverId === session!.user!.id) ||
+        (message.senderId === session!.user!.id &&
           message.receiverId === driverId)
       ) {
         setMessages((prev) => [...prev, message]);

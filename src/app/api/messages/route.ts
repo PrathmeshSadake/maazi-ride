@@ -244,8 +244,8 @@ export async function GET(req: NextRequest) {
       const messages = await prisma.message.findMany({
         where: {
           OR: [
-            { senderId: user.id, receiverId: targetUserId },
-            { senderId: targetUserId, receiverId: user.id },
+            { senderId: user.id, receiverId: targetUserId! },
+            { senderId: targetUserId!, receiverId: user.id },
           ],
           ...(bookingId ? { bookingId } : {}),
         },
@@ -271,7 +271,7 @@ export async function GET(req: NextRequest) {
       // Mark messages as read
       await prisma.message.updateMany({
         where: {
-          senderId: targetUserId,
+          senderId: targetUserId!,
           receiverId: user.id,
           read: false,
         },
