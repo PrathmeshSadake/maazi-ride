@@ -17,6 +17,7 @@ import { redirect, useRouter } from "next/navigation";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { UserRole } from "@prisma/client";
+import { useDriverData } from "@/hooks/useDriverData";
 // Types
 interface VehicleData {
   make: string;
@@ -49,10 +50,15 @@ type FileType = "drivingLicense" | "vehicleRegistration" | "insurance";
 
 export default function DriverOnboarding() {
   const { data: session, status } = useSession();
+  const {
+    driver,
+    loading: driverLoading,
+    error: driverError,
+    refetch,
+  } = useDriverData();
 
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [isVerified, setIsVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fileNames, setFileNames] = useState({
     drivingLicense: "",
@@ -94,11 +100,31 @@ export default function DriverOnboarding() {
   const [vehicleImages, setVehicleImages] = useState<File[]>([]);
   const [vehicleImageUrls, setVehicleImageUrls] = useState<string[]>([]);
 
+  // Pre-populate form data when driver data is loaded
   useEffect(() => {
-    if (status === "authenticated" && session?.user) {
-      setIsVerified((session?.user as any).isVerified || false);
+    if (driver) {
+      setFormData((prev) => ({
+        ...prev,
+        drivingLicenseUrl: driver.drivingLicenseUrl || "",
+        vehicleRegistrationUrl: driver.vehicleRegistrationUrl || "",
+        insuranceUrl: driver.insuranceUrl || "",
+        vehicle: driver.vehicle
+          ? {
+              make: driver.vehicle.make || "",
+              model: driver.vehicle.model || "",
+              year: driver.vehicle.year?.toString() || "",
+              color: driver.vehicle.color || "",
+              licensePlate: driver.vehicle.licensePlate || "",
+            }
+          : prev.vehicle,
+      }));
+
+      // Set vehicle images if they exist
+      if (driver.vehicle?.vehicleImages) {
+        setVehicleImageUrls(driver.vehicle.vehicleImages);
+      }
     }
-  }, [status, session]);
+  }, [driver]);
 
   const handleNextStep = () => {
     setStep((prev) => prev + 1);
@@ -223,6 +249,10 @@ export default function DriverOnboarding() {
       }
 
       toast.success("Profile updated successfully");
+
+      // Refetch verification data to get updated status
+      await refetch();
+
       router.refresh();
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -803,14 +833,49 @@ export default function DriverOnboarding() {
     }
   };
 
-  isVerified && redirect("/drivers");
+  // Redirect verified drivers to dashboard
+  useEffect(() => {
+    if (!driverLoading && driver?.isVerified) {
+      // router.push("/drivers");
+    }
+  }, [driver?.isVerified, driverLoading, router]);
+
+  // Show loading state while driver data is being fetched
+  if (status === "loading" || driverLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-3xl font-bold mb-4">Loading...</h1>
+          <p>Checking your verification status...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if there's an error
+  if (driverError) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-3xl font-bold mb-4">Error</h1>
+          <p className="text-red-600 mb-4">{driverError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">Driver Onboarding</h1>
 
-        {isVerified ? (
+        {driver?.isVerified ? (
           <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
             <h2 className="text-xl font-semibold text-green-800 mb-2">
               Your account is verified!
@@ -818,7 +883,7 @@ export default function DriverOnboarding() {
             <p className="text-green-700 mb-4">
               You can now start offering rides on the platform.
             </p>
-            <Link href="/drivers">
+            <Link href="/drivers/main">
               <Button>Go to Driver Dashboard</Button>
             </Link>
           </div>
@@ -868,12 +933,25 @@ export default function DriverOnboarding() {
               >
                 3
               </div>
+              <div
+                className={`flex-1 h-1 mx-2 ${
+                  step > 3 ? "bg-blue-500" : "bg-gray-200"
+                }`}
+              ></div>
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  step >= 4 ? "bg-blue-500 text-white" : "bg-gray-200"
+                }`}
+              >
+                4
+              </div>
             </div>
           </div>
           <div className="flex justify-between mt-2 text-sm">
-            <div className="text-center w-24">Documents</div>
-            <div className="text-center w-24">Vehicle</div>
-            <div className="text-center w-24">Confirm</div>
+            <div className="text-center w-20">Documents</div>
+            <div className="text-center w-20">Vehicle</div>
+            <div className="text-center w-20">Images</div>
+            <div className="text-center w-20">Confirm</div>
           </div>
         </div>
 

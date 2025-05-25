@@ -57,12 +57,12 @@ export async function middleware(request: NextRequest) {
     }
 
     // If driver is not verified and not on onboarding page
-    if (
-      !(user as any).isVerified &&
-      !request.nextUrl.pathname.includes("/drivers/onboarding")
-    ) {
-      return NextResponse.redirect(new URL("/drivers/onboarding", request.url));
-    }
+    // if (
+    //   !(user as any).isVerified &&
+    //   !request.nextUrl.pathname.includes("/drivers/onboarding")
+    // ) {
+    //   return NextResponse.redirect(new URL("/drivers/onboarding", request.url));
+    // }
   }
 
   // Handle admin routes

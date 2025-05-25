@@ -16,17 +16,21 @@ export default function AuthLayout({
   useEffect(() => {
     if (status === "loading") return;
 
-    if (status === "authenticated" && session?.user?.role) {
-      switch (session.user.role) {
-        case UserRole.user:
-          router.push("/");
-          break;
-        case UserRole.driver:
-          router.push("/drivers");
-          break;
-        case UserRole.admin:
-          router.push("/admin");
-          break;
+    if (status === "authenticated") {
+      if (session?.user?.role)
+        switch (session.user.role) {
+          case UserRole.user:
+            router.push("/");
+            break;
+          case UserRole.driver:
+            router.push("/drivers");
+            break;
+          case UserRole.admin:
+            router.push("/admin");
+            break;
+        }
+      else {
+        router.push("/auth/role-selection");
       }
     }
   }, [session, status, router]);
@@ -39,13 +43,13 @@ export default function AuthLayout({
     );
   }
 
-  if (status === "authenticated") {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-lg">Redirecting to your dashboard...</p>
-      </div>
-    );
-  }
+  // if (status === "authenticated") {
+  //   return (
+  //     <div className="flex min-h-screen items-center justify-center">
+  //       <p className="text-lg">Redirecting to your dashboard...</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="bg-gray-50 min-h-screen">

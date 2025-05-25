@@ -22,6 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { auth } from "@/auth";
 
 // Helper function to format dates
 function formatDate(dateString: string) {
@@ -36,21 +37,16 @@ export default async function DriverDashboard() {
   // Check if user has the driver role (this function will redirect if not)
   const { userId } = await requireRole("driver", "/");
 
-  // Check if the driver is verified
-  const isVerified = await getVerificationStatus();
+  // Check if the driver is verified from database
+  // const isVerified = await getVerificationStatus();
 
   const driver = await prisma.user.findUnique({
     where: { id: userId },
   });
 
   // If driver is not verified, redirect to onboarding
-  if (
-    !isVerified &&
-    !driver?.drivingLicenseUrl &&
-    !driver?.vehicleRegistrationUrl &&
-    !driver?.insuranceUrl
-  ) {
-    redirect("/drivers/onboarding");
+  if (!driver?.isVerified) {
+    // redirect("/drivers/onboarding");
   }
 
   // Fetch the driver's rides from the database

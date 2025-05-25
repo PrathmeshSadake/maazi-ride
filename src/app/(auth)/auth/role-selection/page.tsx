@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
+import { signOut, useSession, signIn } from "next-auth/react";
 import {
   Card,
   CardContent,
@@ -16,12 +16,12 @@ import { Car, Users, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function RoleSelectionPage() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<"user" | "driver" | null>(
     null
   );
-  const router = useRouter();
-  const { update } = useSession();
+  const { update, data: session } = useSession();
 
   const handleRoleSelection = async (role: "user" | "driver") => {
     if (isLoading) return;
@@ -42,8 +42,10 @@ export default function RoleSelectionPage() {
         throw new Error("Failed to set role");
       }
 
-      // Update the session to reflect the new role
+      // Wait for session to update
       await update();
+
+      console.log("Session after update:", session);
 
       toast.success(
         `Welcome! You've joined as a ${
@@ -51,8 +53,8 @@ export default function RoleSelectionPage() {
         }.`
       );
 
-      // Redirect to appropriate dashboard
-      window.location.href = role === "driver" ? "/drivers" : "/";
+      // Now redirect
+      await signOut({ callbackUrl: "/auth/signin?roleJustSet=1" });
     } catch (error) {
       console.error("Error setting role:", error);
       toast.error("Something went wrong. Please try again.");

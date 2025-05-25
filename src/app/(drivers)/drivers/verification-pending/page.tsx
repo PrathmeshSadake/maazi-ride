@@ -1,5 +1,3 @@
-"use client";
-
 import { Shield, Clock, FileCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,8 +9,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
+import { getDriverData } from "@/lib/actions/driver-verification";
 
-export default function VerificationPendingPage() {
+export default async function VerificationPendingPage() {
+  const driver = await getDriverData();
+
+  if (!driver) {
+    return <div>Error loading driver data</div>;
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
       <Card className="w-full max-w-md">
@@ -42,7 +47,11 @@ export default function VerificationPendingPage() {
               <div>
                 <h3 className="font-medium">Documents Submitted</h3>
                 <p className="text-sm text-gray-600">
-                  Your documents have been received and are under review
+                  {driver.drivingLicenseUrl &&
+                  driver.vehicleRegistrationUrl &&
+                  driver.insuranceUrl
+                    ? "All required documents have been received and are under review"
+                    : "Some documents may be missing"}
                 </p>
               </div>
             </div>
@@ -56,6 +65,21 @@ export default function VerificationPendingPage() {
                 </p>
               </div>
             </div>
+
+            {driver.vehicle && (
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h4 className="font-medium text-sm mb-2">
+                  Vehicle Information
+                </h4>
+                <p className="text-xs text-gray-600">
+                  {driver.vehicle.year} {driver.vehicle.make}{" "}
+                  {driver.vehicle.model} ({driver.vehicle.color})
+                </p>
+                <p className="text-xs text-gray-600">
+                  License Plate: {driver.vehicle.licensePlate}
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-3">

@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user's role in database
-    await prisma.user.update({
+    const user = await prisma.user.update({
       where: { id: session.user.id },
       data: { role },
     });

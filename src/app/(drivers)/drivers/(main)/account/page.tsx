@@ -17,49 +17,27 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useDriverVerification } from "@/hooks/useDriverVerification";
 
 export default function DriverAccountPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [driverStatus, setDriverStatus] = useState<{
-    isActive: boolean;
-    message: string;
-  }>({ isActive: false, message: "" });
+  const { verificationData, loading, error, isVerified } =
+    useDriverVerification();
 
-  useEffect(() => {
-    if (status === "loading") return;
+  if (status === "loading" || loading) {
+    return (
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-6">Account</h1>
+        <div className="py-8 text-center">Loading account information...</div>
+      </div>
+    );
+  }
 
-    if (status === "unauthenticated") {
-      router.push("/auth/signin");
-      return;
-    }
-
-    // Check driver verification status
-    const checkDriverStatus = async () => {
-      try {
-        const response = await fetch(
-          `/api/drivers/${session?.user?.id}/status`
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setDriverStatus({
-            isActive: data.isVerified,
-            message: data.isVerified
-              ? "All documents verified"
-              : "Verification pending",
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching driver status:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkDriverStatus();
-  }, [status, session, router]);
+  if (status === "unauthenticated") {
+    router.push("/auth/signin");
+    return null;
+  }
 
   const menuItems = [
     {
@@ -87,36 +65,7 @@ export default function DriverAccountPage() {
       label: "Payment Information",
       href: "/drivers/account/payment",
     },
-    // {
-    //   icon: FileText,
-    //   label: "Tax Information",
-    //   href: "/drivers/account/tax",
-    // },
-    // {
-    //   icon: Bell,
-    //   label: "Notifications",
-    //   href: "/drivers/account/notifications",
-    // },
-    // {
-    //   icon: HelpCircle,
-    //   label: "Help & Support",
-    //   href: "/drivers/account/help",
-    // },
-    // {
-    //   icon: Settings,
-    //   label: "Settings",
-    //   href: "/drivers/account/settings",
-    // },
   ];
-
-  if (isLoading) {
-    return (
-      <div className="p-4">
-        <h1 className="text-2xl font-bold mb-6">Account</h1>
-        <div className="py-8 text-center">Loading account information...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="p-4">
@@ -137,24 +86,48 @@ export default function DriverAccountPage() {
 
       <div
         className={`${
-          driverStatus.isActive ? "bg-green-50" : "bg-yellow-50"
+          isVerified ? "bg-green-50" : "bg-yellow-50"
         } rounded-lg p-4 mb-6`}
       >
         <div className="flex items-center">
           <Shield
             size={20}
-            className={
-              driverStatus.isActive ? "text-green-800" : "text-yellow-800"
-            }
+            className={isVerified ? "text-green-800" : "text-yellow-800"}
           />
           <div className="ml-3">
             <h3 className="font-medium">
-              Account Status: {driverStatus.isActive ? "Active" : "Pending"}
+              Account Status: {isVerified ? "Verified" : "Pending Verification"}
             </h3>
-            <p className="text-sm text-gray-600">{driverStatus.message}</p>
+            <p className="text-sm text-gray-600">
+              {isVerified
+                ? "All documents verified and account is active"
+                : "Please complete document verification to start driving"}
+            </p>
+            {verificationData && !isVerified && (
+              <div className="mt-2 text-xs text-gray-500">
+                <p>
+                  Documents:{" "}
+                  {verificationData.hasDocuments.drivingLicense &&
+                  verificationData.hasDocuments.vehicleRegistration &&
+                  verificationData.hasDocuments.insurance
+                    ? "✓"
+                    : "✗"}{" "}
+                  Uploaded
+                </p>
+                <p>Vehicle: {verificationData.hasVehicle ? "✓" : "✗"} Added</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <p className="text-red-800 text-sm">
+            Error loading verification status: {error}
+          </p>
+        </div>
+      )}
 
       <div className="space-y-1">
         {menuItems.map((item, index) => (
