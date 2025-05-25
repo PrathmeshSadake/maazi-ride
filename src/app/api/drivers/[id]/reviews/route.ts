@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 // GET handler - Fetch driver's reviews and ratings
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<Promise<{ id: string }>> }
 ) {
   try {
     const session = await auth();

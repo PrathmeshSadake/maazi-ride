@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 // GET handler - Fetch vehicle info by driver ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<Promise<{ id: string }>> }
 ) {
   try {
     const session = await auth();

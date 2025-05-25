@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 // Update a review
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<Promise<{ id: string }>> }
 ) {
   try {
     const session = await auth();
@@ -59,7 +59,7 @@ export async function PUT(
 // Delete a review
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<Promise<{ id: string }>> }
 ) {
   try {
     const session = await auth();

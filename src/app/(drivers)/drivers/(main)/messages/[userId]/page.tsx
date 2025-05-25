@@ -93,8 +93,9 @@ export default function DriverConversationPage() {
       // Add the new message if it's from the current conversation
       if (
         (message.senderId === userId &&
-          message.receiverId === session.user.id) ||
-        (message.senderId === session.user.id && message.receiverId === userId)
+          message.receiverId === session!.user!.id) ||
+        (message.senderId === session!.user!.id &&
+          message.receiverId === userId)
       ) {
         setMessages((prev) => [...prev, message]);
         // Mark as read if it's from the other user
@@ -105,7 +106,9 @@ export default function DriverConversationPage() {
     });
 
     channel.bind("pusher:subscription_succeeded", () => {
-      console.log(`Successfully subscribed to user-${session.user.id} channel`);
+      console.log(
+        `Successfully subscribed to user-${session!.user!.id} channel`
+      );
     });
   };
 

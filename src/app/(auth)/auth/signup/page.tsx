@@ -45,12 +45,12 @@ export default function SignupPage() {
   const router = useRouter();
 
   // Form state
-  const [formData, setFormData] = useState<SignUpFormData>({
+  const [formData, setFormData] = useState<any>({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    role: "user" as UserRole,
+    role: "user" as any,
   });
 
   // UI state
@@ -88,9 +88,8 @@ export default function SignupPage() {
   const handleInputChange = (field: keyof SignUpFormData, value: string) => {
     const newFormData = { ...formData, [field]: value };
     setFormData(newFormData);
-
     // Clear field-specific error when user starts typing
-    if (errors[field]) {
+    if (errors[field as keyof FormValidationErrors]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
 
@@ -104,12 +103,15 @@ export default function SignupPage() {
   const handleBlur = (field: keyof SignUpFormData) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
     const validationErrors = validateSignUpForm(formData);
-    setErrors((prev) => ({ ...prev, [field]: validationErrors[field] }));
+    setErrors((prev) => ({
+      ...prev,
+      [field]: validationErrors[field as keyof FormValidationErrors],
+    }));
   };
 
   // Handle role selection
   const handleRoleChange = (role: UserRole) => {
-    setFormData((prev) => ({ ...prev, role }));
+    setFormData((prev: any) => ({ ...prev, role }));
     setTouched((prev) => ({ ...prev, role: true }));
   };
 

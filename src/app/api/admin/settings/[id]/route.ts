@@ -5,11 +5,12 @@ const prisma = new PrismaClient();
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { value, description } = await request.json();
-    const { id } = params;
+    const { id } = await params;
+
 
     if (!value) {
       return NextResponse.json({ error: "Value is required" }, { status: 400 });
@@ -37,10 +38,11 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
+
 
     await prisma.setting.delete({
       where: { id },

@@ -66,7 +66,7 @@ export type AuthError =
 export interface AuthErrorDetails {
   type: AuthError;
   message: string;
-  field?: keyof SignInFormData | keyof SignUpFormData;
+  field?: keyof SignInFormData | keyof SignUpFormData | "general";
 }
 
 // Form validation
