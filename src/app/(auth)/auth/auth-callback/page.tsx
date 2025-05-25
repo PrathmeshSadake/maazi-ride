@@ -2,9 +2,8 @@ import { redirect } from "next/navigation";
 import { UserRole } from "@/lib/auth.types";
 import { auth } from "@/auth";
 
-async function AuthCallback({ children }: { children: React.ReactNode }) {
+const AuthCallback = async () => {
   const session = await auth();
-  
 
   if (session?.user?.role)
     switch (session.user.role) {
@@ -18,6 +17,8 @@ async function AuthCallback({ children }: { children: React.ReactNode }) {
         redirect("/admin");
         break;
     }
-}
+
+  return redirect("/role-selection");
+};
 
 export default AuthCallback;
