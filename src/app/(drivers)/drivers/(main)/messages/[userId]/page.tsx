@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, Send, Phone, Info } from "lucide-react";
+import { ArrowLeft, Send, Phone, Info, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { pusherClient } from "@/lib/pusher";
 import { useSession } from "next-auth/react";
@@ -45,7 +45,7 @@ interface BookingInfo {
   };
 }
 
-export default function DriverConversationPage() {
+function DriverConversationContent() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -394,5 +394,13 @@ export default function DriverConversationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DriverConversationPage() {
+  return (
+    <Suspense fallback={<Loader2 className="animate-spin" size={24} />}>
+      <DriverConversationContent />
+    </Suspense>
   );
 }

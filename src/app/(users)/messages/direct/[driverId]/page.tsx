@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, Send, User, Phone, Info } from "lucide-react";
+import { ArrowLeft, Send, User, Phone, Info, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { pusherClient } from "@/lib/pusher";
 import { useSession } from "next-auth/react";
@@ -45,7 +45,7 @@ interface BookingInfo {
   numSeats: number;
 }
 
-export default function DirectMessagePage() {
+function DirectMessageContent() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -403,5 +403,24 @@ export default function DirectMessagePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Loading conversation...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function DirectMessagePage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <DirectMessageContent />
+    </Suspense>
   );
 }

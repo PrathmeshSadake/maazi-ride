@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -10,6 +10,7 @@ import {
   Search,
   Edit,
   Check,
+  Loader2,
 } from "lucide-react";
 import RideCard from "@/components/users/ride-card";
 import { format, parseISO } from "date-fns";
@@ -41,7 +42,7 @@ interface Location {
   lng: number;
 }
 
-export default function ExplorePage() {
+function ExplorePageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [rides, setRides] = useState<Ride[]>([]);
@@ -451,5 +452,62 @@ export default function ExplorePage() {
         </div>
       )}
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="p-4 max-w-md mx-auto pb-20">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="p-2 rounded-full">
+          <ArrowLeft size={20} className="text-gray-400" />
+        </div>
+        <h1 className="text-lg font-semibold">Available Rides</h1>
+        <div className="p-2 rounded-full">
+          <Filter size={20} className="text-gray-400" />
+        </div>
+      </div>
+
+      {/* Search Info Skeleton */}
+      <div className="bg-white rounded-lg shadow-md mb-4 p-4">
+        <div className="flex items-start mb-3">
+          <div className="w-10 flex-shrink-0 flex justify-center">
+            <div className="w-2.5 h-2.5 mt-1.5 rounded-full bg-gray-300 animate-pulse"></div>
+          </div>
+          <div className="flex-1">
+            <div className="h-4 bg-gray-300 rounded animate-pulse w-3/4"></div>
+          </div>
+        </div>
+        <div className="flex items-start mb-3">
+          <div className="w-10 flex-shrink-0 flex justify-center">
+            <div className="w-2.5 h-2.5 mt-1.5 rounded-full bg-gray-300 animate-pulse"></div>
+          </div>
+          <div className="flex-1">
+            <div className="h-4 bg-gray-300 rounded animate-pulse w-2/3"></div>
+          </div>
+        </div>
+        <div className="mt-4 pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-2">
+            <Calendar size={16} className="text-gray-400" />
+            <div className="h-4 bg-gray-300 rounded animate-pulse w-24"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Loading indicator */}
+      <div className="py-10 flex flex-col items-center justify-center">
+        <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
+        <p className="text-gray-500">Loading rides...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ExplorePageContent />
+    </Suspense>
   );
 }
