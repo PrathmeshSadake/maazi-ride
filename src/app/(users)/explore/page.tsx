@@ -71,7 +71,7 @@ export default function ExplorePage() {
 
     // If not enough search params, redirect back to home
     if (!fromParam || !toParam) {
-      router.push("/");
+      // router.push("/");
       return;
     }
 

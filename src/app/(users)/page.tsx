@@ -106,6 +106,9 @@ export default function HomePage() {
 
     console.log("Navigation with params:", queryParams.toString());
     router.push(`/explore?${queryParams.toString()}`);
+
+    // Reset submitting state after navigation
+    setIsSubmitting(false);
   };
 
   const swapLocations = () => {

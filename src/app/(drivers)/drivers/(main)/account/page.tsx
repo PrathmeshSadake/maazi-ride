@@ -18,12 +18,16 @@ import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useDriverVerification } from "@/hooks/useDriverVerification";
+import { useEffect, useState } from "react";
+import { useLogout } from "@/hooks/useLogout";
 
 export default function DriverAccountPage() {
   const { data: session, status } = useSession();
+  const { logout } = useLogout();
   const router = useRouter();
   const { verificationData, loading, error, isVerified } =
     useDriverVerification();
+  const [driver, setDriver] = useState<any>(null);
 
   if (status === "loading" || loading) {
     return (
@@ -66,6 +70,14 @@ export default function DriverAccountPage() {
       href: "/drivers/account/payment",
     },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await logout("/");
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+  };
 
   return (
     <div className="p-4">
@@ -142,10 +154,7 @@ export default function DriverAccountPage() {
         ))}
       </div>
 
-      <Button
-        onClick={() => signOut({ callbackUrl: "/" })}
-        className="w-full mt-4"
-      >
+      <Button onClick={handleLogout} className="w-full mt-4">
         <LogOut size={20} className="text-gray-500 mr-3" />
         <span className="flex-1">Log Out</span>
       </Button>

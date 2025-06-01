@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signOut, useSession, signIn } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
+import { useLogout } from "@/hooks/useLogout";
 import { toast } from "sonner";
 import {
   Card,
@@ -29,6 +30,7 @@ import {
 export default function RoleSelectionPage() {
   const router = useRouter();
   const { update, data: session } = useSession();
+  const { logout } = useLogout();
 
   // Loading states
   const [loadingStates, setLoadingStates] = useState<AuthLoadingStates>({
@@ -79,7 +81,7 @@ export default function RoleSelectionPage() {
 
       // Small delay to show success message before redirect
       setTimeout(async () => {
-        await signOut({ callbackUrl: "/auth/signin?roleJustSet=1" });
+        await logout("/auth/signin?roleJustSet=1");
       }, 1500);
     } catch (error) {
       const errorDetails = mapAuthError(error as Error);
@@ -94,7 +96,7 @@ export default function RoleSelectionPage() {
   const handleSignOut = async () => {
     setLoadingStates((prev) => ({ ...prev, credentials: true }));
     try {
-      await signOut({ callbackUrl: "/auth/signin" });
+      await logout("/auth/signin");
     } catch (error) {
       const errorDetails = mapAuthError(error as Error);
       toast.error(errorDetails.message);

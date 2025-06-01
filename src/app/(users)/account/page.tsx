@@ -18,7 +18,8 @@ import {
   Phone,
   Mail,
 } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { useLogout } from "@/hooks/useLogout";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Sheet,
@@ -33,14 +34,14 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function AccountPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { logout } = useLogout();
   const [loading, setLoading] = useState(false);
   const [showSignOutSheet, setShowSignOutSheet] = useState(false);
 
   const handleSignOut = async () => {
     setLoading(true);
     try {
-      await signOut();
-      router.push("/sign-in");
+      await logout("/");
     } catch (error) {
       console.error("Error signing out:", error);
     } finally {
@@ -144,60 +145,75 @@ export default function AccountPage() {
                     <Edit size={16} />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="h-auto max-h-[80vh]">
-                  <SheetHeader>
+                <SheetContent side="bottom" className="h-[85vh] flex flex-col">
+                  <SheetHeader className="flex-shrink-0 pb-4 border-b border-gray-200">
                     <SheetTitle>Edit Profile</SheetTitle>
                   </SheetHeader>
-                  <div className="py-6 space-y-4">
-                    <div className="flex justify-center">
-                      <Avatar className="w-24 h-24 ring-4 ring-blue-100">
-                        <AvatarImage src={session?.user?.image || ""} />
-                        <AvatarFallback className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-2xl font-semibold">
-                          {session?.user?.name?.charAt(0) || "U"}
-                        </AvatarFallback>
-                      </Avatar>
+
+                  {/* Scrollable content area */}
+                  <div className="flex-1 overflow-y-auto py-4">
+                    <div className="space-y-6">
+                      <div className="flex justify-center">
+                        <Avatar className="w-24 h-24 ring-4 ring-blue-100">
+                          <AvatarImage src={session?.user?.image || ""} />
+                          <AvatarFallback className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-2xl font-semibold">
+                            {session?.user?.name?.charAt(0) || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+
+                      <Button variant="outline" className="w-full">
+                        Change Photo
+                      </Button>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 block mb-2">
+                            Name
+                          </label>
+                          <input
+                            type="text"
+                            defaultValue={session?.user?.name || ""}
+                            className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 block mb-2">
+                            Email
+                          </label>
+                          <input
+                            type="email"
+                            defaultValue={session?.user?.email || ""}
+                            className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base bg-gray-50"
+                            disabled
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 block mb-2">
+                            Phone
+                          </label>
+                          <input
+                            type="tel"
+                            placeholder="Add phone number"
+                            className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Add some bottom padding for better scrolling */}
+                      <div className="h-4"></div>
                     </div>
-                    <Button variant="outline" className="w-full">
-                      Change Photo
-                    </Button>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">
-                          Name
-                        </label>
-                        <input
-                          type="text"
-                          defaultValue={session?.user?.name || ""}
-                          className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          defaultValue={session?.user?.email || ""}
-                          className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          disabled
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">
-                          Phone
-                        </label>
-                        <input
-                          type="tel"
-                          placeholder="Add phone number"
-                          className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex gap-3 pt-4 border-t">
-                      <Button variant="outline" className="flex-1">
+                  </div>
+
+                  {/* Fixed action buttons at bottom */}
+                  <div className="flex-shrink-0 pt-4 border-t border-gray-200 bg-white">
+                    <div className="flex gap-3 pb-safe">
+                      <Button variant="outline" className="flex-1 py-3">
                         Cancel
                       </Button>
-                      <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
+                      <Button className="flex-1 py-3 bg-blue-600 hover:bg-blue-700">
                         Save Changes
                       </Button>
                     </div>

@@ -9,20 +9,33 @@ export async function middleware(request: NextRequest) {
 
   // Public paths that don't require authentication
   const publicPaths = [
+    "/auth",
+    "/auth/",
     "/auth/signin",
     "/auth/signup",
     "/auth/forgot-password",
     "/auth/role-selection",
+    "/auth/error",
     "/api/auth/signup",
     "/api/auth/set-role",
   ];
+
   const isPublicPath = publicPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
 
+  // Special handling for /auth route - allow both authenticated and unauthenticated users
+  // This is needed for the onboarding flow
+  if (
+    request.nextUrl.pathname === "/auth" ||
+    request.nextUrl.pathname === "/auth/"
+  ) {
+    return NextResponse.next();
+  }
+
   // If the user is not logged in and trying to access protected route
   if (!user && !isPublicPath) {
-    return NextResponse.redirect(new URL("/auth/signin", request.url));
+    return NextResponse.redirect(new URL("/auth", request.url));
   }
 
   // If user needs role selection, redirect to role selection page
@@ -34,11 +47,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/role-selection", request.url));
   }
 
-  // If the user is logged in and trying to access public route (but has role)
+  // If the user is logged in and trying to access signin/signup routes (but has role)
   if (
     user &&
     !user.needsRoleSelection &&
-    isPublicPath &&
+    (request.nextUrl.pathname.startsWith("/auth/signin") ||
+      request.nextUrl.pathname.startsWith("/auth/signup")) &&
     !request.nextUrl.pathname.startsWith("/api/auth")
   ) {
     return NextResponse.redirect(new URL("/", request.url));

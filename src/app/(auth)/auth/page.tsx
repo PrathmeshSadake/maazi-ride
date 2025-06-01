@@ -2,14 +2,39 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, UserPlus, LogIn, Car, Users, Shield } from "lucide-react";
+import OnboardingScreens from "@/components/onboarding/OnboardingScreens";
 
 const AuthPage = () => {
   const { status } = useSession();
+  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (status === "loading") {
+  useEffect(() => {
+    // Check if onboarding has been completed
+    const onboardingCompleted = localStorage.getItem("onboardingCompleted");
+    console.log("🔍 Checking onboarding status:", onboardingCompleted);
+
+    if (onboardingCompleted === "true") {
+      console.log("✅ Onboarding completed, showing login form");
+      setShowOnboarding(false);
+    } else {
+      console.log("🎯 Onboarding not completed, showing onboarding screens");
+      setShowOnboarding(true);
+    }
+    setIsLoading(false);
+  }, []);
+
+  const handleOnboardingComplete = () => {
+    console.log("🎉 Onboarding completed, transitioning to login form");
+    setShowOnboarding(false);
+  };
+
+  // Show loading while checking onboarding status
+  if (isLoading || status === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50">
         <div className="text-center space-y-4">
@@ -45,6 +70,14 @@ const AuthPage = () => {
     );
   }
 
+  // Show onboarding screens if not completed
+  if (showOnboarding) {
+    console.log("📱 Rendering onboarding screens");
+    return <OnboardingScreens onComplete={handleOnboardingComplete} />;
+  }
+
+  // Show auth page after onboarding is completed
+  console.log("🔐 Rendering login form");
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="w-full max-w-4xl mx-auto text-center space-y-12">
@@ -145,6 +178,21 @@ const AuthPage = () => {
               </Link>
             </Button>
           </div>
+        </div>
+
+        {/* Show Onboarding Again Button */}
+        <div className="pt-4">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              console.log("🔄 Resetting onboarding status");
+              localStorage.removeItem("onboardingCompleted");
+              setShowOnboarding(true);
+            }}
+            className="text-sm text-gray-500 hover:text-gray-700"
+          >
+            View App Tour Again
+          </Button>
         </div>
 
         {/* Footer */}

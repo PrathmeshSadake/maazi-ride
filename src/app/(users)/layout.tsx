@@ -12,18 +12,28 @@ export default async function UsersLayout({
   const session = await auth();
   const user = session?.user;
 
-  if (!user) {
-    redirect("/sign-in");
+  if (!session) {
+    redirect("/auth");
+  }
+
+  // Handle role-based redirects
+  if (user?.needsRoleSelection) {
+    redirect("/auth/role-selection");
   }
 
   if (user && user.role === "driver") {
     redirect("/drivers");
   }
+
   if (user && user.role === "admin") {
     redirect("/admin");
   }
 
-  console.log("User is a user", user.role);
+  // Only continue if user has "user" role or no role (default to user)
+  if (user && user.role && user.role !== "user") {
+    // Fallback redirect for any other roles
+    redirect("/auth");
+  }
 
   const navItems = [
     {

@@ -14,10 +14,12 @@ import {
   LogOut,
   AlertTriangle,
 } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { useLogout } from "@/hooks/useLogout";
 
 export default function SettingsPage() {
   const { data: session, status } = useSession();
+  const { logout } = useLogout();
   const router = useRouter();
 
   const [settings, setSettings] = useState({
@@ -52,8 +54,11 @@ export default function SettingsPage() {
   // Handle sign out
   const handleSignOut = async () => {
     if (confirm("Are you sure you want to log out?")) {
-      await signOut();
-      router.push("/auth/sign-in");
+      try {
+        await logout("/");
+      } catch (error) {
+        console.error("Error during logout:", error);
+      }
     }
   };
 
