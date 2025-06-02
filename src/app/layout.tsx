@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Poppins, Geist } from "next/font/google";
 import "./globals.css";
 
 import QueryProvider from "@/providers/QueryProvider";
@@ -8,6 +8,12 @@ import { Providers } from "@/context/providers";
 
 const poppins = Poppins({
   variable: "--font-poppins",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const geist = Geist({
+  variable: "--font-geist",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
@@ -25,7 +31,7 @@ export default function RootLayout({
   return (
     <Providers>
       <html lang="en">
-        <body className={`${poppins.variable}`}>
+        <body className={`${poppins.variable} ${geist.className}`}>
           <QueryProvider>
             <SplashScreenWrapper>{children}</SplashScreenWrapper>
           </QueryProvider>

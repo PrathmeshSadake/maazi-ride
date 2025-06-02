@@ -15,7 +15,8 @@ import DatePicker from "@/components/users/date-picker";
 import { useRouter } from "next/navigation";
 import { GoogleMapsAutocomplete } from "@/components/ui/google-maps-autocomplete";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
 
 // Define Location type to match GoogleMapsAutocomplete component
 interface Location {
@@ -31,6 +32,9 @@ export default function HomePage() {
   const [isFormValid, setIsFormValid] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [numberOfSeats, setNumberOfSeats] = useState<number>(1);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showSeatSelector, setShowSeatSelector] = useState(false);
   const router = useRouter();
 
   // Check if both locations are set and form is valid
@@ -54,15 +58,20 @@ export default function HomePage() {
       source,
       destination,
       selectedDate,
+      numberOfSeats,
     });
 
     setIsFormValid(
-      hasSource && hasDestination && hasDifferentLocations && hasDate
+      hasSource &&
+        hasDestination &&
+        hasDifferentLocations &&
+        hasDate &&
+        numberOfSeats > 0
     );
 
     // Clear validation errors when input changes
     setValidationError(null);
-  }, [source, destination, selectedDate]);
+  }, [source, destination, selectedDate, numberOfSeats]);
 
   const handleSearch = () => {
     setIsSubmitting(true);
@@ -104,6 +113,10 @@ export default function HomePage() {
       queryParams.append("date", formattedDate);
     }
 
+    if (numberOfSeats > 0) {
+      queryParams.append("seats", numberOfSeats.toString());
+    }
+
     console.log("Navigation with params:", queryParams.toString());
     router.push(`/explore?${queryParams.toString()}`);
 
@@ -121,112 +134,214 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-100">
-        <div className="max-w-md mx-auto px-4 py-6">
-          <div className="flex items-center justify-center mb-2">
-            <div className="text-white rounded-2xl p-4">
-              <img src="/images/logo.png" alt="" className="h-24" />
+        <div className="max-w-md mx-auto flex items-center p-2 gap-2">
+          <div className="flex items-center justify-center">
+            <div className="text-white rounded-2xl">
+              <img src="/images/logo2.png" alt="" className="h-16" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-center text-gray-900 mb-1">
-            Find Your Ride
-          </h1>
-          <p className="text-center text-gray-600 text-sm">
-            Safe, reliable, and affordable rides
-          </p>
+          <div className="flex flex-col">
+            <h1 className="text-lg font-bold text-gray-900">Find Your Ride</h1>
+            <p className="text-gray-600 text-sm">
+              Safe, reliable, and affordable rides
+            </p>
+          </div>
         </div>
       </div>
 
+      <div className="relative w-full max-h-[200px] aspect-video">
+        <Image src="/images/car.svg" alt="" className="" fill />
+      </div>
+
       {/* Main Content */}
-      <div className="max-w-md mx-auto px-4 py-6">
+      <div className="max-w-md mx-auto px-4">
         {/* Search Card */}
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <div className="space-y-6">
+        <Card className="border-0 shadow rounded-lg bg-white">
+          <CardHeader className="py-0 text-center">
+            <CardTitle>Find Your Ride</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 pt-0">
+            <div className="space-y-4">
               {/* Location Inputs */}
               <div className="relative">
                 <div className="space-y-4">
-                  <GoogleMapsAutocomplete
-                    label="From"
-                    placeholder="Enter pickup location"
-                    value={source}
-                    onChange={setSource}
-                  />
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                        <MapPin size={18} className="text-green-600" />
+                      </div>
+                    </div>
+                    <GoogleMapsAutocomplete
+                      label="From"
+                      placeholder="Select location"
+                      value={source}
+                      onChange={setSource}
+                    />
+                  </div>
 
-                  <GoogleMapsAutocomplete
-                    label="To"
-                    placeholder="Enter destination"
-                    value={destination}
-                    onChange={setDestination}
-                  />
-                </div>
-
-                {/* Swap Button */}
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10">
-                  <button
-                    onClick={swapLocations}
-                    className="bg-white border border-gray-200 rounded-full p-2 shadow-sm hover:shadow-md transition-all duration-200 hover:bg-gray-50"
-                    disabled={!source && !destination}
-                  >
-                    <ArrowUpDown size={16} className="text-gray-600" />
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                        <MapPin size={18} className="text-red-600" />
+                      </div>
+                    </div>
+                    <GoogleMapsAutocomplete
+                      label="To"
+                      placeholder="Select location"
+                      value={destination}
+                      onChange={setDestination}
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Date Picker */}
-              <DatePicker
-                onDateSelect={(date) => {
-                  console.log("HomePage - Date selected:", date);
-                  if (date) {
-                    setSelectedDate(date);
-                  }
-                }}
-                initialDate={selectedDate}
-              />
+              {/* Date & Time Select */}
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center justify-between py-6 border bg-white"
+                  onClick={() => setShowDatePicker(!showDatePicker)}
+                >
+                  <div className="flex items-center gap-2">
+                    <Calendar size={18} className="text-gray-500" />
+                    <span
+                      className={
+                        selectedDate ? "text-gray-900" : "text-gray-500"
+                      }
+                    >
+                      {selectedDate
+                        ? selectedDate.toLocaleDateString("en-US", {
+                            weekday: "short",
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : "Date & time"}
+                    </span>
+                  </div>
+                  <div>
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 15 15"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="text-gray-500"
+                    >
+                      <path
+                        d="M3.13523 6.15803C3.3241 5.95657 3.64052 5.94637 3.84197 6.13523L7.5 9.56464L11.158 6.13523C11.3595 5.94637 11.6759 5.95657 11.8648 6.15803C12.0536 6.35949 12.0434 6.67591 11.842 6.86477L7.84197 10.6148C7.64964 10.7951 7.35036 10.7951 7.15803 10.6148L3.15803 6.86477C2.95657 6.67591 2.94637 6.35949 3.13523 6.15803Z"
+                        fill="currentColor"
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                      ></path>
+                    </svg>
+                  </div>
+                </Button>
+                {showDatePicker && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
+                    <DatePicker
+                      onDateSelect={(date) => {
+                        console.log("HomePage - Date selected:", date);
+                        if (date) {
+                          setSelectedDate(date);
+                          setShowDatePicker(false);
+                        }
+                      }}
+                      initialDate={selectedDate}
+                    />
+                  </div>
+                )}
+              </div>
 
-              {/* Validation Error */}
-              {validationError && (
-                <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-100">
-                  <AlertCircle
-                    size={20}
-                    className="flex-shrink-0 mt-0.5 text-red-500"
-                  />
-                  <span className="text-red-700 text-sm font-medium">
-                    {validationError}
-                  </span>
-                </div>
-              )}
+              {/* Seats Select */}
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center justify-between py-6 border bg-white"
+                  onClick={() => setShowSeatSelector(!showSeatSelector)}
+                >
+                  <div className="flex items-center gap-2">
+                    <Users size={18} className="text-gray-500" />
+                    <span
+                      className={
+                        numberOfSeats !== 1 ? "text-gray-900" : "text-gray-500"
+                      }
+                    >
+                      {numberOfSeats === 1
+                        ? "No of seat"
+                        : `${numberOfSeats} seats`}
+                    </span>
+                  </div>
+                  <div>
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 15 15"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="text-gray-500"
+                    >
+                      <path
+                        d="M3.13523 6.15803C3.3241 5.95657 3.64052 5.94637 3.84197 6.13523L7.5 9.56464L11.158 6.13523C11.3595 5.94637 11.6759 5.95657 11.8648 6.15803C12.0536 6.35949 12.0434 6.67591 11.842 6.86477L7.84197 10.6148C7.64964 10.7951 7.35036 10.7951 7.15803 10.6148L3.15803 6.86477C2.95657 6.67591 2.94637 6.35949 3.13523 6.15803Z"
+                        fill="currentColor"
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                      ></path>
+                    </svg>
+                  </div>
+                </Button>
+                {showSeatSelector && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
+                    <div className="p-2">
+                      {[1, 2, 3, 4, 5].map((num) => (
+                        <button
+                          key={num}
+                          className={`w-full text-left px-4 py-2 hover:bg-gray-100 rounded-md ${
+                            numberOfSeats === num
+                              ? "bg-blue-50 text-blue-600"
+                              : ""
+                          }`}
+                          onClick={() => {
+                            setNumberOfSeats(num);
+                            setShowSeatSelector(false);
+                          }}
+                        >
+                          {num} {num === 1 ? "seat" : "seats"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
-              {/* Search Button */}
+              {/* Find Ride Button */}
               <Button
                 onClick={handleSearch}
                 disabled={isSubmitting || (!isFormValid && !validationError)}
-                className={`w-full py-4 rounded-xl font-semibold text-base flex items-center justify-center gap-3 transition-all duration-200 ${
-                  isSubmitting
-                    ? "bg-blue-400 text-white cursor-not-allowed"
-                    : isFormValid
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                }`}
+                className="w-full py-6 rounded-md font-semibold text-base bg-[#0099cc] hover:bg-[#007aa3] text-white"
               >
-                {isSubmitting ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Searching for rides...
-                  </>
-                ) : (
-                  <>
-                    <Search size={20} />
-                    Find Available Rides
-                  </>
-                )}
+                Find ride
               </Button>
             </div>
           </CardContent>
         </Card>
 
+        {/* Validation Error */}
+        {validationError && (
+          <div className="mt-4 flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-100">
+            <AlertCircle
+              size={20}
+              className="flex-shrink-0 mt-0.5 text-red-500"
+            />
+            <span className="text-red-700 text-sm font-medium">
+              {validationError}
+            </span>
+          </div>
+        )}
+
         {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-4 mt-6">
-          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 text-center border border-gray-100">
+        <div className="grid grid-cols-3 gap-4 py-6">
+          <div className="bg-white backdrop-blur-sm rounded-xl p-4 text-center border border-gray-200">
             <div className="bg-blue-100 rounded-full p-2 w-10 h-10 mx-auto mb-2 flex items-center justify-center">
               <Clock size={18} className="text-blue-600" />
             </div>
@@ -234,7 +349,7 @@ export default function HomePage() {
             <p className="text-xs text-gray-500">Booking</p>
           </div>
 
-          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 text-center border border-gray-100">
+          <div className="bg-white backdrop-blur-sm rounded-xl p-4 text-center border border-gray-200">
             <div className="bg-green-100 rounded-full p-2 w-10 h-10 mx-auto mb-2 flex items-center justify-center">
               <Users size={18} className="text-green-600" />
             </div>
@@ -242,7 +357,7 @@ export default function HomePage() {
             <p className="text-xs text-gray-500">Drivers</p>
           </div>
 
-          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 text-center border border-gray-100">
+          <div className="bg-white backdrop-blur-sm rounded-xl p-4 text-center border border-gray-200">
             <div className="bg-purple-100 rounded-full p-2 w-10 h-10 mx-auto mb-2 flex items-center justify-center">
               <MapPin size={18} className="text-purple-600" />
             </div>
