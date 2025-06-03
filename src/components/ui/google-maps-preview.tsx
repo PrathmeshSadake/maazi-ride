@@ -14,6 +14,13 @@ interface GoogleMapsPreviewProps {
   className?: string;
 }
 
+declare global {
+  interface Window {
+    google: any;
+    googleMapsScriptLoaded: boolean;
+  }
+}
+
 export function GoogleMapsPreview({
   source,
   destination,
@@ -27,13 +34,39 @@ export function GoogleMapsPreview({
   useEffect(() => {
     // Load Google Maps JavaScript API if not already loaded
     if (!window.google) {
+      // Check if script is already being loaded
+      if (document.querySelector('script[src*="maps.googleapis.com"]')) {
+        return;
+      }
+
       const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+      if (!apiKey) {
+        console.error(
+          "Google Maps API key is missing. Please check your environment variables."
+        );
+        return;
+      }
+
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
       script.async = true;
       script.defer = true;
-      script.onload = () => setIsLoaded(true);
+
+      script.onload = () => {
+        setIsLoaded(true);
+        window.googleMapsScriptLoaded = true;
+      };
+
+      script.onerror = () => {
+        console.error(
+          "Failed to load Google Maps. Please check your internet connection and API key configuration."
+        );
+      };
+
       document.head.appendChild(script);
-    } else {
+    } else if (window.googleMapsScriptLoaded) {
+      // If Google Maps is already loaded, initialize immediately
       setIsLoaded(true);
     }
   }, []);

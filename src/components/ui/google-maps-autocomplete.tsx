@@ -23,6 +23,8 @@ declare global {
   interface Window {
     google: any;
     initGoogleMapsAutocomplete: () => void;
+    googleMapsScriptLoaded: boolean;
+    googleMapsCallbacks: Array<() => void>;
   }
 }
 
@@ -96,9 +98,25 @@ export function GoogleMapsAutocomplete({
   }, [onChange]);
 
   useEffect(() => {
+    // Initialize callbacks array if it doesn't exist
+    if (!window.googleMapsCallbacks) {
+      window.googleMapsCallbacks = [];
+    }
+
     // Load Google Maps JavaScript API
     if (!window.google) {
       setIsLoading(true);
+
+      // Check if script is already being loaded
+      if (document.querySelector('script[src*="maps.googleapis.com"]')) {
+        // Add this component's initialization to the callbacks
+        window.googleMapsCallbacks.push(() => {
+          setIsLoading(false);
+          initializeAutocomplete();
+        });
+        return;
+      }
+
       const script = document.createElement("script");
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -116,8 +134,10 @@ export function GoogleMapsAutocomplete({
 
       // Set up global callback
       window.initGoogleMapsAutocomplete = () => {
-        setIsLoading(false);
-        initializeAutocomplete();
+        window.googleMapsScriptLoaded = true;
+        // Execute all pending callbacks
+        window.googleMapsCallbacks.forEach((callback) => callback());
+        window.googleMapsCallbacks = [];
       };
 
       script.onerror = () => {
@@ -127,8 +147,16 @@ export function GoogleMapsAutocomplete({
         );
       };
 
+      // Add this component's initialization to the callbacks
+      window.googleMapsCallbacks.push(() => {
+        setIsLoading(false);
+        initializeAutocomplete();
+      });
+
       document.head.appendChild(script);
-    } else {
+    } else if (window.googleMapsScriptLoaded) {
+      // If Google Maps is already loaded, initialize immediately
+      setIsLoading(false);
       initializeAutocomplete();
     }
 
