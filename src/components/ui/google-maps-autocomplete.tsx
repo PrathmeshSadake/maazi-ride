@@ -100,7 +100,17 @@ export function GoogleMapsAutocomplete({
     if (!window.google) {
       setIsLoading(true);
       const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGoogleMapsAutocomplete`;
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+      if (!apiKey) {
+        setIsLoading(false);
+        setError(
+          "Google Maps API key is missing. Please check your environment variables."
+        );
+        return;
+      }
+
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGoogleMapsAutocomplete`;
       script.async = true;
       script.defer = true;
 
@@ -113,7 +123,7 @@ export function GoogleMapsAutocomplete({
       script.onerror = () => {
         setIsLoading(false);
         setError(
-          "Failed to load Google Maps. Please check your internet connection."
+          "Failed to load Google Maps. Please check your internet connection and API key configuration."
         );
       };
 
