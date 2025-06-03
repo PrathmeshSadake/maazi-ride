@@ -11,6 +11,7 @@ import {
   Edit,
   Check,
   Loader2,
+  MapPin,
 } from "lucide-react";
 import RideCard from "@/components/users/ride-card";
 import { format, parseISO } from "date-fns";
@@ -280,7 +281,9 @@ function ExplorePageContent() {
           <>
             <div className="flex items-start mb-3">
               <div className="w-10 flex-shrink-0 flex justify-center">
-                <div className="w-2.5 h-2.5 mt-1.5 rounded-full bg-green-500"></div>
+                <div className="size-6 rounded-full bg-green-100 flex items-center justify-center">
+                  <MapPin size={16} className="text-green-600" />
+                </div>
               </div>
               <div className="flex-1">
                 <p className="font-medium">{fromLocationName}</p>
@@ -288,7 +291,9 @@ function ExplorePageContent() {
             </div>
             <div className="flex items-start">
               <div className="w-10 flex-shrink-0 flex justify-center">
-                <div className="w-2.5 h-2.5 mt-1.5 rounded-full bg-red-500"></div>
+                <div className="size-6 rounded-full bg-red-100 flex items-center justify-center">
+                  <MapPin size={16} className="text-red-600" />
+                </div>
               </div>
               <div className="flex-1">
                 <p className="font-medium">{toLocationName}</p>
