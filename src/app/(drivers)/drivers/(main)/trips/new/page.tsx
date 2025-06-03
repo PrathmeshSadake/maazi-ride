@@ -118,8 +118,8 @@ const ScheduleRideForm = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <GoogleMapsAutocomplete
-                label="Dropoff Location"
-                placeholder="Enter dropoff location"
+                label="Pickup Location"
+                placeholder="Enter pickup location"
                 value={source}
                 onChange={setSource}
               />
