@@ -1,37 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Check,
-  Clock,
-  X,
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  ArrowLeft,
   Calendar,
   ChevronRight,
-  ArrowLeft,
+  Clock,
   Info,
-  MapPin,
-  User,
-  Phone,
   MessageCircle,
-  Star,
   Navigation,
+  Phone,
+  Star,
 } from "lucide-react";
-import { format, isPast } from "date-fns";
 import { useSession } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Card, CardContent } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface Driver {
   id: string;
@@ -61,12 +55,161 @@ interface Ride {
   toLongitude?: number;
 }
 
+// Status Badge Component
+function StatusBadge({ status }: { status: string }) {
+  let color, text;
+
+  switch (status) {
+    case "COMPLETED":
+      color =
+        "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900";
+      text = "Completed";
+      break;
+    case "PENDING":
+      color =
+        "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900";
+      text = "Pending";
+      break;
+    case "CANCELLED":
+      color =
+        "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900";
+      text = "Cancelled";
+      break;
+    default:
+      color = "bg-gray-50 text-gray-700 border-gray-200";
+      text = status;
+  }
+
+  return (
+    <div
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${color}`}
+    >
+      {text}
+    </div>
+  );
+}
+
+// Ride Card Component
+function RideCard({ ride, onClick }: { ride: Ride; onClick: () => void }) {
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card
+        className="mb-4 py-0 overflow-hidden border-border hover:shadow-md transition-all cursor-pointer"
+        onClick={onClick}
+      >
+        <CardContent className="p-0">
+          <div className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <Calendar size={14} className="text-gray-500" />
+                  <h3 className="font-medium text-foreground">
+                    {formatDate(ride.departureDate)}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <Clock size={14} className="text-gray-500" />
+                  <p className="text-sm text-muted-foreground">
+                    {ride.departureTime}
+                  </p>
+                </div>
+              </div>
+              <StatusBadge status={ride.status} />
+            </div>
+
+            <div className="space-y-3 mt-4">
+              <div className="flex items-start gap-3">
+                <div className="mt-1">
+                  <div className="size-2 rounded-full bg-blue-500"></div>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">
+                    {ride.fromLocation}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="mt-1">
+                  <div className="size-2 rounded-full bg-red-500"></div>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">
+                    {ride.toLocation}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-muted/50 p-3 flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">₹{ride.price}</span>
+            </div>
+            <div className="flex items-center">
+              {ride.driver && (
+                <div className="flex items-center mr-3">
+                  <div className="size-6 rounded-full bg-gray-200 mr-2 flex items-center justify-center text-xs font-medium">
+                    {ride.driver.name.charAt(0)}
+                  </div>
+                  <span className="text-sm">
+                    {ride.booking?.numSeats || 1} seat
+                    {(ride.booking?.numSeats || 1) > 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
+              <Button variant="ghost" size="sm" className="text-primary">
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+// Empty State Component
+function EmptyState({ message }: { message: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex flex-col items-center justify-center h-[calc(100vh-220px)] text-center"
+    >
+      <div className="size-16 rounded-full bg-muted flex items-center justify-center mb-4">
+        <Info className="size-8 text-muted-foreground" />
+      </div>
+      <h3 className="text-lg font-medium mb-1">{message}</h3>
+      <p className="text-sm text-muted-foreground">
+        Your rides will appear here once you book them
+      </p>
+      <Button className="mt-6">Book a Ride</Button>
+    </motion.div>
+  );
+}
+
 export default function ActivityPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [rides, setRides] = useState<Ride[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRide, setSelectedRide] = useState<Ride | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -89,17 +232,13 @@ export default function ActivityPage() {
     }
   };
 
-  const getRideStatusColor = (status: string): string => {
-    switch (status) {
-      case "COMPLETED":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "CANCELLED":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "PENDING":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
+  const handleRideClick = (ride: Ride) => {
+    setSelectedRide(ride);
+    setIsDetailOpen(true);
+  };
+
+  const handleCloseDetail = () => {
+    setIsDetailOpen(false);
   };
 
   const formatDate = (dateString: string): string => {
@@ -113,36 +252,35 @@ export default function ActivityPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        <div className="bg-white shadow-sm border-b border-gray-100">
-          <div className="max-w-md mx-auto px-4 py-4">
-            <div className="flex items-center">
-              <Button variant="ghost" size="sm" className="mr-2">
-                <ArrowLeft size={20} />
-              </Button>
-              <h1 className="text-2xl font-bold text-gray-900">Activity</h1>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-4 animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-6 animate-pulse">
+            <div className="flex gap-2 mb-4">
+              <div className="h-10 bg-gray-200 rounded flex-1"></div>
+              <div className="h-10 bg-gray-200 rounded flex-1"></div>
+              <div className="h-10 bg-gray-200 rounded flex-1"></div>
             </div>
           </div>
-        </div>
-
-        <div className="max-w-md mx-auto px-4 py-6">
-          <Tabs defaultValue="all" className="w-full mb-6">
-            <TabsList className="w-full bg-white/60 backdrop-blur-sm">
-              <TabsTrigger value="all" className="flex-1">
-                All
-              </TabsTrigger>
-              <TabsTrigger value="completed" className="flex-1">
-                Completed
-              </TabsTrigger>
-              <TabsTrigger value="upcoming" className="flex-1">
-                Upcoming
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
 
           {[1, 2, 3].map((_, i) => (
-            <div key={i} className="mb-4">
-              <Skeleton className="h-32 w-full rounded-xl" />
+            <div
+              key={i}
+              className="bg-white rounded-lg shadow-sm p-4 mb-4 animate-pulse"
+            >
+              <div className="flex justify-between mb-4">
+                <div className="h-5 bg-gray-200 rounded w-1/3"></div>
+                <div className="h-5 bg-gray-200 rounded w-1/4"></div>
+              </div>
+              <div className="space-y-3 mb-4">
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+              </div>
+              <div className="h-12 bg-gray-200 rounded w-full"></div>
             </div>
           ))}
         </div>
@@ -205,118 +343,117 @@ export default function ActivityPage() {
           </TabsList>
 
           <TabsContent value="all" className="mt-6">
-            {rides.length === 0 ? (
-              <EmptyState message="No ride history found" />
-            ) : (
-              <div className="space-y-4">
-                {rides.map((ride) => (
-                  <RideCard
-                    key={ride.id}
-                    ride={ride}
-                    onClick={() => setSelectedRide(ride)}
-                  />
-                ))}
-              </div>
-            )}
+            <AnimatePresence>
+              {rides.length === 0 ? (
+                <EmptyState message="No ride history found" />
+              ) : (
+                <ScrollArea className="h-[calc(100vh-220px)]">
+                  {rides.map((ride) => (
+                    <RideCard
+                      key={ride.id}
+                      ride={ride}
+                      onClick={() => handleRideClick(ride)}
+                    />
+                  ))}
+                </ScrollArea>
+              )}
+            </AnimatePresence>
           </TabsContent>
 
           <TabsContent value="completed" className="mt-6">
-            {pastRides.length === 0 ? (
-              <EmptyState message="No completed rides" />
-            ) : (
-              <div className="space-y-4">
-                {pastRides.map((ride) => (
-                  <RideCard
-                    key={ride.id}
-                    ride={ride}
-                    onClick={() => setSelectedRide(ride)}
-                  />
-                ))}
-              </div>
-            )}
+            <AnimatePresence>
+              {pastRides.length === 0 ? (
+                <EmptyState message="No completed rides" />
+              ) : (
+                <ScrollArea className="h-[calc(100vh-220px)]">
+                  {pastRides.map((ride) => (
+                    <RideCard
+                      key={ride.id}
+                      ride={ride}
+                      onClick={() => handleRideClick(ride)}
+                    />
+                  ))}
+                </ScrollArea>
+              )}
+            </AnimatePresence>
           </TabsContent>
 
           <TabsContent value="upcoming" className="mt-6">
-            {upcomingRides.length === 0 ? (
-              <EmptyState message="No upcoming rides" />
-            ) : (
-              <div className="space-y-4">
-                {upcomingRides.map((ride) => (
-                  <RideCard
-                    key={ride.id}
-                    ride={ride}
-                    onClick={() => setSelectedRide(ride)}
-                  />
-                ))}
-              </div>
-            )}
+            <AnimatePresence>
+              {upcomingRides.length === 0 ? (
+                <EmptyState message="No upcoming rides" />
+              ) : (
+                <ScrollArea className="h-[calc(100vh-220px)]">
+                  {upcomingRides.map((ride) => (
+                    <RideCard
+                      key={ride.id}
+                      ride={ride}
+                      onClick={() => handleRideClick(ride)}
+                    />
+                  ))}
+                </ScrollArea>
+              )}
+            </AnimatePresence>
           </TabsContent>
         </Tabs>
       </div>
 
-      {/* Ride Details Sheet */}
-      <Sheet open={!!selectedRide} onOpenChange={() => setSelectedRide(null)}>
-        <SheetContent side="bottom" className="h-auto max-h-[90vh]">
+      {/* Ride Details Drawer */}
+      <Drawer open={isDetailOpen} onOpenChange={handleCloseDetail}>
+        <DrawerContent className="max-h-[90vh]">
           {selectedRide && (
             <>
-              <SheetHeader>
-                <SheetTitle>Ride Details</SheetTitle>
-              </SheetHeader>
+              <DrawerHeader>
+                <DrawerTitle className="text-xl">Ride Details</DrawerTitle>
+                <DrawerDescription>
+                  {formatDate(selectedRide.departureDate)} •{" "}
+                  {selectedRide.departureTime}
+                </DrawerDescription>
+              </DrawerHeader>
 
-              <div className="py-6 space-y-6">
+              <div className="py-6 px-4 space-y-6 overflow-y-auto">
                 {/* Status Badge */}
                 <div className="flex justify-center">
-                  <Badge
-                    className={`${getRideStatusColor(
-                      selectedRide.status
-                    )} px-4 py-2 text-sm font-medium border`}
-                  >
-                    {selectedRide.status}
-                  </Badge>
+                  <StatusBadge status={selectedRide.status} />
                 </div>
 
                 {/* Route */}
                 <div className="bg-gray-50 rounded-xl p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                        <span className="font-semibold text-gray-900">
-                          {selectedRide.fromLocation}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-red-600 rounded-full"></div>
-                        <span className="font-semibold text-gray-900">
-                          {selectedRide.toLocation}
-                        </span>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      <Navigation size={16} />
-                    </Button>
-                  </div>
-                </div>
+                  <div className="space-y-6 relative">
+                    <div className="absolute left-[11px] top-[28px] bottom-[28px] w-[2px] bg-gray-200"></div>
 
-                {/* Date & Time */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Calendar size={16} className="text-gray-600" />
-                      <span className="text-sm text-gray-600">Date</span>
+                    <div className="flex items-start gap-3">
+                      <div className="relative z-10 mt-1 bg-white p-1 rounded-full border border-blue-500">
+                        <div className="size-2 rounded-full bg-blue-500"></div>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">
+                          Pickup
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {selectedRide.fromLocation}
+                        </p>
+                      </div>
                     </div>
-                    <p className="font-semibold">
-                      {formatDate(selectedRide.departureDate)}
-                    </p>
+
+                    <div className="flex items-start gap-3">
+                      <div className="relative z-10 mt-1 bg-white p-1 rounded-full border border-red-500">
+                        <div className="size-2 rounded-full bg-red-500"></div>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">
+                          Dropoff
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {selectedRide.toLocation}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Clock size={16} className="text-gray-600" />
-                      <span className="text-sm text-gray-600">Time</span>
-                    </div>
-                    <p className="font-semibold">
-                      {selectedRide.departureTime}
-                    </p>
+                  <div className="mt-4 flex justify-end">
+                    <Button variant="outline" size="sm">
+                      <Navigation size={16} className="mr-1" /> View Map
+                    </Button>
                   </div>
                 </div>
 
@@ -326,22 +463,19 @@ export default function ActivityPage() {
                     <h3 className="font-semibold text-gray-900 mb-3">Driver</h3>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <Avatar className="w-12 h-12">
-                          <AvatarFallback className="bg-blue-600 text-white">
-                            {selectedRide.driver.name?.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="size-12 rounded-full bg-gray-200 flex items-center justify-center">
+                          <span className="text-lg font-medium">
+                            {selectedRide.driver.name.charAt(0)}
+                          </span>
+                        </div>
                         <div>
                           <p className="font-semibold">
                             {selectedRide.driver.name}
                           </p>
                           {selectedRide.driver.driverRating && (
-                            <div className="flex items-center gap-1">
-                              <Star
-                                size={14}
-                                className="text-yellow-500 fill-current"
-                              />
-                              <span className="text-sm text-gray-600">
+                            <div className="flex items-center gap-1 text-yellow-500">
+                              <Star size={14} className="fill-current" />
+                              <span className="text-sm">
                                 {selectedRide.driver.driverRating}
                               </span>
                             </div>
@@ -365,14 +499,14 @@ export default function ActivityPage() {
                   <h3 className="font-semibold text-gray-900 mb-3">
                     Booking Details
                   </h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center py-1 border-b border-gray-200">
                       <span className="text-gray-600">Seats</span>
                       <span className="font-semibold">
                         {selectedRide.booking?.numSeats || 1}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center py-1">
                       <span className="text-gray-600">Total Amount</span>
                       <span className="font-semibold text-lg">
                         ₹{selectedRide.price}
@@ -382,148 +516,43 @@ export default function ActivityPage() {
                 </div>
 
                 {/* Action Buttons */}
-                {selectedRide.status === "PENDING" && (
-                  <div className="flex gap-3 pt-4 border-t">
-                    <Button
-                      variant="outline"
-                      className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
-                    >
-                      Cancel Ride
-                    </Button>
-                    <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
-                      Contact Driver
-                    </Button>
-                  </div>
-                )}
+                <div className="flex gap-3 pt-4 border-t">
+                  {selectedRide.status === "PENDING" && (
+                    <>
+                      <Button
+                        variant="outline"
+                        className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+                      >
+                        Cancel Ride
+                      </Button>
+                      <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
+                        Contact Driver
+                      </Button>
+                    </>
+                  )}
 
-                {selectedRide.status === "COMPLETED" && (
-                  <div className="flex gap-3 pt-4 border-t">
-                    <Button variant="outline" className="flex-1">
-                      Rate Driver
-                    </Button>
+                  {selectedRide.status === "COMPLETED" && (
+                    <>
+                      <Button variant="outline" className="flex-1">
+                        Rate Driver
+                      </Button>
+                      <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
+                        Book Again
+                      </Button>
+                    </>
+                  )}
+
+                  {selectedRide.status === "CANCELLED" && (
                     <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
-                      Book Again
+                      Book New Ride
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </>
           )}
-        </SheetContent>
-      </Sheet>
+        </DrawerContent>
+      </Drawer>
     </div>
-  );
-}
-
-interface RideCardProps {
-  ride: Ride;
-  onClick: () => void;
-}
-
-function RideCard({ ride, onClick }: RideCardProps) {
-  const getRideStatusColor = (status: string): string => {
-    switch (status) {
-      case "COMPLETED":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "CANCELLED":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "PENDING":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  return (
-    <Card
-      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-0 bg-white/80 backdrop-blur-sm hover:bg-white/90"
-      onClick={onClick}
-    >
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar size={14} className="text-gray-500" />
-              <span className="text-sm text-gray-600">
-                {formatDate(ride.departureDate)}
-              </span>
-              <span className="text-gray-300">•</span>
-              <Clock size={14} className="text-gray-500" />
-              <span className="text-sm text-gray-600">
-                {ride.departureTime}
-              </span>
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                <span className="font-semibold text-gray-900 text-sm">
-                  {ride.fromLocation}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-red-600 rounded-full"></div>
-                <span className="font-semibold text-gray-900 text-sm">
-                  {ride.toLocation}
-                </span>
-              </div>
-            </div>
-          </div>
-          <Badge
-            className={`${getRideStatusColor(ride.status)} text-xs border`}
-          >
-            {ride.status}
-          </Badge>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Avatar className="w-8 h-8">
-              <AvatarFallback className="bg-gray-200 text-gray-700 text-xs">
-                {ride.driver?.name?.charAt(0) || "D"}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-sm font-medium text-gray-900">
-                {ride.driver?.name || "Driver"}
-              </p>
-              <p className="text-xs text-gray-500">
-                {ride.booking?.numSeats && ride.booking.numSeats > 1
-                  ? `${ride.booking.numSeats} seats`
-                  : "1 seat"}
-              </p>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-lg font-bold text-gray-900">₹{ride.price}</p>
-            <ChevronRight size={16} className="text-gray-400 ml-auto" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function EmptyState({ message }: { message: string }) {
-  return (
-    <Card className="border-0 bg-white/60 backdrop-blur-sm">
-      <CardContent className="p-8 text-center">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Info size={32} className="text-gray-400" />
-        </div>
-        <p className="text-gray-600 font-medium">{message}</p>
-        <p className="text-sm text-gray-500 mt-1">
-          Your rides will appear here once you book them
-        </p>
-      </CardContent>
-    </Card>
   );
 }

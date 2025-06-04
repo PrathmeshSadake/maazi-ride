@@ -30,6 +30,13 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -102,21 +109,21 @@ export default function AccountPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-slate-100">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-100">
-        <div className="max-w-md mx-auto px-4 py-6">
-          <h1 className="text-2xl font-bold text-gray-900">Account</h1>
-          <p className="text-gray-600 text-sm mt-1">
+      <div className="bg-sky-600 shadow-sm border-b border-gray-100">
+        <div className="max-w-md mx-auto px-4 py-4">
+          <h1 className="text-xl font-bold text-white">Account</h1>
+          <p className="text-gray-200 text-sm">
             Manage your profile and preferences
           </p>
         </div>
       </div>
 
-      <div className="max-w-md mx-auto px-4 py-6">
+      <div className="max-w-md mx-auto">
         {/* User Profile Section */}
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm mb-6">
-          <CardContent className="p-6">
+        <Card className="shadow-none py-3 border-0 bg-white/80 backdrop-blur-sm mb-4">
+          <CardContent className="px-4 py-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <Avatar className="w-16 h-16 mr-4 ring-4 ring-blue-100">
@@ -126,29 +133,29 @@ export default function AccountPage() {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">
-                    {session?.user?.name || "User"}
-                  </h2>
-                  <p className="text-gray-600 text-sm">
-                    {session?.user?.email}
-                  </p>
-                  <div className="flex items-center mt-2">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-gray-900">
+                      {session?.user?.name || "User"}
+                    </h2>
                     <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
                       Verified
                     </div>
                   </div>
+                  <p className="text-gray-600 text-sm">
+                    {session?.user?.email}
+                  </p>
                 </div>
               </div>
-              <Sheet>
-                <SheetTrigger asChild>
+              <Drawer>
+                <DrawerTrigger asChild>
                   <Button variant="outline" size="sm" className="rounded-full">
                     <Edit size={16} />
                   </Button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="h-[85vh] flex flex-col">
-                  <SheetHeader className="flex-shrink-0 pb-4 border-b border-gray-200">
-                    <SheetTitle>Edit Profile</SheetTitle>
-                  </SheetHeader>
+                </DrawerTrigger>
+                <DrawerContent className=" flex flex-col px-4">
+                  <DrawerHeader className="flex-shrink-0 pb-4 border-b border-gray-200">
+                    <DrawerTitle>Edit Profile</DrawerTitle>
+                  </DrawerHeader>
 
                   {/* Scrollable content area */}
                   <div className="flex-1 overflow-y-auto py-4">
@@ -208,7 +215,7 @@ export default function AccountPage() {
                   </div>
 
                   {/* Fixed action buttons at bottom */}
-                  <div className="flex-shrink-0 pt-4 border-t border-gray-200 bg-white">
+                  <div className="flex-shrink-0 py-4 border-t border-gray-200 bg-white">
                     <div className="flex gap-3 pb-safe">
                       <Button variant="outline" className="flex-1 py-3">
                         Cancel
@@ -218,30 +225,30 @@ export default function AccountPage() {
                       </Button>
                     </div>
                   </div>
-                </SheetContent>
-              </Sheet>
+                </DrawerContent>
+              </Drawer>
             </div>
           </CardContent>
         </Card>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 text-center border border-gray-100">
+        <div className="grid grid-cols-3 gap-2 mb-4 px-2">
+          <div className="bg-white backdrop-blur-sm rounded-xl p-4 text-center border border-gray-200">
             <div className="text-2xl font-bold text-blue-600">12</div>
             <p className="text-xs text-gray-600 font-medium">Total Rides</p>
           </div>
-          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 text-center border border-gray-100">
+          <div className="bg-white backdrop-blur-sm rounded-xl p-4 text-center border border-gray-200">
             <div className="text-2xl font-bold text-green-600">4.8</div>
             <p className="text-xs text-gray-600 font-medium">Rating</p>
           </div>
-          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 text-center border border-gray-100">
+          <div className="bg-white backdrop-blur-sm rounded-xl p-4 text-center border border-gray-200">
             <div className="text-2xl font-bold text-purple-600">₹2.4k</div>
             <p className="text-xs text-gray-600 font-medium">Saved</p>
           </div>
         </div>
 
         {/* Menu Items */}
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm mb-6">
+        <Card className="shadow-none border-0 bg-white/80 backdrop-blur-sm rounded-none border-b border-gray-200 py-0">
           <CardContent className="p-0">
             {menuItems.map((item, index) => (
               <div
@@ -278,7 +285,7 @@ export default function AccountPage() {
         </Card>
 
         {/* Contact Support */}
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm mb-6">
+        <Card className="shadow-none border-0 bg-white/80 backdrop-blur-sm rounded-none">
           <CardContent className="p-4">
             <h3 className="font-semibold text-gray-900 mb-3">Need Help?</h3>
             <div className="grid grid-cols-2 gap-3">
@@ -295,20 +302,22 @@ export default function AccountPage() {
         </Card>
 
         {/* Sign Out */}
-        <Sheet open={showSignOutSheet} onOpenChange={setShowSignOutSheet}>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full py-3 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
-            >
-              <LogOut size={18} className="mr-2" />
-              Sign Out
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="h-auto">
-            <SheetHeader>
-              <SheetTitle>Sign Out</SheetTitle>
-            </SheetHeader>
+        <Drawer open={showSignOutSheet} onOpenChange={setShowSignOutSheet}>
+          <div className="bg-white p-2">
+            <DrawerTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full py-3 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+              >
+                <LogOut size={18} className="mr-2" />
+                Sign Out
+              </Button>
+            </DrawerTrigger>
+          </div>
+          <DrawerContent className="h-auto">
+            <DrawerHeader>
+              <DrawerTitle>Sign Out</DrawerTitle>
+            </DrawerHeader>
             <div className="py-6">
               <p className="text-gray-600 mb-6">
                 Are you sure you want to sign out of your account?
@@ -330,10 +339,10 @@ export default function AccountPage() {
                 </Button>
               </div>
             </div>
-          </SheetContent>
-        </Sheet>
+          </DrawerContent>
+        </Drawer>
 
-        <p className="text-xs text-gray-500 text-center mt-6">
+        <p className="text-xs text-gray-500 text-center py-2">
           Maazi Ride • Version 1.0.0
         </p>
       </div>

@@ -192,10 +192,9 @@ export function GoogleMapsAutocomplete({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-0">
       <Label className="text-sm font-medium text-gray-700">{label}</Label>
       <div className="relative">
-        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-500 z-10" />
         {isLoading && (
           <Loader2 className="absolute right-3 top-3 h-4 w-4 text-gray-500 animate-spin z-10" />
         )}
@@ -204,7 +203,7 @@ export function GoogleMapsAutocomplete({
           type="text"
           placeholder={isLoading ? "Loading..." : placeholder}
           value={inputValue}
-          className={`pl-10 pr-10 ${
+          className={`border-0 px-0 shadow-none ${
             error ? "border-red-300 focus:border-red-500" : ""
           }`}
           disabled={disabled || isLoading}
