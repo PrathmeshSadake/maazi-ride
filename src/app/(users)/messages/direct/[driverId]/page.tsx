@@ -255,7 +255,7 @@ function DirectMessageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-[calc(100vh-60px)] bg-background flex flex-col">
       {/* Header */}
       <div className="bg-card border-b sticky top-0 z-10">
         <div className="max-w-md mx-auto px-4 py-4">
@@ -275,7 +275,7 @@ function DirectMessageContent() {
             </Avatar>
 
             <div className="flex-1">
-              <h1 className="font-semibold text-foreground">
+              <h1 className="font-semibold text-foreground truncate max-w-[150px]">
                 {driverInfo?.name || "Driver"}
               </h1>
               {driverInfo && (
@@ -300,10 +300,10 @@ function DirectMessageContent() {
 
       {/* Ride/Booking Info */}
       {(rideInfo || bookingInfo) && (
-        <div className="max-w-md mx-auto px-4 py-3">
-          <Card>
-            <CardContent className="p-4">
-              {rideInfo && (
+        <div className="max-w-md mx-auto px-4 pt-2">
+          {rideInfo && (
+            <Card>
+              <CardContent className="p-4 py-0">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <h3 className="font-medium text-foreground">
@@ -332,9 +332,9 @@ function DirectMessageContent() {
                     </p>
                   </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
@@ -375,15 +375,15 @@ function DirectMessageContent() {
       </div>
 
       {/* Message Input */}
-      <div className="bg-card border-t">
-        <div className="max-w-md mx-auto p-4">
-          <div className="flex items-center gap-3">
+      <div className="bg-muted border-t">
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center gap-3 h-12">
             <Input
               type="text"
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
               placeholder="Type a message..."
-              className="flex-1"
+              className="flex-1 border-none shadow-none h-full focus-visible:ring-0 focus-visible:ring-offset-0"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -394,7 +394,7 @@ function DirectMessageContent() {
             <Button
               onClick={sendMessage}
               disabled={sending || !messageText.trim()}
-              size="sm"
+              size="icon"
               className="px-4"
             >
               <Send size={16} className={sending ? "animate-pulse" : ""} />

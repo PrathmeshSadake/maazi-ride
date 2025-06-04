@@ -30,6 +30,13 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -139,16 +146,16 @@ export default function AccountPage() {
                   </p>
                 </div>
               </div>
-              <Sheet>
-                <SheetTrigger asChild>
+              <Drawer>
+                <DrawerTrigger asChild>
                   <Button variant="outline" size="sm" className="rounded-full">
                     <Edit size={16} />
                   </Button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="h-[85vh] flex flex-col">
-                  <SheetHeader className="flex-shrink-0 pb-4 border-b border-gray-200">
-                    <SheetTitle>Edit Profile</SheetTitle>
-                  </SheetHeader>
+                </DrawerTrigger>
+                <DrawerContent className=" flex flex-col px-4">
+                  <DrawerHeader className="flex-shrink-0 pb-4 border-b border-gray-200">
+                    <DrawerTitle>Edit Profile</DrawerTitle>
+                  </DrawerHeader>
 
                   {/* Scrollable content area */}
                   <div className="flex-1 overflow-y-auto py-4">
@@ -208,7 +215,7 @@ export default function AccountPage() {
                   </div>
 
                   {/* Fixed action buttons at bottom */}
-                  <div className="flex-shrink-0 pt-4 border-t border-gray-200 bg-white">
+                  <div className="flex-shrink-0 py-4 border-t border-gray-200 bg-white">
                     <div className="flex gap-3 pb-safe">
                       <Button variant="outline" className="flex-1 py-3">
                         Cancel
@@ -218,8 +225,8 @@ export default function AccountPage() {
                       </Button>
                     </div>
                   </div>
-                </SheetContent>
-              </Sheet>
+                </DrawerContent>
+              </Drawer>
             </div>
           </CardContent>
         </Card>
@@ -295,9 +302,9 @@ export default function AccountPage() {
         </Card>
 
         {/* Sign Out */}
-        <Sheet open={showSignOutSheet} onOpenChange={setShowSignOutSheet}>
+        <Drawer open={showSignOutSheet} onOpenChange={setShowSignOutSheet}>
           <div className="bg-white p-2">
-            <SheetTrigger asChild>
+            <DrawerTrigger asChild>
               <Button
                 variant="outline"
                 className="w-full py-3 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
@@ -305,12 +312,12 @@ export default function AccountPage() {
                 <LogOut size={18} className="mr-2" />
                 Sign Out
               </Button>
-            </SheetTrigger>
+            </DrawerTrigger>
           </div>
-          <SheetContent side="bottom" className="h-auto">
-            <SheetHeader>
-              <SheetTitle>Sign Out</SheetTitle>
-            </SheetHeader>
+          <DrawerContent className="h-auto">
+            <DrawerHeader>
+              <DrawerTitle>Sign Out</DrawerTitle>
+            </DrawerHeader>
             <div className="py-6">
               <p className="text-gray-600 mb-6">
                 Are you sure you want to sign out of your account?
@@ -332,8 +339,8 @@ export default function AccountPage() {
                 </Button>
               </div>
             </div>
-          </SheetContent>
-        </Sheet>
+          </DrawerContent>
+        </Drawer>
 
         <p className="text-xs text-gray-500 text-center py-2">
           Maazi Ride • Version 1.0.0
