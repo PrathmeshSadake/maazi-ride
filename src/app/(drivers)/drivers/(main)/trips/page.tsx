@@ -22,10 +22,12 @@ import {
   IndianRupee,
   Users,
   ArrowRight,
+  ChevronLeft,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 
 type Ride = {
   id: string;
@@ -69,52 +71,37 @@ export default function TripsPage() {
     switch (status) {
       case "PENDING_APPROVAL":
         return (
-          <Badge
-            variant="outline"
-            className="bg-yellow-50 text-yellow-700 whitespace-nowrap"
-          >
-            Pending Approval
+          <Badge className="bg-yellow-100 text-yellow-800 border-0 text-xs px-2 py-0.5">
+            Pending
           </Badge>
         );
       case "APPROVED":
         return (
-          <Badge
-            variant="outline"
-            className="bg-green-50 text-green-700 whitespace-nowrap"
-          >
+          <Badge className="bg-green-100 text-green-800 border-0 text-xs px-2 py-0.5">
             Approved
           </Badge>
         );
       case "REJECTED":
         return (
-          <Badge
-            variant="outline"
-            className="bg-red-50 text-red-700 whitespace-nowrap"
-          >
+          <Badge className="bg-red-100 text-red-800 border-0 text-xs px-2 py-0.5">
             Rejected
           </Badge>
         );
       case "COMPLETED":
         return (
-          <Badge
-            variant="outline"
-            className="bg-blue-50 text-blue-700 whitespace-nowrap"
-          >
+          <Badge className="bg-blue-100 text-blue-800 border-0 text-xs px-2 py-0.5">
             Completed
           </Badge>
         );
       case "CANCELLED":
         return (
-          <Badge
-            variant="outline"
-            className="bg-gray-50 text-gray-700 whitespace-nowrap"
-          >
+          <Badge className="bg-gray-100 text-gray-800 border-0 text-xs px-2 py-0.5">
             Cancelled
           </Badge>
         );
       default:
         return (
-          <Badge variant="outline" className="whitespace-nowrap">
+          <Badge className="bg-gray-100 text-gray-800 border-0 text-xs px-2 py-0.5">
             {status}
           </Badge>
         );
@@ -139,165 +126,209 @@ export default function TripsPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold">My Scheduled Rides</h1>
-        <Link href="/drivers/trips/new">
-          <Button className="whitespace-nowrap">
-            <CalendarPlus className="mr-2 h-4 w-4" />
-            Schedule New Ride
-          </Button>
-        </Link>
+    <div className="min-h-screen bg-gray-50 pb-16">
+      {/* Page Header */}
+      <div className="bg-white border-b mb-4">
+        <div className="px-4 py-4">
+          <div className="flex items-center mb-4">
+            <button onClick={() => router.back()} className="mr-2">
+              <ChevronLeft className="h-5 w-5 text-gray-500" />
+            </button>
+            <h1 className="text-xl font-bold">My Rides</h1>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-500">
+              Manage your scheduled rides
+            </div>
+            <Link href="/drivers/trips/new">
+              <Button
+                size="sm"
+                className="text-xs h-8 flex items-center gap-1 bg-blue-600 hover:bg-blue-700"
+              >
+                <CalendarPlus className="h-3.5 w-3.5" />
+                Schedule
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
 
-      <Tabs defaultValue="upcoming" className="w-full">
-        <TabsList className="mb-6 w-full sm:w-auto">
-          <TabsTrigger value="upcoming" className="flex-1 sm:flex-initial">
-            Upcoming ({upcomingRides.length})
-          </TabsTrigger>
-          <TabsTrigger value="completed" className="flex-1 sm:flex-initial">
-            Completed ({completedRides.length})
-          </TabsTrigger>
-        </TabsList>
+      <div className="px-4">
+        <Tabs defaultValue="upcoming" className="w-full">
+          <TabsList className="mb-4 w-full grid grid-cols-2 h-10">
+            <TabsTrigger value="upcoming" className="text-sm">
+              Upcoming ({upcomingRides.length})
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="text-sm">
+              Completed ({completedRides.length})
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="upcoming">
-          {isLoading ? (
-            <div className="grid grid-cols-1 gap-6">
-              {[1, 2, 3].map((i) => (
-                <RideSkeleton key={i} />
-              ))}
-            </div>
-          ) : upcomingRides.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6">
-              {upcomingRides.map((ride) => (
-                <RideCard
-                  key={ride.id}
-                  ride={ride}
-                  status={getStatusBadge(ride.status)}
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              message="You don't have any upcoming rides"
-              buttonText="Schedule a ride"
-              buttonLink="/drivers/trips/new"
-            />
-          )}
-        </TabsContent>
+          <TabsContent value="upcoming">
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <RideSkeleton key={i} />
+                ))}
+              </div>
+            ) : upcomingRides.length > 0 ? (
+              <div className="space-y-3">
+                {upcomingRides.map((ride) => (
+                  <RideCard
+                    key={ride.id}
+                    ride={ride}
+                    status={getStatusBadge(ride.status)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                message="You don't have any upcoming rides"
+                buttonText="Schedule a ride"
+                buttonLink="/drivers/trips/new"
+              />
+            )}
+          </TabsContent>
 
-        <TabsContent value="completed">
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <RideSkeleton key={i} />
-              ))}
-            </div>
-          ) : completedRides.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {completedRides.map((ride) => (
-                <RideCard
-                  key={ride.id}
-                  ride={ride}
-                  status={getStatusBadge(ride.status)}
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptyState message="No completed rides" />
-          )}
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="completed">
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <RideSkeleton key={i} />
+                ))}
+              </div>
+            ) : completedRides.length > 0 ? (
+              <div className="space-y-3">
+                {completedRides.map((ride) => (
+                  <RideCard
+                    key={ride.id}
+                    ride={ride}
+                    status={getStatusBadge(ride.status)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState message="No completed rides" />
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
 
 function RideCard({ ride, status }: { ride: Ride; status: React.ReactNode }) {
   return (
-    <Card className="h-full flex flex-col overflow-hidden transition-shadow hover:shadow-md">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg font-semibold line-clamp-1">
-            {ride.fromLocation.split(",")[0]}
-            <ArrowRight className="inline h-4 w-4 mx-1" />
-            {ride.toLocation.split(",")[0]}
-          </CardTitle>
-          {status}
-        </div>
-      </CardHeader>
-      <CardContent className="pb-0 flex-1">
-        <div className="flex flex-wrap gap-3 mb-3">
-          <div className="flex items-center gap-1 text-gray-600 text-sm">
-            <Calendar className="h-4 w-4 flex-shrink-0" />
-            <span className="whitespace-nowrap">
-              {format(ride.departureDate, "MMM d, yyyy")}
-            </span>
-          </div>
-          <div className="flex items-center gap-1 text-gray-600 text-sm">
-            <Clock className="h-4 w-4 flex-shrink-0" />
-            <span className="whitespace-nowrap">{ride.departureTime}</span>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-start gap-1 text-gray-600">
-            <MapPin className="h-4 w-4 mt-1 flex-shrink-0 text-gray-500" />
-            <div className="text-sm">
-              <p className="line-clamp-1 font-medium">{ride.fromLocation}</p>
-              <p className="line-clamp-1 text-gray-500">{ride.toLocation}</p>
+    <Card className="border-gray-200 hover:border-gray-300 transition-all overflow-hidden">
+      <CardContent className="p-3">
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex items-start space-x-2">
+            <div className="bg-blue-100 p-1.5 rounded-full mt-0.5">
+              <Car className="h-4 w-4 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-900">
+                {ride.fromLocation.split(",")[0]}
+                <ArrowRight className="inline h-3 w-3 mx-1 text-gray-400" />
+                {ride.toLocation.split(",")[0]}
+              </h3>
+              <div className="flex items-center text-xs text-gray-500 mt-0.5">
+                <Calendar className="h-3 w-3 mr-1" />
+                {format(new Date(ride.departureDate), "MMM d, yyyy")}
+                <span className="mx-1">•</span>
+                <Clock className="h-3 w-3 mr-1" />
+                {ride.departureTime}
+              </div>
             </div>
           </div>
+          {status}
         </div>
 
-        <div className="flex justify-between mt-4">
-          <div className="flex items-center gap-1">
-            <IndianRupee className="h-4 w-4 text-gray-500 flex-shrink-0" />
-            <span className="font-semibold">
-              ₹{ride.price.toLocaleString("en-IN")}
+        <Separator className="my-2" />
+
+        <div className="grid grid-cols-3 gap-2 my-2">
+          <div className="flex flex-col">
+            <span className="text-[10px] text-gray-500">Price</span>
+            <span className="text-xs font-medium text-gray-900 flex items-center mt-0.5">
+              <IndianRupee className="h-3 w-3 mr-0.5" />
+              {ride.price.toLocaleString("en-IN")}
             </span>
           </div>
-          <div className="flex items-center gap-1">
-            <Users className="h-4 w-4 text-gray-500 flex-shrink-0" />
-            <span>{ride.availableSeats} seats</span>
+          <div className="flex flex-col">
+            <span className="text-[10px] text-gray-500">Bookings</span>
+            <span className="text-xs font-medium text-gray-900 mt-0.5">
+              {ride.bookings?.length || 0}
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[10px] text-gray-500">Seats</span>
+            <span className="text-xs font-medium text-gray-900 flex items-center mt-0.5">
+              <Users className="h-3 w-3 mr-0.5" />
+              {ride.availableSeats}
+            </span>
           </div>
         </div>
-      </CardContent>
 
-      <CardFooter className="pt-4 mt-auto">
-        <Link href={`/drivers/trips/${ride.id}`} className="w-full">
-          <Button variant="outline" className="w-full">
-            View Details
-          </Button>
-        </Link>
-      </CardFooter>
+        <div className="flex gap-2 mt-3">
+          <Link href={`/drivers/trips/${ride.id}`} className="flex-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
+            >
+              View Details
+            </Button>
+          </Link>
+          {ride.status === "PENDING_APPROVAL" && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 text-xs border-red-200 text-red-600 hover:bg-red-50"
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
+      </CardContent>
     </Card>
   );
 }
 
 function RideSkeleton() {
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <Skeleton className="h-6 w-2/3" />
-          <Skeleton className="h-5 w-24" />
+    <Card className="border-gray-200 overflow-hidden">
+      <CardContent className="p-3">
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex items-start space-x-2">
+            <Skeleton className="h-7 w-7 rounded-full" />
+            <div>
+              <Skeleton className="h-4 w-32 mb-1" />
+              <Skeleton className="h-3 w-40" />
+            </div>
+          </div>
+          <Skeleton className="h-5 w-16 rounded-full" />
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex gap-4">
-          <Skeleton className="h-5 w-24" />
-          <Skeleton className="h-5 w-20" />
+
+        <Separator className="my-2" />
+
+        <div className="grid grid-cols-3 gap-2 my-2">
+          <div>
+            <Skeleton className="h-3 w-10 mb-1" />
+            <Skeleton className="h-4 w-14" />
+          </div>
+          <div>
+            <Skeleton className="h-3 w-10 mb-1" />
+            <Skeleton className="h-4 w-8" />
+          </div>
+          <div>
+            <Skeleton className="h-3 w-10 mb-1" />
+            <Skeleton className="h-4 w-8" />
+          </div>
         </div>
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
-        </div>
-        <div className="flex justify-between pt-2">
-          <Skeleton className="h-5 w-16" />
-          <Skeleton className="h-5 w-20" />
-        </div>
-        <div className="pt-2">
-          <Skeleton className="h-9 w-full" />
+
+        <div className="flex gap-2 mt-3">
+          <Skeleton className="h-8 w-full rounded" />
         </div>
       </CardContent>
     </Card>
@@ -314,13 +345,17 @@ function EmptyState({
   buttonLink?: string;
 }) {
   return (
-    <div className="text-center py-10 px-4 border border-dashed rounded-lg">
-      <Car className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-      <p className="text-gray-500 mb-4">{message}</p>
+    <div className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+      <Car className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+      <h3 className="text-sm font-medium text-gray-900 mb-1">{message}</h3>
       {buttonText && buttonLink && (
-        <Link href={buttonLink}>
-          <Button>{buttonText}</Button>
-        </Link>
+        <div className="mt-4">
+          <Link href={buttonLink}>
+            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-sm">
+              {buttonText}
+            </Button>
+          </Link>
+        </div>
       )}
     </div>
   );

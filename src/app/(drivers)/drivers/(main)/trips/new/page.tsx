@@ -107,7 +107,7 @@ const ScheduleRideForm = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-md">
+    <div className="container mx-auto px-4 pt-8 max-w-md">
       <h1 className="text-2xl font-bold mb-6">Schedule a Ride</h1>
 
       <form onSubmit={handleSubmit}>

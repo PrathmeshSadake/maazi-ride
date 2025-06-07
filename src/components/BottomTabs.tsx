@@ -67,7 +67,7 @@ export default function BottomTabs() {
                 {tab.label}
               </span>
               {tab.badge && (
-                <Badge className="absolute -top-1 -right-2 h-4 w-4 rounded-full p-0 text-xs bg-red-500 flex items-center justify-center">
+                <Badge className="absolute -top-1 right-0 h-4 w-4 rounded-full p-0 text-xs bg-red-500 flex items-center justify-center">
                   {tab.badge}
                 </Badge>
               )}
