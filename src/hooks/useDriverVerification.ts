@@ -24,6 +24,7 @@ export function useDriverVerification() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasFetched = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchVerificationStatus = useCallback(
     async (force = false) => {
@@ -55,10 +56,32 @@ export function useDriverVerification() {
         setError(null);
         if (!loading) setLoading(true);
 
-        const response = await fetch("/api/drivers/verification-status");
+        // Cancel previous request if it exists
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+
+        // Create new abort controller for this request
+        abortControllerRef.current = new AbortController();
+
+        // Add timeout
+        const timeoutId = setTimeout(() => {
+          if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+          }
+        }, 10000); // 10 second timeout
+
+        const response = await fetch("/api/drivers/verification-status", {
+          signal: abortControllerRef.current.signal,
+          headers: {
+            "Cache-Control": "no-cache",
+          },
+        });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({}));
           throw new Error(
             errorData.error || `HTTP error! status: ${response.status}`
           );
@@ -68,18 +91,30 @@ export function useDriverVerification() {
         setVerificationData(data);
         hasFetched.current = true;
       } catch (err) {
+        // Don't set error if request was aborted (user navigated away or new request started)
+        if (err instanceof Error && err.name === "AbortError") {
+          return;
+        }
+
         console.error("Error fetching verification status:", err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to fetch verification status"
-        );
+
+        let errorMessage = "Failed to fetch verification status";
+        if (err instanceof Error) {
+          if (err.message.includes("fetch")) {
+            errorMessage = "Network error - please check your connection";
+          } else {
+            errorMessage = err.message;
+          }
+        }
+
+        setError(errorMessage);
         hasFetched.current = true;
       } finally {
         setLoading(false);
+        abortControllerRef.current = null;
       }
     },
-    [session?.user?.id, session?.user?.role, status]
+    [session?.user?.id, session?.user?.role, status, loading]
   );
 
   useEffect(() => {
@@ -87,6 +122,13 @@ export function useDriverVerification() {
     if (!hasFetched.current && status !== "loading") {
       fetchVerificationStatus();
     }
+
+    // Cleanup function
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [fetchVerificationStatus, status]);
 
   const refetch = useCallback(async () => {
