@@ -5,7 +5,15 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, UserPlus, LogIn, Car, Users, Shield } from "lucide-react";
+import {
+  Loader2,
+  UserPlus,
+  LogIn,
+  Car,
+  Users,
+  Shield,
+  Smartphone,
+} from "lucide-react";
 import OnboardingScreens from "@/components/onboarding/OnboardingScreens";
 
 const AuthPage = () => {
@@ -175,6 +183,24 @@ const AuthPage = () => {
               <Link href="/auth/signup" className="flex items-center gap-2">
                 <UserPlus className="h-5 w-5" />
                 Sign Up
+              </Link>
+            </Button>
+          </div>
+
+          {/* Phone Auth Option */}
+          <div className="pt-4">
+            <p className="text-sm text-gray-600 mb-3">
+              Or authenticate with phone number
+            </p>
+            <Button
+              asChild
+              size="lg"
+              variant="ghost"
+              className="h-12 w-full border-2 border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 font-semibold transition-colors"
+            >
+              <Link href="/auth/phone-auth" className="flex items-center gap-2">
+                <Smartphone className="h-5 w-5" />
+                Phone Number Auth
               </Link>
             </Button>
           </div>

@@ -35,13 +35,13 @@ model User {
   name          String?
   email         String    @unique
   password      String
+  phone         String?   @unique
+  phoneVerified Boolean   @default(false)
   role          UserRole?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   accounts      Account[]
   sessions      Session[]
-
-
 
    // Driver specific fields
   driverRating  Float?         // Out of 5
