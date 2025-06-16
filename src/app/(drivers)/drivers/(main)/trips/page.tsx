@@ -23,6 +23,8 @@ import {
   Users,
   ArrowRight,
   ChevronLeft,
+  Phone,
+  User,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -38,7 +40,16 @@ type Ride = {
   price: number;
   availableSeats: number;
   status: string;
-  bookings: Array<{ id: string; status: string }>;
+  bookings: Array<{
+    id: string;
+    status: string;
+    phoneNumber?: string;
+    user: {
+      id: string;
+      name: string;
+      phone?: string;
+    };
+  }>;
 };
 
 export default function TripsPage() {
@@ -269,6 +280,39 @@ function RideCard({ ride, status }: { ride: Ride; status: React.ReactNode }) {
             </span>
           </div>
         </div>
+
+        {/* Show passenger details for confirmed bookings */}
+        {ride.bookings &&
+          ride.bookings.some((booking) => booking.status === "CONFIRMED") && (
+            <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded-lg">
+              <h4 className="text-xs font-medium text-green-800 mb-2">
+                Confirmed Passengers
+              </h4>
+              <div className="space-y-2">
+                {ride.bookings
+                  .filter((booking) => booking.status === "CONFIRMED")
+                  .map((booking, index) => (
+                    <div
+                      key={booking.id}
+                      className="flex items-center justify-between text-xs"
+                    >
+                      <div className="flex items-center text-green-700">
+                        <User size={12} className="mr-1" />
+                        <span className="font-medium">{booking.user.name}</span>
+                      </div>
+                      <div className="flex items-center text-green-700">
+                        <Phone size={12} className="mr-1" />
+                        <span>
+                          {booking.phoneNumber ||
+                            booking.user.phone ||
+                            "Not provided"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
 
         <div className="flex gap-2 mt-3">
           <Link href={`/drivers/trips/${ride.id}`} className="flex-1">

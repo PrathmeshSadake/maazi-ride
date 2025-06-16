@@ -2,7 +2,16 @@
 
 import { useState, useEffect, JSX } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Clock, X, Calendar, MapPin, MessageSquare } from "lucide-react";
+import {
+  Check,
+  Clock,
+  X,
+  Calendar,
+  MapPin,
+  MessageSquare,
+  Phone,
+  User,
+} from "lucide-react";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 
@@ -10,12 +19,13 @@ interface Booking {
   id: string;
   status: string;
   numSeats: number;
+  phoneNumber?: string;
   createdAt: string;
   updatedAt: string;
   user: {
     id: string;
-    firstName: string;
-    lastName: string;
+    name: string;
+    phone?: string;
   };
   ride: {
     id: string;
@@ -226,10 +236,7 @@ export default function DriverBookingsPage() {
               </div>
 
               <div className="flex items-center mt-3 text-sm text-gray-600">
-                <span>
-                  Passenger: {booking.user.firstName}{" "}
-                  {booking.user.lastName.charAt(0)}.
-                </span>
+                <span>Passenger: {booking.user.name}</span>
                 <span className="mx-2">•</span>
                 <span>
                   {booking.numSeats} {booking.numSeats === 1 ? "seat" : "seats"}
@@ -240,6 +247,31 @@ export default function DriverBookingsPage() {
                   {format(new Date(booking.createdAt), "MMM d, h:mm a")}
                 </span>
               </div>
+
+              {/* Show passenger contact details for confirmed bookings */}
+              {booking.status === "CONFIRMED" && (
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <h4 className="font-medium text-green-800 mb-2">
+                    Passenger Contact Details
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center text-green-700">
+                      <User size={16} className="mr-2" />
+                      <span className="font-medium mr-2">Name:</span>
+                      <span>{booking.user.name}</span>
+                    </div>
+                    <div className="flex items-center text-green-700">
+                      <Phone size={16} className="mr-2" />
+                      <span className="font-medium mr-2">Phone:</span>
+                      <span>
+                        {booking.phoneNumber ||
+                          booking.user.phone ||
+                          "Not provided"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {booking.status === "PENDING_APPROVAL" && (
                 <div className="flex gap-3 mt-4">
@@ -265,7 +297,7 @@ export default function DriverBookingsPage() {
                   <button
                     onClick={() =>
                       router.push(
-                        `/messages?userId=${booking.user.id}&bookingId=${booking.id}`
+                        `/drivers/messages/${booking.user.id}?bookingId=${booking.id}`
                       )
                     }
                     className="w-full py-2 flex items-center justify-center gap-2 text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50"

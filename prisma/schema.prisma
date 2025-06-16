@@ -151,6 +151,7 @@ model Booking {
   user          User          @relation("UserBookings", fields: [userId], references: [id])
   status        BookingStatus @default(PENDING)
   numSeats      Int           @default(1)
+  phoneNumber   String?       // Optional phone number for the booking
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   

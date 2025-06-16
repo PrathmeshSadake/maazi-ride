@@ -30,12 +30,19 @@ interface Message {
 interface UserInfo {
   id: string;
   name: string;
+  phone?: string;
 }
 
 interface BookingInfo {
   id: string;
   status: string;
   numSeats: number;
+  phoneNumber?: string;
+  user: {
+    id: string;
+    name: string;
+    phone?: string;
+  };
   ride: {
     fromLocation: string;
     toLocation: string;
@@ -216,6 +223,19 @@ function DriverConversationContent() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const makePhoneCall = (phoneNumber: string) => {
+    if (phoneNumber) {
+      window.open(`tel:${phoneNumber}`, "_self");
+    }
+  };
+
+  const getPhoneNumber = () => {
+    // Priority: booking phoneNumber > user phone > userInfo phone
+    return (
+      bookingInfo?.phoneNumber || bookingInfo?.user?.phone || userInfo?.phone
+    );
+  };
+
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "CONFIRMED":
@@ -268,17 +288,32 @@ function DriverConversationContent() {
               <h1 className="font-semibold text-foreground">
                 {userInfo?.name || "Passenger"}
               </h1>
-              {bookingId && (
-                <p className="text-xs text-muted-foreground">
-                  Booking #{bookingId.slice(0, 8)}
-                </p>
-              )}
+              <div className="space-y-1">
+                {bookingId && (
+                  <p className="text-xs text-muted-foreground">
+                    Booking #{bookingId.slice(0, 8)}
+                  </p>
+                )}
+                {getPhoneNumber() && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Phone size={12} />
+                    {getPhoneNumber()}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Phone size={16} />
-              </Button>
+              {getPhoneNumber() && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => makePhoneCall(getPhoneNumber()!)}
+                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                >
+                  <Phone size={16} />
+                </Button>
+              )}
               <Button variant="outline" size="sm">
                 <Info size={16} />
               </Button>

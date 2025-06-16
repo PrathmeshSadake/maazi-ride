@@ -25,6 +25,7 @@ interface Message {
 interface DriverInfo {
   id: string;
   name: string;
+  phone?: string;
   driverRating?: number;
   ridesCompleted: number;
 }
@@ -230,6 +231,12 @@ function DirectMessageContent() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const makePhoneCall = (phoneNumber: string) => {
+    if (phoneNumber) {
+      window.open(`tel:${phoneNumber}`, "_self");
+    }
+  };
+
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "CONFIRMED":
@@ -278,18 +285,33 @@ function DirectMessageContent() {
               <h1 className="font-semibold text-foreground truncate max-w-[150px]">
                 {driverInfo?.name || "Driver"}
               </h1>
-              {driverInfo && (
-                <p className="text-xs text-muted-foreground">
-                  ⭐ {driverInfo.driverRating?.toFixed(1) || "New"} •{" "}
-                  {driverInfo.ridesCompleted} rides
-                </p>
-              )}
+              <div className="space-y-1">
+                {driverInfo && (
+                  <p className="text-xs text-muted-foreground">
+                    ⭐ {driverInfo.driverRating?.toFixed(1) || "New"} •{" "}
+                    {driverInfo.ridesCompleted} rides
+                  </p>
+                )}
+                {driverInfo?.phone && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Phone size={12} />
+                    {driverInfo.phone}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Phone size={16} />
-              </Button>
+              {driverInfo?.phone && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => makePhoneCall(driverInfo.phone!)}
+                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                >
+                  <Phone size={16} />
+                </Button>
+              )}
               <Button variant="outline" size="sm">
                 <Info size={16} />
               </Button>

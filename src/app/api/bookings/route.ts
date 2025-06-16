@@ -8,6 +8,7 @@ import { pusherServer } from "@/lib/pusher";
 const createBookingSchema = z.object({
   rideId: z.string(),
   numSeats: z.number().int().positive(),
+  phoneNumber: z.string().min(10, "Phone number is required for booking"),
 });
 
 // Schema for updating a booking status
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { rideId, numSeats } = createBookingSchema.parse(body);
+    const { rideId, numSeats, phoneNumber } = createBookingSchema.parse(body);
 
     // Get the ride details
     const ride = await prisma.ride.findUnique({
@@ -82,6 +83,7 @@ export async function POST(req: NextRequest) {
         userId: user.id,
         status: "PENDING_APPROVAL",
         numSeats,
+        phoneNumber,
       },
     });
 
@@ -166,6 +168,7 @@ export async function GET(req: NextRequest) {
             select: {
               id: true,
               name: true,
+              phone: true,
             },
           },
           ride: true,

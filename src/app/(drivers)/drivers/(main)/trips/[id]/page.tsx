@@ -33,6 +33,7 @@ import {
   ChevronLeft,
   MoreVertical,
   Menu,
+  Phone,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { format } from "date-fns";
@@ -69,9 +70,11 @@ interface Booking {
   numSeats: number;
   createdAt: string;
   userId: string;
+  phoneNumber?: string;
   user: {
-    firstName: string;
-    lastName: string;
+    id: string;
+    name: string;
+    phone?: string;
   };
 }
 
@@ -466,13 +469,13 @@ export default function TripDetailPage() {
           onValueChange={setActiveTab}
           className="w-full"
         >
-          <TabsList className="grid grid-cols-3 w-full">
+          <TabsList className="grid grid-cols-2 w-full">
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="bookings">
               Bookings{" "}
               {trip.bookings.length > 0 ? `(${trip.bookings.length})` : ""}
             </TabsTrigger>
-            <TabsTrigger value="driver">Driver</TabsTrigger>
+            {/* <TabsTrigger value="driver">Driver</TabsTrigger> */}
           </TabsList>
 
           {/* Details Tab */}
@@ -623,8 +626,7 @@ export default function TripDetailPage() {
                             <div className="flex justify-between mb-2">
                               <div>
                                 <div className="font-medium text-sm">
-                                  {booking.user.firstName}{" "}
-                                  {booking.user.lastName}
+                                  {booking.user.name}
                                 </div>
                                 <div className="text-xs text-gray-500">
                                   {booking.numSeats} seat(s) •{" "}
@@ -655,7 +657,9 @@ export default function TripDetailPage() {
                                 <X className="h-3 w-3 mr-1" />
                                 Reject
                               </Button>
-                              <Link href={`/messages?userId=${booking.userId}`}>
+                              <Link
+                                href={`/drivers/messages/${booking.userId}?bookingId=${booking.id}`}
+                              >
                                 <Button
                                   size="sm"
                                   variant="outline"
@@ -687,8 +691,7 @@ export default function TripDetailPage() {
                             <div className="flex justify-between mb-2">
                               <div>
                                 <div className="font-medium text-sm">
-                                  {booking.user.firstName}{" "}
-                                  {booking.user.lastName}
+                                  {booking.user.name}
                                 </div>
                                 <div className="text-xs text-gray-500">
                                   {booking.numSeats} seat(s)
@@ -696,8 +699,38 @@ export default function TripDetailPage() {
                               </div>
                               {getStatusBadge(booking.status)}
                             </div>
+
+                            {/* Show passenger contact details for confirmed bookings */}
+                            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                              <h4 className="text-xs font-medium text-green-800 mb-2">
+                                Contact Details
+                              </h4>
+                              <div className="space-y-1">
+                                <div className="flex items-center text-xs text-green-700">
+                                  <User size={12} className="mr-2" />
+                                  <span className="font-medium mr-2">
+                                    Name:
+                                  </span>
+                                  <span>{booking.user.name}</span>
+                                </div>
+                                <div className="flex items-center text-xs text-green-700">
+                                  <Phone size={12} className="mr-2" />
+                                  <span className="font-medium mr-2">
+                                    Phone:
+                                  </span>
+                                  <span>
+                                    {booking.phoneNumber ||
+                                      booking.user.phone ||
+                                      "Not provided"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
                             <div className="flex mt-3">
-                              <Link href={`/messages?userId=${booking.userId}`}>
+                              <Link
+                                href={`/drivers/messages/${booking.userId}?bookingId=${booking.id}`}
+                              >
                                 <Button
                                   size="sm"
                                   variant="outline"
@@ -729,8 +762,7 @@ export default function TripDetailPage() {
                             <div className="flex justify-between mb-2">
                               <div>
                                 <div className="font-medium text-sm">
-                                  {booking.user.firstName}{" "}
-                                  {booking.user.lastName}
+                                  {booking.user.name}
                                 </div>
                                 <div className="text-xs text-gray-500">
                                   {booking.numSeats} seat(s)
@@ -752,7 +784,7 @@ export default function TripDetailPage() {
             </Card>
           </TabsContent>
 
-          {/* Driver Tab */}
+          {/* Driver Tab
           <TabsContent value="driver" className="mt-4">
             <Card className="shadow-sm">
               <CardHeader className="pb-2">
@@ -779,7 +811,7 @@ export default function TripDetailPage() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
       </div>
 

@@ -102,13 +102,12 @@ export async function GET(req: NextRequest) {
         },
         include: {
           bookings: {
-            select: {
-              id: true,
-              status: true,
+            include: {
               user: {
                 select: {
                   id: true,
                   name: true,
+                  phone: true,
                 },
               },
             },
