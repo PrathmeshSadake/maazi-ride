@@ -15,6 +15,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import OnboardingScreens from "@/components/onboarding/OnboardingScreens";
+import Image from "next/image";
 
 const AuthPage = () => {
   const { status } = useSession();
@@ -91,9 +92,15 @@ const AuthPage = () => {
       <div className="w-full max-w-4xl mx-auto text-center space-y-12">
         {/* Header */}
         <div className="space-y-6">
-          <div className="mx-auto h-20 w-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mb-6">
-            <Car className="h-10 w-10 text-white" />
-          </div>
+          {/* <div className="mx-auto h-20 w-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mb-6">
+            <Image
+              src="/images/logo.png"
+              alt="Maazi Ride Logo"
+              width={80}
+              height={80}
+              className="rounded-full"
+            />
+          </div> */}
           <h1 className="text-5xl font-bold text-gray-900 tracking-tight">
             Welcome to Maazi Ride
           </h1>
@@ -105,7 +112,7 @@ const AuthPage = () => {
         </div>
 
         {/* Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="text-center pb-4">
               <div className="mx-auto mb-3 p-3 bg-blue-100 rounded-full w-fit">
@@ -140,7 +147,7 @@ const AuthPage = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow">
+          {/* <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="text-center pb-4">
               <div className="mx-auto mb-3 p-3 bg-purple-100 rounded-full w-fit">
                 <Shield className="h-6 w-6 text-purple-600" />
@@ -155,7 +162,7 @@ const AuthPage = () => {
                 our top priority.
               </p>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         {/* CTA Buttons */}
@@ -188,7 +195,7 @@ const AuthPage = () => {
           </div>
 
           {/* Phone Auth Option */}
-          <div className="pt-4">
+          {/* <div className="pt-4">
             <p className="text-sm text-gray-600 mb-3">
               Or authenticate with phone number
             </p>
@@ -203,7 +210,7 @@ const AuthPage = () => {
                 Phone Number Auth
               </Link>
             </Button>
-          </div>
+          </div> */}
         </div>
 
         {/* Show Onboarding Again Button */}
