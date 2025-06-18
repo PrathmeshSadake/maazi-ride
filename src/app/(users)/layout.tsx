@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Home, Search, User, Clock, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { auth } from "@/auth";
+import UserLayoutClient from "@/components/users/UserLayoutClient";
 
 export default async function UsersLayout({
   children,
@@ -60,24 +61,26 @@ export default async function UsersLayout({
 
   return (
     <div className="min-h-screen flex flex-col w-full max-w-md mx-auto bg-background">
-      <main className="flex-1 pb-16">{children}</main>
+      <UserLayoutClient>
+        <main className="flex-1 pb-16">{children}</main>
 
-      {/* Bottom Navbar */}
-      <div className="mx-auto w-full max-w-md fixed bottom-0 left-0 right-0 border-t bg-card shadow-lg">
-        <nav className="flex justify-between items-center h-16">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex flex-col items-center justify-center flex-1 pt-2 pb-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-              prefetch={false}
-            >
-              <item.icon size={22} className="mb-1" />
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-      </div>
+        {/* Bottom Navbar */}
+        <div className="mx-auto w-full max-w-md fixed bottom-0 left-0 right-0 border-t bg-card shadow-lg">
+          <nav className="flex justify-between items-center h-16">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex flex-col items-center justify-center flex-1 pt-2 pb-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                prefetch={false}
+              >
+                <item.icon size={22} className="mb-1" />
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </nav>
+        </div>
+      </UserLayoutClient>
     </div>
   );
 }

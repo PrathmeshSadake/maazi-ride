@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MessageSquare, Search } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { pusherClient } from "@/lib/pusher";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,34 +45,21 @@ export default function MessagesPage() {
         router.push("/sign-in");
       } else {
         fetchConversations();
-        setupPusher();
+
+        // Listen for new messages from the global notification listener
+        const handleNewMessage = () => {
+          console.log("Refreshing conversations due to new message");
+          fetchConversations();
+        };
+
+        window.addEventListener("pusher-new-message", handleNewMessage);
+
+        return () => {
+          window.removeEventListener("pusher-new-message", handleNewMessage);
+        };
       }
     }
-
-    return () => {
-      if (session?.user) {
-        pusherClient.unsubscribe(`user-${session.user.id}`);
-      }
-    };
   }, [status, session, router]);
-
-  const setupPusher = () => {
-    if (!session?.user) return;
-
-    const channel = pusherClient.subscribe(`user-${session.user.id}`);
-
-    channel.bind("new-message", (data: { message: any }) => {
-      console.log("Received new message via Pusher:", data);
-      // Refresh conversations when new message arrives
-      fetchConversations();
-    });
-
-    channel.bind("pusher:subscription_succeeded", () => {
-      console.log(
-        `Successfully subscribed to user-${session?.user?.id} channel`
-      );
-    });
-  };
 
   const fetchConversations = async () => {
     setLoading(true);

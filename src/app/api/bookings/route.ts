@@ -334,7 +334,7 @@ export async function PATCH(req: NextRequest) {
     });
 
     // Create a notification for the user
-    await prisma.notification.create({
+    const notification = await prisma.notification.create({
       data: {
         userId: booking.userId,
         type: "booking_status",
@@ -345,6 +345,20 @@ export async function PATCH(req: NextRequest) {
         relatedId: booking.id,
       },
     });
+
+    // Send real-time notification via Pusher to the user
+    try {
+      await pusherServer.trigger(`user-${booking.userId}`, "new-notification", {
+        notification,
+      });
+      console.log(
+        `Pusher notification sent to user-${
+          booking.userId
+        } for booking ${status.toLowerCase()}`
+      );
+    } catch (error) {
+      console.error("Error sending Pusher notification:", error);
+    }
 
     // Format dates for consistent client-side handling
     const formattedBooking = {
