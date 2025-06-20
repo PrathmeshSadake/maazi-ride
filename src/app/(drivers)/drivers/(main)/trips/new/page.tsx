@@ -17,7 +17,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { GoogleMapsAutocomplete } from "@/components/ui/google-maps-autocomplete";
 import { GoogleMapsPreview } from "@/components/ui/google-maps-preview";
-import { Users, Calendar as CalendarIcon, IndianRupee } from "lucide-react";
+import {
+  Users,
+  Calendar as CalendarIcon,
+  IndianRupee,
+  ArrowLeft,
+  MapPin,
+  Navigation,
+  Clock,
+  DollarSign,
+} from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -107,89 +116,145 @@ const ScheduleRideForm = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 pt-8 max-w-md">
-      <h1 className="text-2xl font-bold mb-6">Schedule a Ride</h1>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white">
+        <div className="flex items-center px-4 pt-8 pb-4">
+          <button
+            onClick={() => router.push("/drivers/trips")}
+            className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <h1 className="text-xl font-semibold text-gray-900">
+            Create New Trip
+          </h1>
+        </div>
+      </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Route Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <GoogleMapsAutocomplete
-                label="Pickup Location"
-                placeholder="Enter pickup location"
-                value={source}
-                onChange={setSource}
-              />
+      {/* Content */}
+      <div className="px-4 pb-6 space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3">
+          {/* Route Details Card */}
+          <div className="bg-white rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <div className="flex items-center">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                  <MapPin className="w-3 h-3 text-blue-600" />
+                </div>
+                <h2 className="text-base font-semibold text-gray-900">
+                  Route Details
+                </h2>
+              </div>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="space-y-2">
+                <GoogleMapsAutocomplete
+                  label="Pickup Location"
+                  placeholder="Enter pickup location"
+                  value={source}
+                  onChange={setSource}
+                />
+              </div>
 
-              <GoogleMapsAutocomplete
-                label="Dropoff Location"
-                placeholder="Enter dropoff location"
-                value={destination}
-                onChange={setDestination}
-              />
+              <div className="space-y-2">
+                <GoogleMapsAutocomplete
+                  label="Dropoff Location"
+                  placeholder="Enter dropoff location"
+                  value={destination}
+                  onChange={setDestination}
+                />
+              </div>
 
               {source && destination && (
-                <GoogleMapsPreview
-                  source={source}
-                  destination={destination}
-                  className="mt-4"
-                />
+                <div className="mt-3">
+                  <GoogleMapsPreview
+                    source={source}
+                    destination={destination}
+                    className="rounded-lg overflow-hidden"
+                  />
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Schedule & Pricing</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="date">Departure Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal"
-                        id="date"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date ? format(date, "PPP") : "Select date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        initialFocus
-                        disabled={(date) => date < new Date()}
-                      />
-                    </PopoverContent>
-                  </Popover>
+          {/* Date & Time Card */}
+          <div className="bg-white rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <div className="flex items-center">
+                <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                  <Clock className="w-3 h-3 text-purple-600" />
                 </div>
+                <h2 className="text-base font-semibold text-gray-900">
+                  Schedule
+                </h2>
+              </div>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Departure Date
+                </label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                      <div className="flex items-center">
+                        <CalendarIcon className="w-4 h-4 mr-3 text-gray-500" />
+                        <span
+                          className={date ? "text-gray-900" : "text-gray-500"}
+                        >
+                          {date ? format(date, "PPP") : "Select departure date"}
+                        </span>
+                      </div>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={setDate}
+                      initialFocus
+                      disabled={(date) => date < new Date()}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="time">Departure Time</Label>
-                  <div id="time">
-                    <TimePicker value={time} onChange={setTime} />
-                  </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Departure Time
+                </label>
+                <TimePicker value={time} onChange={setTime} />
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing & Seats Card */}
+          <div className="bg-white rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <div className="flex items-center">
+                <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                  <DollarSign className="w-3 h-3 text-green-600" />
                 </div>
-
+                <h2 className="text-base font-semibold text-gray-900">
+                  Pricing & Capacity
+                </h2>
+              </div>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price (INR)</Label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Price (INR)
+                  </label>
                   <div className="relative">
-                    <IndianRupee className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                    <Input
-                      id="price"
+                    <IndianRupee className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
+                    <input
+                      type="number"
                       placeholder="0.00"
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
-                      type="number"
-                      className="pl-10"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       min="0"
                       step="0.01"
                       required
@@ -198,16 +263,17 @@ const ScheduleRideForm = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="seats">Available Seats</Label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Available Seats
+                  </label>
                   <div className="relative">
-                    <Users className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                    <Input
-                      id="seats"
+                    <Users className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
+                    <input
+                      type="number"
                       placeholder="1"
                       value={seats}
                       onChange={(e) => setSeats(e.target.value)}
-                      type="number"
-                      className="pl-10"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       min="1"
                       max="10"
                       required
@@ -215,50 +281,73 @@ const ScheduleRideForm = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div className="space-y-2 mt-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="isScheduled">Schedule for booking</Label>
-                  <Switch
-                    id="isScheduled"
-                    checked={isScheduled}
-                    onCheckedChange={setIsScheduled}
-                  />
+          {/* Booking Options Card */}
+          <div className="bg-white rounded-xl overflow-hidden">
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-gray-900">
+                    Accept Booking Requests
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Users can request to book this ride and you'll approve each
+                    request
+                  </p>
                 </div>
-                <p className="text-sm text-gray-500">
-                  When enabled, users can request to book this ride and you'll
-                  need to approve each request.
-                </p>
+                <Switch
+                  checked={isScheduled}
+                  onCheckedChange={setIsScheduled}
+                />
               </div>
+            </div>
+          </div>
 
+          {/* Description Card */}
+          <div className="bg-white rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <h2 className="text-base font-semibold text-gray-900">
+                Additional Details
+              </h2>
+            </div>
+            <div className="p-4">
               <div className="space-y-2">
-                <Label htmlFor="description">Description (Optional)</Label>
-                <Textarea
-                  id="description"
+                <label className="text-sm font-medium text-gray-700">
+                  Description (Optional)
+                </label>
+                <textarea
                   placeholder="Add any additional details about your ride..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="min-h-[100px]"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
+                  rows={4}
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <div className="flex justify-end space-x-4 pt-6">
-            <Button
+          {/* Action Buttons */}
+          <div className="flex space-x-3 pt-2">
+            <button
               type="button"
-              variant="outline"
               onClick={() => router.push("/drivers/trips")}
               disabled={isSubmitting}
+              className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors disabled:opacity-50"
             >
               Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Scheduling..." : "Schedule Ride"}
-            </Button>
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              {isSubmitting ? "Creating..." : "Create Trip"}
+            </button>
           </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

@@ -44,14 +44,14 @@ export default function AuthLayout({
   // // Loading state
   // if (status === "loading") {
   //   return (
-  //     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
   //       <div className="text-center space-y-4">
-  //         <div className="mx-auto h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center animate-pulse">
-  //           <Loader2 className="h-6 w-6 text-white animate-spin" />
+  //         <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center animate-pulse">
+  //           <Loader2 className="w-6 h-6 text-white animate-spin" />
   //         </div>
-  //         <div className="space-y-2">
-  //           <p className="text-lg font-medium text-gray-900">Loading...</p>
-  //           <p className="text-sm text-gray-600">
+  //         <div className="space-y-1">
+  //           <p className="text-lg font-semibold text-gray-900">Loading...</p>
+  //           <p className="text-sm text-gray-500">
   //             Please wait while we set things up
   //           </p>
   //         </div>
@@ -63,14 +63,14 @@ export default function AuthLayout({
   // // Redirecting state
   // if (status === "authenticated" || isRedirecting) {
   //   return (
-  //     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-50 via-white to-blue-50">
+  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
   //       <div className="text-center space-y-4">
-  //         <div className="mx-auto h-12 w-12 bg-green-600 rounded-full flex items-center justify-center">
-  //           <CheckCircle2 className="h-6 w-6 text-white" />
+  //         <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+  //           <CheckCircle2 className="w-6 h-6 text-white" />
   //         </div>
-  //         <div className="space-y-2">
-  //           <p className="text-lg font-medium text-gray-900">Welcome back!</p>
-  //           <p className="text-sm text-gray-600">
+  //         <div className="space-y-1">
+  //           <p className="text-lg font-semibold text-gray-900">Welcome back!</p>
+  //           <p className="text-sm text-gray-500">
   //             Redirecting to your dashboard...
   //           </p>
   //         </div>
@@ -79,9 +79,5 @@ export default function AuthLayout({
   //   );
   // }
 
-  return (
-    <div className="bg-gradient-to-br from-gray-50 via-white to-blue-50 min-h-screen">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">{children}</div>
-    </div>
-  );
+  return <div className="bg-gray-50 min-h-screen">{children}</div>;
 }

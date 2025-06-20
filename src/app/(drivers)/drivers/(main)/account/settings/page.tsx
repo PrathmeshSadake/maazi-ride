@@ -13,6 +13,9 @@ import {
   Languages,
   LogOut,
   AlertTriangle,
+  ChevronRight,
+  HelpCircle,
+  FileText,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useLogout } from "@/hooks/useLogout";
@@ -63,59 +66,76 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-4 max-w-3xl mx-auto">
-      <div className="flex items-center mb-6">
-        <button
-          onClick={() => router.back()}
-          className="p-2 mr-2 rounded-full hover:bg-gray-100"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-2xl font-bold">Settings</h1>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white">
+        <div className="flex items-center px-4 pt-8 pb-4">
+          <button
+            onClick={() => router.back()}
+            className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <h1 className="text-xl font-semibold text-gray-900">Settings</h1>
+        </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="px-4 pb-6 space-y-4">
         {/* Appearance Settings */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-medium mb-4">Appearance</h2>
+        <div className="bg-white rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h2 className="text-base font-semibold text-gray-900">
+              Appearance
+            </h2>
+          </div>
 
-          <div className="space-y-4">
+          <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <Moon size={20} className="text-gray-500 mr-3" />
-                <label htmlFor="darkMode" className="text-gray-700">
-                  Dark Mode
-                </label>
+                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                  <Moon className="w-4 h-4 text-gray-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900 text-sm">
+                    Dark Mode
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    Switch to dark theme
+                  </div>
+                </div>
               </div>
-              <div className="relative inline-block w-12 align-middle select-none">
-                <input
-                  type="checkbox"
-                  id="darkMode"
-                  checked={settings.darkMode}
-                  onChange={() => handleToggle("darkMode")}
-                  className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                />
-                <label
-                  htmlFor="darkMode"
-                  className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    settings.darkMode ? "bg-green-500" : "bg-gray-300"
+              <button
+                onClick={() => handleToggle("darkMode")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  settings.darkMode ? "bg-blue-500" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    settings.darkMode ? "translate-x-6" : "translate-x-1"
                   }`}
-                ></label>
-              </div>
+                />
+              </button>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <Languages size={20} className="text-gray-500 mr-3" />
-                <label htmlFor="language" className="text-gray-700">
-                  Language
-                </label>
+                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                  <Languages className="w-4 h-4 text-gray-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900 text-sm">
+                    Language
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    Change app language
+                  </div>
+                </div>
               </div>
               <select
-                id="language"
                 value={settings.language}
                 onChange={handleLanguageChange}
-                className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="english">English</option>
                 <option value="hindi">Hindi</option>
@@ -128,219 +148,305 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Privacy Settings */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-medium mb-4">Privacy & Security</h2>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Shield size={20} className="text-gray-500 mr-3" />
-                <label htmlFor="privacyMode" className="text-gray-700">
-                  Enhanced Privacy Mode
-                </label>
-              </div>
-              <div className="relative inline-block w-12 align-middle select-none">
-                <input
-                  type="checkbox"
-                  id="privacyMode"
-                  checked={settings.privacyMode}
-                  onChange={() => handleToggle("privacyMode")}
-                  className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                />
-                <label
-                  htmlFor="privacyMode"
-                  className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    settings.privacyMode ? "bg-green-500" : "bg-gray-300"
-                  }`}
-                ></label>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Smartphone size={20} className="text-gray-500 mr-3" />
-                <label htmlFor="useBiometrics" className="text-gray-700">
-                  Use Biometrics Authentication
-                </label>
-              </div>
-              <div className="relative inline-block w-12 align-middle select-none">
-                <input
-                  type="checkbox"
-                  id="useBiometrics"
-                  checked={settings.useBiometrics}
-                  onChange={() => handleToggle("useBiometrics")}
-                  className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                />
-                <label
-                  htmlFor="useBiometrics"
-                  className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    settings.useBiometrics ? "bg-green-500" : "bg-gray-300"
-                  }`}
-                ></label>
-              </div>
-            </div>
+        {/* Privacy & Security Settings */}
+        <div className="bg-white rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h2 className="text-base font-semibold text-gray-900">
+              Privacy & Security
+            </h2>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                  <Shield className="w-4 h-4 text-gray-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900 text-sm">
+                    Enhanced Privacy Mode
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    Hide personal information
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => handleToggle("privacyMode")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  settings.privacyMode ? "bg-blue-500" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    settings.privacyMode ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                  <Smartphone className="w-4 h-4 text-gray-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900 text-sm">
+                    Biometric Authentication
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    Use fingerprint or face ID
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => handleToggle("useBiometrics")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  settings.useBiometrics ? "bg-blue-500" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    settings.useBiometrics ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+
             <button
               onClick={() => router.push("/drivers/account/settings/password")}
-              className="text-green-600 font-medium hover:text-green-700"
+              className="w-full flex items-center p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg"
             >
-              Change Password
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                <Shield className="w-4 h-4 text-gray-600" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="font-medium text-gray-900 text-sm">
+                  Change Password
+                </div>
+                <div className="text-xs text-gray-500 mt-0.5">
+                  Update your account password
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
             </button>
           </div>
         </div>
 
         {/* Preferences */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-medium mb-4">Preferences</h2>
+        <div className="bg-white rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h2 className="text-base font-semibold text-gray-900">
+              Preferences
+            </h2>
+          </div>
 
-          <div className="space-y-4">
+          <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <Bell size={20} className="text-gray-500 mr-3" />
-                <label htmlFor="notifications" className="text-gray-700">
-                  In-app Notifications
-                </label>
+                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                  <Bell className="w-4 h-4 text-gray-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900 text-sm">
+                    In-app Notifications
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    Show notifications within the app
+                  </div>
+                </div>
               </div>
-              <div className="relative inline-block w-12 align-middle select-none">
-                <input
-                  type="checkbox"
-                  id="notifications"
-                  checked={settings.notifications}
-                  onChange={() => handleToggle("notifications")}
-                  className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                />
-                <label
-                  htmlFor="notifications"
-                  className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    settings.notifications ? "bg-green-500" : "bg-gray-300"
+              <button
+                onClick={() => handleToggle("notifications")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  settings.notifications ? "bg-blue-500" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    settings.notifications ? "translate-x-6" : "translate-x-1"
                   }`}
-                ></label>
-              </div>
+                />
+              </button>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <Globe size={20} className="text-gray-500 mr-3" />
-                <label htmlFor="autoAcceptRides" className="text-gray-700">
-                  Auto-accept Ride Requests
-                </label>
+                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                  <Globe className="w-4 h-4 text-gray-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900 text-sm">
+                    Auto-accept Ride Requests
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    Automatically accept compatible rides
+                  </div>
+                </div>
               </div>
-              <div className="relative inline-block w-12 align-middle select-none">
-                <input
-                  type="checkbox"
-                  id="autoAcceptRides"
-                  checked={settings.autoAcceptRides}
-                  onChange={() => handleToggle("autoAcceptRides")}
-                  className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                />
-                <label
-                  htmlFor="autoAcceptRides"
-                  className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    settings.autoAcceptRides ? "bg-green-500" : "bg-gray-300"
+              <button
+                onClick={() => handleToggle("autoAcceptRides")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  settings.autoAcceptRides ? "bg-blue-500" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    settings.autoAcceptRides ? "translate-x-6" : "translate-x-1"
                   }`}
-                ></label>
-              </div>
+                />
+              </button>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <Sun size={20} className="text-gray-500 mr-3" />
-                <label htmlFor="showEarnings" className="text-gray-700">
-                  Show Earnings on Dashboard
-                </label>
+                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                  <Sun className="w-4 h-4 text-gray-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900 text-sm">
+                    Show Earnings on Dashboard
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    Display earnings information
+                  </div>
+                </div>
               </div>
-              <div className="relative inline-block w-12 align-middle select-none">
-                <input
-                  type="checkbox"
-                  id="showEarnings"
-                  checked={settings.showEarnings}
-                  onChange={() => handleToggle("showEarnings")}
-                  className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                />
-                <label
-                  htmlFor="showEarnings"
-                  className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    settings.showEarnings ? "bg-green-500" : "bg-gray-300"
+              <button
+                onClick={() => handleToggle("showEarnings")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  settings.showEarnings ? "bg-blue-500" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    settings.showEarnings ? "translate-x-6" : "translate-x-1"
                   }`}
-                ></label>
-              </div>
+                />
+              </button>
             </div>
           </div>
         </div>
 
-        {/* About & Account Actions */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-medium mb-4">Account</h2>
-
-          <div className="border-b border-gray-200 pb-4 mb-4">
-            <p className="text-gray-500 text-sm mb-2">App Version</p>
-            <p>{settings.appVersion}</p>
+        {/* Support & Legal */}
+        <div className="bg-white rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h2 className="text-base font-semibold text-gray-900">
+              Support & Legal
+            </h2>
           </div>
 
-          <div className="space-y-3">
-            <button
-              onClick={() =>
-                window.open("https://maaziride.com/terms", "_blank")
-              }
-              className="text-gray-700 hover:text-gray-900 block"
-            >
-              Terms of Service
-            </button>
-            <button
-              onClick={() =>
-                window.open("https://maaziride.com/privacy", "_blank")
-              }
-              className="text-gray-700 hover:text-gray-900 block"
-            >
-              Privacy Policy
-            </button>
-            <button
-              onClick={() => router.push("/drivers/account/help")}
-              className="text-gray-700 hover:text-gray-900 block"
-            >
-              Help & Support
-            </button>
+          <div className="p-4 space-y-0">
+            {[
+              {
+                icon: HelpCircle,
+                label: "Help & Support",
+                description: "Get help and contact support",
+                action: () => router.push("/drivers/account/help"),
+              },
+              {
+                icon: FileText,
+                label: "Terms of Service",
+                description: "Read our terms and conditions",
+                action: () =>
+                  window.open("https://maaziride.com/terms", "_blank"),
+              },
+              {
+                icon: Shield,
+                label: "Privacy Policy",
+                description: "View our privacy policy",
+                action: () =>
+                  window.open("https://maaziride.com/privacy", "_blank"),
+              },
+            ].map((item, index) => (
+              <button
+                key={index}
+                onClick={item.action}
+                className="w-full flex items-center p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50 last:border-b-0"
+              >
+                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                  <item.icon className="w-4 h-4 text-gray-600" />
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="font-medium text-gray-900 text-sm">
+                    {item.label}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    {item.description}
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* App Info */}
+        <div className="bg-white rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h2 className="text-base font-semibold text-gray-900">
+              App Information
+            </h2>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium text-gray-900 text-sm">Version</div>
+                <div className="text-xs text-gray-500 mt-0.5">
+                  Current app version
+                </div>
+              </div>
+              <span className="text-sm text-gray-600">
+                {settings.appVersion}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Account Actions */}
+        <div className="bg-white rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h2 className="text-base font-semibold text-gray-900">
+              Account Actions
+            </h2>
+          </div>
+
+          <div className="p-4 space-y-3">
             <button
               onClick={handleSignOut}
-              className="flex items-center px-4 py-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100"
+              className="w-full flex items-center p-3 bg-red-50 rounded-lg hover:bg-red-100 active:bg-red-200 transition-colors"
             >
-              <LogOut size={16} className="mr-2" />
-              Log Out
+              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                <LogOut className="w-4 h-4 text-red-600" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="font-medium text-red-600 text-sm">Log Out</div>
+                <div className="text-xs text-red-400 mt-0.5">
+                  Sign out of your account
+                </div>
+              </div>
             </button>
 
             <button
               onClick={() => router.push("/drivers/account/deactivate")}
-              className="mt-4 flex items-center px-4 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50"
+              className="w-full flex items-center p-3 border border-red-200 rounded-lg hover:bg-red-50 active:bg-red-100 transition-colors"
             >
-              <AlertTriangle size={16} className="mr-2" />
-              Deactivate Account
+              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                <AlertTriangle className="w-4 h-4 text-red-600" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="font-medium text-red-600 text-sm">
+                  Deactivate Account
+                </div>
+                <div className="text-xs text-red-400 mt-0.5">
+                  Temporarily disable your account
+                </div>
+              </div>
             </button>
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .toggle-checkbox:checked {
-          right: 0;
-          border-color: #ffffff;
-        }
-        .toggle-checkbox:checked + .toggle-label {
-          background-color: #10b981;
-        }
-        .toggle-checkbox {
-          right: 0;
-          transition: all 0.3s;
-        }
-        .toggle-label {
-          transition: all 0.3s;
-        }
-      `}</style>
     </div>
   );
 }

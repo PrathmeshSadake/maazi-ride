@@ -1,21 +1,19 @@
 "use client";
 
-import Link from "next/link";
-import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import OnboardingScreens from "@/components/onboarding/OnboardingScreens";
 import {
-  Loader2,
-  UserPlus,
-  LogIn,
+  ArrowRight,
   Car,
-  Users,
+  Loader2,
+  LogIn,
   Shield,
   Smartphone,
+  UserPlus,
+  Users,
 } from "lucide-react";
-import OnboardingScreens from "@/components/onboarding/OnboardingScreens";
-import Image from "next/image";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const AuthPage = () => {
   const { status } = useSession();
@@ -45,14 +43,14 @@ const AuthPage = () => {
   // Show loading while checking onboarding status
   if (isLoading || status === "loading") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="mx-auto h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center animate-pulse">
-            <Loader2 className="h-6 w-6 text-white animate-spin" />
+          <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center animate-pulse">
+            <Loader2 className="w-6 h-6 text-white animate-spin" />
           </div>
-          <div className="space-y-2">
-            <p className="text-lg font-medium text-gray-900">Loading...</p>
-            <p className="text-sm text-gray-600">
+          <div className="space-y-1">
+            <p className="text-lg font-semibold text-gray-900">Loading...</p>
+            <p className="text-sm text-gray-500">
               Please wait while we set things up
             </p>
           </div>
@@ -63,14 +61,14 @@ const AuthPage = () => {
 
   if (status === "authenticated") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-50 via-white to-blue-50">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="mx-auto h-12 w-12 bg-green-600 rounded-full flex items-center justify-center">
-            <Shield className="h-6 w-6 text-white" />
+          <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+            <Shield className="w-6 h-6 text-white" />
           </div>
-          <div className="space-y-2">
-            <p className="text-lg font-medium text-gray-900">Welcome back!</p>
-            <p className="text-sm text-gray-600">
+          <div className="space-y-1">
+            <p className="text-lg font-semibold text-gray-900">Welcome back!</p>
+            <p className="text-sm text-gray-500">
               Redirecting to your dashboard...
             </p>
           </div>
@@ -85,170 +83,151 @@ const AuthPage = () => {
     return <OnboardingScreens onComplete={handleOnboardingComplete} />;
   }
 
-  // Show auth page after onboarding is completed
-  console.log("🔐 Rendering login form");
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="w-full max-w-4xl mx-auto text-center space-y-12">
-        {/* Header */}
-        <div className="space-y-6">
-          {/* <div className="mx-auto h-20 w-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mb-6">
-            <Image
-              src="/images/logo.png"
-              alt="Maazi Ride Logo"
-              width={80}
-              height={80}
-              className="rounded-full"
-            />
-          </div> */}
-          <h1 className="text-5xl font-bold text-gray-900 tracking-tight">
-            Welcome to Maazi Ride
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Your trusted ride-sharing platform connecting passengers with
-            verified drivers. Safe, reliable, and convenient transportation at
-            your fingertips.
-          </p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="px-4 pt-8 pb-6 space-y-6">
+        {/* Logo and Header */}
+        <div className="text-center space-y-4">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Car className="w-10 h-10 text-white" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Welcome to Maazi Ride
+            </h1>
+            <p className="text-base text-gray-600 leading-relaxed">
+              Your trusted ride-sharing platform connecting passengers with
+              verified drivers
+            </p>
+          </div>
         </div>
 
-        {/* Features */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-          <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="text-center pb-4">
-              <div className="mx-auto mb-3 p-3 bg-blue-100 rounded-full w-fit">
-                <Users className="h-6 w-6 text-blue-600" />
+        {/* Feature Cards */}
+        <div className="space-y-3">
+          <div className="bg-white rounded-xl p-4 border border-gray-100">
+            <div className="flex items-start space-x-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <Users className="w-5 h-5 text-blue-600" />
               </div>
-              <CardTitle className="text-lg font-semibold">
-                For Passengers
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-gray-600 text-sm">
-                Book rides instantly, track your journey, and rate your
-                experience with verified drivers.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="text-center pb-4">
-              <div className="mx-auto mb-3 p-3 bg-green-100 rounded-full w-fit">
-                <Car className="h-6 w-6 text-green-600" />
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                  For Passengers
+                </h3>
+                <p className="text-xs text-gray-600">
+                  Book rides instantly, track your journey, and rate your
+                  experience
+                </p>
               </div>
-              <CardTitle className="text-lg font-semibold">
-                For Drivers
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-gray-600 text-sm">
-                Earn money on your schedule, connect with passengers, and build
-                your reputation.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="text-center pb-4">
-              <div className="mx-auto mb-3 p-3 bg-purple-100 rounded-full w-fit">
-                <Shield className="h-6 w-6 text-purple-600" />
-              </div>
-              <CardTitle className="text-lg font-semibold">
-                Safe & Secure
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-gray-600 text-sm">
-                All drivers are verified, rides are tracked, and your safety is
-                our top priority.
-              </p>
-            </CardContent>
-          </Card> */}
-        </div>
-
-        {/* CTA Buttons */}
-        <div className="space-y-6">
-          <p className="text-lg text-gray-700 font-medium">
-            Ready to get started? Choose your path below
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-            <Button
-              asChild
-              size="lg"
-              className="h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors shadow-lg hover:shadow-xl"
-            >
-              <Link href="/auth/signin" className="flex items-center gap-2">
-                <LogIn className="h-5 w-5" />
-                Sign In
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="h-12 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold transition-colors shadow-lg hover:shadow-xl"
-            >
-              <Link href="/auth/signup" className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5" />
-                Sign Up
-              </Link>
-            </Button>
+            </div>
           </div>
 
-          {/* Phone Auth Option */}
-          {/* <div className="pt-4">
-            <p className="text-sm text-gray-600 mb-3">
-              Or authenticate with phone number
-            </p>
-            <Button
-              asChild
-              size="lg"
-              variant="ghost"
-              className="h-12 w-full border-2 border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 font-semibold transition-colors"
-            >
-              <Link href="/auth/phone-auth" className="flex items-center gap-2">
-                <Smartphone className="h-5 w-5" />
-                Phone Number Auth
-              </Link>
-            </Button>
-          </div> */}
+          <div className="bg-white rounded-xl p-4 border border-gray-100">
+            <div className="flex items-start space-x-3">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <Car className="w-5 h-5 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                  For Drivers
+                </h3>
+                <p className="text-xs text-gray-600">
+                  Earn money on your schedule and connect with passengers
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-4 border border-gray-100">
+            <div className="flex items-start space-x-3">
+              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                <Shield className="w-5 h-5 text-purple-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                  Safe & Secure
+                </h3>
+                <p className="text-xs text-gray-600">
+                  All drivers are verified and your safety is our priority
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Show Onboarding Again Button */}
-        <div className="pt-4">
-          <Button
-            variant="ghost"
+        {/* Call to Action */}
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="text-center space-y-4">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Ready to get started?
+            </h2>
+            <p className="text-sm text-gray-600">
+              Choose your path below to begin your journey
+            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="grid gap-3">
+          <Link href="/auth/signin">
+            <button className="w-full px-4 py-4 bg-blue-500 text-white rounded-xl font-semibold hover:bg-blue-600 active:bg-blue-700 transition-colors flex items-center justify-center space-x-2">
+              <LogIn className="w-5 h-5" />
+              <span>Sign In</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </Link>
+
+          <Link href="/auth/signup">
+            <button className="w-full px-4 py-4 bg-white border-2 border-blue-500 text-blue-600 rounded-xl font-semibold hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center space-x-2">
+              <UserPlus className="w-5 h-5" />
+              <span>Create Account</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </Link>
+
+          {/* Phone Auth Option */}
+          <Link href="/auth/phone-auth">
+            <button className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors flex items-center justify-center space-x-2">
+              <Smartphone className="w-4 h-4" />
+              <span>Continue with Phone</span>
+            </button>
+          </Link>
+        </div>
+
+        {/* Show Onboarding Again */}
+        <div className="text-center pt-4">
+          <button
             onClick={() => {
               console.log("🔄 Resetting onboarding status");
               localStorage.removeItem("onboardingCompleted");
               setShowOnboarding(true);
             }}
-            className="text-sm text-gray-500 hover:text-gray-700"
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
           >
             View App Tour Again
-          </Button>
+          </button>
         </div>
 
         {/* Footer */}
-        <div className="pt-8 border-t border-gray-200">
-          <p className="text-sm text-gray-500">
+        <div className="pt-6 border-t border-gray-200 text-center">
+          <p className="text-xs text-gray-500 leading-relaxed">
             By using Maazi Ride, you agree to our{" "}
             <Link
               href="/terms"
-              className="underline hover:text-gray-700 transition-colors"
+              className="text-blue-600 hover:text-blue-700 font-medium"
             >
               Terms of Service
             </Link>{" "}
             and{" "}
             <Link
               href="/privacy"
-              className="underline hover:text-gray-700 transition-colors"
+              className="text-blue-600 hover:text-blue-700 font-medium"
             >
               Privacy Policy
             </Link>
           </p>
         </div>
       </div>
-    </main>
+    </div>
   );
 };
 

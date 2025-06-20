@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MessageSquare, Search, User, ArrowRight } from "lucide-react";
+import {
+  MessageSquare,
+  Search,
+  User,
+  ArrowRight,
+  ArrowLeft,
+  MessageCircle,
+  Clock,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format, formatDistanceToNow } from "date-fns";
 import { useSession } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { pusherClient } from "@/lib/pusher";
 
 interface Conversation {
@@ -117,132 +120,150 @@ export default function MessagesPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-md mx-auto px-4 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-foreground">Messages</h1>
-            <MessageSquare size={24} className="text-primary" />
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white">
+          <div className="flex items-center px-4 pt-8 pb-4">
+            <button
+              onClick={() => router.back()}
+              className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <h1 className="text-xl font-semibold text-gray-900">Messages</h1>
           </div>
+        </div>
 
-          <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-muted rounded-full"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-muted rounded w-3/4"></div>
-                      <div className="h-3 bg-muted rounded w-1/2"></div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        <div className="px-4 pt-4 space-y-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-gray-200 rounded-full mr-3"></div>
+                <div className="flex-1">
+                  <div className="w-32 h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="w-48 h-3 bg-gray-200 rounded"></div>
+                </div>
+                <div className="w-16 h-3 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-md mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-foreground">Messages</h1>
-          <MessageSquare size={24} className="text-primary" />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white">
+        <div className="flex items-center px-4 pt-8 pb-4">
+          <button
+            onClick={() => router.back()}
+            className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <h1 className="text-xl font-semibold text-gray-900">Messages</h1>
         </div>
 
         {/* Search */}
-        <div className="relative mb-6">
-          <Search
-            size={20}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            type="text"
-            placeholder="Search conversations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        <div className="px-4 pb-4">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-gray-50 border-0 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
+      </div>
 
-        {/* Conversations List */}
+      {/* Content */}
+      <div className="px-4 pb-20 pt-4">
         {filteredConversations.length === 0 ? (
           <div className="text-center py-12">
-            <MessageSquare
-              size={48}
-              className="mx-auto text-muted-foreground mb-4"
-            />
-            <h3 className="text-lg font-medium text-foreground mb-2">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageCircle className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
               No messages yet
             </h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-gray-500 text-sm mb-6">
               Messages from passengers will appear here when they contact you
             </p>
-            <Button onClick={() => router.push("/drivers")}>
+            <button
+              onClick={() => router.push("/drivers")}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium"
+            >
               View Dashboard
-            </Button>
+            </button>
           </div>
         ) : (
           <div className="space-y-3">
             {filteredConversations.map((conversation) => (
-              <Card
+              <div
                 key={conversation.user.id}
-                className="cursor-pointer hover:shadow-md transition-shadow"
                 onClick={() => handleOpenConversation(conversation)}
+                className="bg-white rounded-xl p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer"
               >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-12 h-12">
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        {conversation.user.name
-                          ?.split(" ")
-                          .map((n) => n.charAt(0))
-                          .join("")
-                          .slice(0, 2) || "P"}
-                      </AvatarFallback>
-                    </Avatar>
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-sm font-bold text-white">
+                      {conversation.user.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-semibold text-foreground truncate">
-                          {conversation.user.name}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          {conversation.unreadCount > 0 && (
-                            <Badge variant="destructive" className="text-xs">
-                              {conversation.unreadCount}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-xs text-muted-foreground">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="font-medium text-gray-900 text-sm truncate">
+                        {conversation.user.name}
+                      </h3>
+                      <div className="flex items-center ml-2">
+                        {conversation.unreadCount > 0 && (
+                          <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center mr-2">
+                            <span className="text-xs font-bold text-white">
+                              {conversation.unreadCount > 9
+                                ? "9+"
+                                : conversation.unreadCount}
+                            </span>
+                          </div>
+                        )}
+                        <span className="text-xs text-gray-400">
                           {formatDistanceToNow(
                             new Date(conversation.latestMessage.createdAt),
                             { addSuffix: true }
                           )}
                         </span>
                       </div>
-                      {/* 
-                      {conversation.rideDetails && (
-                        <div className="text-xs text-muted-foreground mb-1">
-                          {conversation.rideDetails.fromLocation} →{" "}
-                          {conversation.rideDetails.toLocation}
-                        </div>
-                      )} */}
-
-                      <p className="text-sm text-muted-foreground truncate">
-                        {conversation.latestMessage.content}
-                      </p>
                     </div>
 
-                    <ArrowRight size={16} className="text-muted-foreground" />
+                    <p className="text-xs text-gray-500 truncate mb-1">
+                      {conversation.latestMessage.content}
+                    </p>
+
+                    {conversation.rideDetails && (
+                      <div className="flex items-center text-xs text-gray-400">
+                        <Clock className="w-3 h-3 mr-1" />
+                        <span className="truncate">
+                          {conversation.rideDetails.fromLocation.split(",")[0]}{" "}
+                          → {conversation.rideDetails.toLocation.split(",")[0]}
+                        </span>
+                        <span className="mx-1">•</span>
+                        <span>
+                          {format(
+                            new Date(conversation.rideDetails.departureDate),
+                            "MMM d"
+                          )}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
+
+                  <ArrowRight className="w-4 h-4 text-gray-400 ml-2" />
+                </div>
+              </div>
             ))}
           </div>
         )}

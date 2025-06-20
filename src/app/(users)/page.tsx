@@ -10,12 +10,12 @@ import {
   ArrowUpDown,
   Clock,
   Users,
+  ArrowRight,
 } from "lucide-react";
 import DatePicker from "@/components/users/date-picker";
 import { useRouter } from "next/navigation";
 import { GoogleMapsAutocomplete } from "@/components/ui/google-maps-autocomplete";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 
 // Define Location type to match GoogleMapsAutocomplete component
@@ -131,79 +131,92 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-100">
-        <div className="max-w-md mx-auto flex items-center p-2 gap-2">
-          <div className="flex items-center justify-center">
-            <div className="text-white rounded-2xl">
-              <img src="/images/logo2.png" alt="" className="h-16" />
+      <div className="bg-white border-b border-gray-100">
+        <div className="px-4 pt-8 pb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <Car className="w-6 h-6 text-white" />
             </div>
-          </div>
-          <div className="flex flex-col">
-            <h1 className="text-lg font-bold text-gray-900">Find Your Ride</h1>
-            <p className="text-gray-600 text-sm">
-              Safe, reliable, and affordable rides
-            </p>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">
+                Find Your Ride
+              </h1>
+              <p className="text-sm text-gray-600">
+                Safe, reliable, and affordable rides
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Hero Image */}
       <div className="relative w-full max-h-[200px] aspect-video">
         <Image src="/images/car.svg" alt="" className="" fill />
       </div>
 
       {/* Main Content */}
-      <div className="max-w-md mx-auto px-4">
+      <div className="px-4 pb-6 space-y-4 -mt-4">
         {/* Search Card */}
-        <Card className="border-0 shadow rounded-lg bg-white">
-          <CardHeader className="py-0 text-center">
-            <CardTitle>Find Your Ride</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 pt-0">
-            <div className="space-y-4">
-              {/* Location Inputs */}
-              <div className="relative">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                        <MapPin size={18} className="text-green-600" />
-                      </div>
-                    </div>
-                    <GoogleMapsAutocomplete
-                      label="From"
-                      placeholder="Select location"
-                      value={source}
-                      onChange={setSource}
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                        <MapPin size={18} className="text-red-600" />
-                      </div>
-                    </div>
-                    <GoogleMapsAutocomplete
-                      label="To"
-                      placeholder="Select location"
-                      value={destination}
-                      onChange={setDestination}
-                    />
-                  </div>
-                </div>
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h2 className="text-base font-semibold text-gray-900">
+              Plan Your Journey
+            </h2>
+          </div>
+          <div className="p-4 space-y-4">
+            {/* Location Inputs */}
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 flex items-center">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  Pickup Location
+                </label>
+                <GoogleMapsAutocomplete
+                  label=""
+                  placeholder="Enter pickup location"
+                  value={source}
+                  onChange={setSource}
+                />
               </div>
 
-              {/* Date & Time Select */}
-              <div className="relative">
-                <Button
-                  variant="outline"
-                  className="w-full flex items-center justify-between py-6 border bg-white"
-                  onClick={() => setShowDatePicker(!showDatePicker)}
+              {/* Swap Button */}
+              <div className="flex justify-center">
+                <button
+                  onClick={swapLocations}
+                  className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 active:bg-gray-300 transition-colors"
                 >
-                  <div className="flex items-center gap-2">
-                    <Calendar size={18} className="text-gray-500" />
+                  <ArrowUpDown className="w-4 h-4 text-gray-600" />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 flex items-center">
+                  <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+                  Destination
+                </label>
+                <GoogleMapsAutocomplete
+                  label=""
+                  placeholder="Enter destination"
+                  value={destination}
+                  onChange={setDestination}
+                />
+              </div>
+            </div>
+
+            {/* Date & Time Select */}
+            <div className="relative">
+              <label className="text-sm font-medium text-gray-700 block mb-2">
+                Travel Date
+              </label>
+              <button
+                onClick={() => setShowDatePicker(!showDatePicker)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Calendar className="w-4 h-4 text-gray-500" />
                     <span
                       className={
                         selectedDate ? "text-gray-900" : "text-gray-500"
@@ -216,153 +229,136 @@ export default function HomePage() {
                             month: "short",
                             day: "numeric",
                           })
-                        : "Date & time"}
+                        : "Select travel date"}
                     </span>
                   </div>
-                  <div>
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 15 15"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="text-gray-500"
-                    >
-                      <path
-                        d="M3.13523 6.15803C3.3241 5.95657 3.64052 5.94637 3.84197 6.13523L7.5 9.56464L11.158 6.13523C11.3595 5.94637 11.6759 5.95657 11.8648 6.15803C12.0536 6.35949 12.0434 6.67591 11.842 6.86477L7.84197 10.6148C7.64964 10.7951 7.35036 10.7951 7.15803 10.6148L3.15803 6.86477C2.95657 6.67591 2.94637 6.35949 3.13523 6.15803Z"
-                        fill="currentColor"
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                      ></path>
-                    </svg>
-                  </div>
-                </Button>
-                {showDatePicker && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
-                    <DatePicker
-                      onDateSelect={(date) => {
-                        console.log("HomePage - Date selected:", date);
-                        if (date) {
-                          setSelectedDate(date);
-                          setShowDatePicker(false);
-                        }
-                      }}
-                      initialDate={selectedDate}
-                    />
-                  </div>
-                )}
-              </div>
+                  <ArrowRight className="w-4 h-4 text-gray-400" />
+                </div>
+              </button>
+              {showDatePicker && (
+                <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg">
+                  <DatePicker
+                    onDateSelect={(date) => {
+                      console.log("HomePage - Date selected:", date);
+                      if (date) {
+                        setSelectedDate(date);
+                        setShowDatePicker(false);
+                      }
+                    }}
+                    initialDate={selectedDate}
+                  />
+                </div>
+              )}
+            </div>
 
-              {/* Seats Select */}
-              <div className="relative">
-                <Button
-                  variant="outline"
-                  className="w-full flex items-center justify-between py-6 border bg-white"
-                  onClick={() => setShowSeatSelector(!showSeatSelector)}
-                >
-                  <div className="flex items-center gap-2">
-                    <Users size={18} className="text-gray-500" />
+            {/* Seats Select */}
+            <div className="relative">
+              <label className="text-sm font-medium text-gray-700 block mb-2">
+                Number of Seats
+              </label>
+              <button
+                onClick={() => setShowSeatSelector(!showSeatSelector)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Users className="w-4 h-4 text-gray-500" />
                     <span
                       className={
-                        numberOfSeats !== 1 ? "text-gray-900" : "text-gray-500"
+                        numberOfSeats > 1 ? "text-gray-900" : "text-gray-500"
                       }
                     >
                       {numberOfSeats === 1
-                        ? "No of seat"
+                        ? "1 seat"
                         : `${numberOfSeats} seats`}
                     </span>
                   </div>
-                  <div>
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 15 15"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="text-gray-500"
-                    >
-                      <path
-                        d="M3.13523 6.15803C3.3241 5.95657 3.64052 5.94637 3.84197 6.13523L7.5 9.56464L11.158 6.13523C11.3595 5.94637 11.6759 5.95657 11.8648 6.15803C12.0536 6.35949 12.0434 6.67591 11.842 6.86477L7.84197 10.6148C7.64964 10.7951 7.35036 10.7951 7.15803 10.6148L3.15803 6.86477C2.95657 6.67591 2.94637 6.35949 3.13523 6.15803Z"
-                        fill="currentColor"
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                      ></path>
-                    </svg>
+                  <ArrowRight className="w-4 h-4 text-gray-400" />
+                </div>
+              </button>
+              {showSeatSelector && (
+                <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                  <div className="py-2">
+                    {[1, 2, 3, 4, 5].map((num) => (
+                      <button
+                        key={num}
+                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors ${
+                          numberOfSeats === num
+                            ? "bg-blue-50 text-blue-600 border-r-2 border-blue-500"
+                            : "text-gray-900"
+                        }`}
+                        onClick={() => {
+                          setNumberOfSeats(num);
+                          setShowSeatSelector(false);
+                        }}
+                      >
+                        {num} {num === 1 ? "seat" : "seats"}
+                      </button>
+                    ))}
                   </div>
-                </Button>
-                {showSeatSelector && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
-                    <div className="p-2">
-                      {[1, 2, 3, 4, 5].map((num) => (
-                        <button
-                          key={num}
-                          className={`w-full text-left px-4 py-2 hover:bg-gray-100 rounded-md ${
-                            numberOfSeats === num
-                              ? "bg-blue-50 text-blue-600"
-                              : ""
-                          }`}
-                          onClick={() => {
-                            setNumberOfSeats(num);
-                            setShowSeatSelector(false);
-                          }}
-                        >
-                          {num} {num === 1 ? "seat" : "seats"}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Find Ride Button */}
-              <Button
-                onClick={handleSearch}
-                disabled={isSubmitting || (!isFormValid && !validationError)}
-                className="w-full py-6 rounded-md font-semibold text-base bg-[#0099cc] hover:bg-[#007aa3] text-white"
-              >
-                Find ride
-              </Button>
+                </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Find Ride Button */}
+            <button
+              onClick={handleSearch}
+              disabled={isSubmitting || (!isFormValid && !validationError)}
+              className="w-full px-4 py-4 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 active:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+              <Search className="w-5 h-5" />
+              <span>{isSubmitting ? "Searching..." : "Find Rides"}</span>
+              {!isSubmitting && <ArrowRight className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
 
         {/* Validation Error */}
         {validationError && (
-          <div className="mt-4 flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-100">
-            <AlertCircle
-              size={20}
-              className="flex-shrink-0 mt-0.5 text-red-500"
-            />
-            <span className="text-red-700 text-sm font-medium">
-              {validationError}
-            </span>
+          <div className="bg-red-50 border border-red-100 rounded-xl p-4">
+            <div className="flex items-start space-x-3">
+              <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-medium text-red-800">Error</h3>
+                <p className="text-sm text-red-600 mt-1">{validationError}</p>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-4 py-6">
-          <div className="bg-white backdrop-blur-sm rounded-xl p-4 text-center border border-gray-200">
-            <div className="bg-blue-100 rounded-full p-2 w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-              <Clock size={18} className="text-blue-600" />
-            </div>
-            <p className="text-xs text-gray-600 font-medium">Quick</p>
-            <p className="text-xs text-gray-500">Booking</p>
+        {/* Features Section */}
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h2 className="text-base font-semibold text-gray-900">
+              Why Choose Us
+            </h2>
           </div>
+          <div className="p-4">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Clock className="w-5 h-5 text-blue-600" />
+                </div>
+                <p className="text-xs font-medium text-gray-900">Quick</p>
+                <p className="text-xs text-gray-500">Booking</p>
+              </div>
 
-          <div className="bg-white backdrop-blur-sm rounded-xl p-4 text-center border border-gray-200">
-            <div className="bg-green-100 rounded-full p-2 w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-              <Users size={18} className="text-green-600" />
-            </div>
-            <p className="text-xs text-gray-600 font-medium">Verified</p>
-            <p className="text-xs text-gray-500">Drivers</p>
-          </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Users className="w-5 h-5 text-green-600" />
+                </div>
+                <p className="text-xs font-medium text-gray-900">Verified</p>
+                <p className="text-xs text-gray-500">Drivers</p>
+              </div>
 
-          <div className="bg-white backdrop-blur-sm rounded-xl p-4 text-center border border-gray-200">
-            <div className="bg-purple-100 rounded-full p-2 w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-              <MapPin size={18} className="text-purple-600" />
+              <div className="text-center">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <MapPin className="w-5 h-5 text-purple-600" />
+                </div>
+                <p className="text-xs font-medium text-gray-900">Live</p>
+                <p className="text-xs text-gray-500">Tracking</p>
+              </div>
             </div>
-            <p className="text-xs text-gray-600 font-medium">Live</p>
-            <p className="text-xs text-gray-500">Tracking</p>
           </div>
         </div>
       </div>

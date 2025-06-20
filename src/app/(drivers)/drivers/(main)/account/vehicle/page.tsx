@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Car, FileText, AlertTriangle } from "lucide-react";
+import {
+  ArrowLeft,
+  Car,
+  FileText,
+  AlertTriangle,
+  ChevronRight,
+  Plus,
+  Edit3,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 
 // Type for vehicle data from database
@@ -60,149 +68,255 @@ export default function VehiclePage() {
     fetchVehicleData();
   }, [status, session, router]);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white px-4 pt-8 pb-4">
+          <div className="h-6 bg-gray-200 rounded animate-pulse mb-4"></div>
+        </div>
+        <div className="px-4 space-y-4">
+          <div className="bg-white rounded-xl p-4">
+            <div className="h-32 bg-gray-200 rounded-lg animate-pulse mb-4"></div>
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
+              <div className="h-3 bg-gray-200 rounded w-24 animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white px-4 pt-8 pb-4">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => router.back()}
+              className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <h1 className="text-xl font-semibold text-gray-900">My Vehicle</h1>
+          </div>
+        </div>
+
+        <div className="px-4">
+          <div className="bg-red-50 rounded-xl p-4 border border-red-100">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                <AlertTriangle className="w-4 h-4 text-red-600" />
+              </div>
+              <div>
+                <p className="text-red-800 font-medium text-sm">
+                  Error Loading Vehicle
+                </p>
+                <p className="text-red-600 text-xs mt-0.5">{error}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-4 max-w-3xl mx-auto">
-      <div className="flex items-center mb-6">
-        <button
-          onClick={() => router.back()}
-          className="p-2 mr-2 rounded-full hover:bg-gray-100"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-2xl font-bold">My Vehicle</h1>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white">
+        <div className="flex items-center justify-between px-4 pt-8 pb-4">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => router.back()}
+              className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <h1 className="text-xl font-semibold text-gray-900">My Vehicle</h1>
+          </div>
+
+          {vehicle && (
+            <button
+              onClick={() => router.push("/drivers/onboarding/vehicle")}
+              className="px-3 py-1.5 text-sm text-blue-500 bg-blue-50 rounded-full flex items-center space-x-1"
+            >
+              <Edit3 className="w-3 h-3" />
+              <span>Edit</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      {isLoading ? (
-        <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p>Loading vehicle information...</p>
-        </div>
-      ) : error ? (
-        <div className="bg-red-50 rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <AlertTriangle className="text-red-500 mr-2" />
-            <p className="text-red-700">{error}</p>
-          </div>
-        </div>
-      ) : vehicle ? (
-        <div className="bg-white rounded-lg shadow">
-          {/* Vehicle Images */}
-          <div className="relative h-48 bg-gray-200 rounded-t-lg overflow-hidden">
-            {vehicle.vehicleImages && vehicle.vehicleImages.length > 0 ? (
-              <img
-                src={vehicle.vehicleImages[0]}
-                alt={`${vehicle.make} ${vehicle.model}`}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500">
-                <Car size={64} />
-              </div>
-            )}
-          </div>
+      <div className="px-4 pb-6 space-y-4">
+        {vehicle ? (
+          <>
+            {/* Vehicle Main Card */}
+            <div className="bg-white rounded-xl overflow-hidden">
+              {/* Vehicle Image */}
+              <div className="relative h-48 bg-gray-200">
+                {vehicle.vehicleImages && vehicle.vehicleImages.length > 0 ? (
+                  <img
+                    src={vehicle.vehicleImages[0]}
+                    alt={`${vehicle.make} ${vehicle.model}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500">
+                    <Car size={48} />
+                  </div>
+                )}
 
-          {/* Vehicle Details */}
-          <div className="p-6">
-            <h2 className="text-xl font-semibold mb-4">
-              {vehicle.make} {vehicle.model} ({vehicle.year})
-            </h2>
+                {/* Overlay with vehicle name */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                  <h2 className="text-white text-lg font-semibold">
+                    {vehicle.make} {vehicle.model}
+                  </h2>
+                  <p className="text-white/80 text-sm">{vehicle.year}</p>
+                </div>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-gray-500 text-sm mb-1">Make</div>
-                <p className="font-medium">{vehicle.make}</p>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-gray-500 text-sm mb-1">Model</div>
-                <p className="font-medium">{vehicle.model}</p>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-gray-500 text-sm mb-1">Year</div>
-                <p className="font-medium">{vehicle.year}</p>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-gray-500 text-sm mb-1">Color</div>
-                <p className="font-medium">{vehicle.color}</p>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-gray-500 text-sm mb-1">License Plate</div>
-                <p className="font-medium">{vehicle.licensePlate}</p>
+              {/* Vehicle Details */}
+              <div className="p-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <div className="text-gray-500 text-xs mb-1">Make</div>
+                    <p className="font-medium text-sm">{vehicle.make}</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <div className="text-gray-500 text-xs mb-1">Model</div>
+                    <p className="font-medium text-sm">{vehicle.model}</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <div className="text-gray-500 text-xs mb-1">Year</div>
+                    <p className="font-medium text-sm">{vehicle.year}</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <div className="text-gray-500 text-xs mb-1">Color</div>
+                    <p className="font-medium text-sm">{vehicle.color}</p>
+                  </div>
+                </div>
+
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="text-gray-500 text-xs mb-1">
+                    License Plate
+                  </div>
+                  <p className="font-medium text-sm">{vehicle.licensePlate}</p>
+                </div>
               </div>
             </div>
 
             {/* Additional Images */}
             {vehicle.vehicleImages && vehicle.vehicleImages.length > 1 && (
-              <div className="mt-4">
-                <h3 className="text-md font-medium text-gray-700 mb-2">
-                  Additional Photos
-                </h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {vehicle.vehicleImages.slice(1).map((image, index) => (
-                    <div
-                      key={index}
-                      className="h-24 bg-gray-200 rounded-lg overflow-hidden"
-                    >
-                      <img
-                        src={image}
-                        alt={`Vehicle image ${index + 2}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
+              <div className="bg-white rounded-xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <h3 className="text-base font-semibold text-gray-900">
+                    Additional Photos
+                  </h3>
+                </div>
+
+                <div className="p-4">
+                  <div className="grid grid-cols-3 gap-2">
+                    {vehicle.vehicleImages.slice(1).map((image, index) => (
+                      <div
+                        key={index}
+                        className="aspect-square bg-gray-200 rounded-lg overflow-hidden"
+                      >
+                        <img
+                          src={image}
+                          alt={`Vehicle image ${index + 2}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
-
-            {/* Update button */}
-            {/* <div className="mt-6 pt-6 border-t border-gray-200">
+          </>
+        ) : (
+          /* No Vehicle State */
+          <div className="bg-white rounded-xl p-6">
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <Car size={32} className="text-gray-400" />
+              </div>
+              <h2 className="text-lg font-semibold mb-2 text-gray-900">
+                No Vehicle Information
+              </h2>
+              <p className="text-gray-500 mb-6 text-sm">
+                You haven't added any vehicle information yet. Please add your
+                vehicle details to continue.
+              </p>
               <button
                 onClick={() => router.push("/drivers/onboarding/vehicle")}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="px-6 py-3 bg-blue-500 text-white rounded-xl font-medium flex items-center space-x-2 hover:bg-blue-600 active:bg-blue-700 transition-colors"
               >
-                Update Vehicle Information
+                <Plus className="w-4 h-4" />
+                <span>Add Vehicle</span>
               </button>
-            </div> */}
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <Car size={64} className="text-gray-400 mb-4" />
-            <h2 className="text-xl font-semibold mb-2">
-              No Vehicle Information
-            </h2>
-            <p className="text-gray-500 mb-6">
-              You haven't added any vehicle information yet. Please add your
-              vehicle details to continue.
-            </p>
-            <button
-              onClick={() => router.push("/drivers/onboarding/vehicle")}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              Add Vehicle
-            </button>
+        )}
+
+        {/* Documents Section */}
+        <div className="bg-white rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h3 className="text-base font-semibold text-gray-900 flex items-center">
+              <FileText className="w-4 h-4 mr-2" />
+              Vehicle Documents
+            </h3>
           </div>
-        </div>
-      )}
 
-      {/* Documents Section */}
-      <div className="mt-6 bg-white rounded-lg shadow p-6">
-        <div className="flex items-center mb-4">
-          <FileText className="text-gray-500 mr-2" />
-          <h2 className="text-xl font-semibold">Vehicle Documents</h2>
-        </div>
-
-        <div className="flex flex-col items-center justify-center py-6 text-center">
-          <p className="text-gray-500 mb-4">
-            View and manage your vehicle-related documents in the Documents
-            section.
-          </p>
           <button
             onClick={() => router.push("/drivers/account/documents")}
-            className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            className="w-full flex items-center p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors"
           >
-            Go to Documents
+            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+              <FileText className="w-4 h-4 text-gray-600" />
+            </div>
+            <div className="flex-1 text-left">
+              <div className="font-medium text-gray-900 text-sm">
+                Manage Documents
+              </div>
+              <div className="text-xs text-gray-500 mt-0.5">
+                View and manage vehicle-related documents
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
           </button>
         </div>
+
+        {/* Quick Actions */}
+        {vehicle && (
+          <div className="bg-white rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <h3 className="text-base font-semibold text-gray-900">
+                Quick Actions
+              </h3>
+            </div>
+
+            <div className="p-4 space-y-3">
+              <button
+                onClick={() => router.push("/drivers/onboarding/vehicle")}
+                className="w-full flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 active:bg-blue-200 transition-colors"
+              >
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                  <Edit3 className="w-4 h-4 text-blue-600" />
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="font-medium text-blue-900 text-sm">
+                    Update Vehicle Info
+                  </div>
+                  <div className="text-xs text-blue-600 mt-0.5">
+                    Edit vehicle details and photos
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-blue-400" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

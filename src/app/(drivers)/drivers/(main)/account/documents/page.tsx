@@ -10,6 +10,9 @@ import {
   AlertCircle,
   FileText,
   Shield,
+  Eye,
+  RefreshCw,
+  Clock,
 } from "lucide-react";
 
 interface DocumentStatus {
@@ -59,7 +62,7 @@ export default function DocumentsPage() {
         setDocuments({
           drivingLicense: {
             url: data.drivingLicenseUrl,
-            verified: data.isVerified, // This could be more granular in a real app
+            verified: data.isVerified,
           },
           vehicleRegistration: {
             url: data.vehicleRegistrationUrl,
@@ -99,14 +102,16 @@ export default function DocumentsPage() {
 
     if (allDocumentsVerified) {
       return (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div className="bg-green-50 border border-green-100 rounded-xl p-4">
           <div className="flex items-center">
-            <Shield className="text-green-600 mr-3" />
+            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+              <Shield className="w-4 h-4 text-green-600" />
+            </div>
             <div>
-              <h3 className="font-medium text-green-800">
+              <h3 className="font-medium text-green-800 text-sm">
                 Verification Complete
               </h3>
-              <p className="text-sm text-green-600">
+              <p className="text-xs text-green-600 mt-0.5">
                 All your documents are verified and approved.
               </p>
             </div>
@@ -115,14 +120,16 @@ export default function DocumentsPage() {
       );
     } else if (allDocumentsUploaded) {
       return (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+        <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-4">
           <div className="flex items-center">
-            <AlertCircle className="text-yellow-600 mr-3" />
+            <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
+              <Clock className="w-4 h-4 text-yellow-600" />
+            </div>
             <div>
-              <h3 className="font-medium text-yellow-800">
+              <h3 className="font-medium text-yellow-800 text-sm">
                 Verification In Progress
               </h3>
-              <p className="text-sm text-yellow-600">
+              <p className="text-xs text-yellow-600 mt-0.5">
                 Your documents are under review. This may take 1-2 business
                 days.
               </p>
@@ -132,14 +139,16 @@ export default function DocumentsPage() {
       );
     } else {
       return (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div className="bg-red-50 border border-red-100 rounded-xl p-4">
           <div className="flex items-center">
-            <AlertCircle className="text-red-600 mr-3" />
+            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
+              <AlertCircle className="w-4 h-4 text-red-600" />
+            </div>
             <div>
-              <h3 className="font-medium text-red-800">
+              <h3 className="font-medium text-red-800 text-sm">
                 Verification Incomplete
               </h3>
-              <p className="text-sm text-red-600">
+              <p className="text-xs text-red-600 mt-0.5">
                 Please upload all required documents to complete verification.
               </p>
             </div>
@@ -164,13 +173,13 @@ export default function DocumentsPage() {
     documentType: string;
   }) => {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-4">
-        <div className="p-4">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="font-medium">{title}</h3>
+      <div className="bg-white rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100">
+          <div className="flex justify-between items-center">
+            <h3 className="font-medium text-gray-900 text-base">{title}</h3>
             {documentUrl && (
               <div
-                className={`px-2 py-1 rounded-full text-xs ${
+                className={`px-2 py-1 rounded-full text-xs font-medium ${
                   isVerified
                     ? "bg-green-100 text-green-800"
                     : "bg-yellow-100 text-yellow-800"
@@ -180,27 +189,42 @@ export default function DocumentsPage() {
               </div>
             )}
           </div>
+        </div>
+
+        <div className="p-4">
           <p className="text-sm text-gray-600 mb-4">{description}</p>
 
           {documentUrl ? (
             <div className="space-y-3">
-              <div className="border border-gray-200 rounded-lg p-2 bg-gray-50">
+              <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
                 <div className="flex items-center">
-                  <FileText size={16} className="text-gray-500 mr-2" />
-                  <span className="text-sm truncate">Document uploaded</span>
+                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                    <FileText className="w-4 h-4 text-gray-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">
+                      Document uploaded
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Ready for verification
+                    </p>
+                  </div>
                 </div>
               </div>
+
               <div className="flex space-x-2">
                 <button
                   onClick={() => window.open(documentUrl, "_blank")}
-                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="flex-1 flex items-center justify-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors"
                 >
+                  <Eye className="w-4 h-4 mr-2" />
                   View
                 </button>
                 <button
                   onClick={() => handleUpload(documentType)}
-                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="flex-1 flex items-center justify-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors"
                 >
+                  <RefreshCw className="w-4 h-4 mr-2" />
                   Replace
                 </button>
               </div>
@@ -208,9 +232,9 @@ export default function DocumentsPage() {
           ) : (
             <button
               onClick={() => handleUpload(documentType)}
-              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full flex items-center justify-center px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 active:bg-blue-700 transition-colors"
             >
-              <Upload size={16} className="mr-2" />
+              <Upload className="w-4 h-4 mr-2" />
               Upload Document
             </button>
           )}
@@ -219,58 +243,90 @@ export default function DocumentsPage() {
     );
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white px-4 pt-8 pb-4">
+          <div className="h-6 bg-gray-200 rounded animate-pulse mb-4"></div>
+        </div>
+        <div className="px-4 space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-4">
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
+                <div className="h-3 bg-gray-200 rounded w-48 animate-pulse"></div>
+                <div className="h-8 bg-gray-200 rounded animate-pulse mt-4"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-4 max-w-3xl mx-auto">
-      <div className="flex items-center mb-6">
-        <button
-          onClick={() => router.back()}
-          className="p-2 mr-2 rounded-full hover:bg-gray-100"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-2xl font-bold">Documents & Verification</h1>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white">
+        <div className="flex items-center px-4 pt-8 pb-4">
+          <button
+            onClick={() => router.back()}
+            className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <h1 className="text-xl font-semibold text-gray-900">
+            Documents & Verification
+          </h1>
+        </div>
       </div>
 
-      {isLoading ? (
-        <div className="py-8 text-center">Loading document information...</div>
-      ) : (
-        <>
-          <VerificationStatus />
+      <div className="px-4 pb-6 space-y-4">
+        <VerificationStatus />
 
-          <div className="space-y-6">
-            <DocumentCard
-              title="Driving License"
-              description="Upload a clear photo or scan of your valid driving license (front and back)."
-              documentUrl={documents.drivingLicense.url}
-              isVerified={documents.drivingLicense.verified}
-              documentType="drivingLicense"
-            />
+        <div className="space-y-4">
+          <DocumentCard
+            title="Driving License"
+            description="Upload a clear photo or scan of your valid driving license (front and back)."
+            documentUrl={documents.drivingLicense.url}
+            isVerified={documents.drivingLicense.verified}
+            documentType="drivingLicense"
+          />
 
-            <DocumentCard
-              title="Vehicle Registration"
-              description="Upload your vehicle registration certificate (RC)."
-              documentUrl={documents.vehicleRegistration.url}
-              isVerified={documents.vehicleRegistration.verified}
-              documentType="vehicleRegistration"
-            />
+          <DocumentCard
+            title="Vehicle Registration"
+            description="Upload your vehicle registration certificate (RC)."
+            documentUrl={documents.vehicleRegistration.url}
+            isVerified={documents.vehicleRegistration.verified}
+            documentType="vehicleRegistration"
+          />
 
-            <DocumentCard
-              title="Insurance"
-              description="Upload your valid vehicle insurance document."
-              documentUrl={documents.insurance.url}
-              isVerified={documents.insurance.verified}
-              documentType="insurance"
-            />
+          <DocumentCard
+            title="Insurance"
+            description="Upload your valid vehicle insurance document."
+            documentUrl={documents.insurance.url}
+            isVerified={documents.insurance.verified}
+            documentType="insurance"
+          />
+        </div>
+
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+          <div className="flex items-start">
+            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+              <FileText className="w-4 h-4 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="font-medium text-blue-800 text-sm mb-1">
+                Important Notes
+              </h3>
+              <p className="text-xs text-blue-600">
+                All documents must be clearly visible and not expired. Our team
+                will review your documents within 1-2 business days.
+              </p>
+            </div>
           </div>
-
-          <div className="mt-8 text-sm text-gray-500">
-            <p>
-              * All documents must be clearly visible and not expired. Our team
-              will review your documents within 1-2 business days.
-            </p>
-          </div>
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }

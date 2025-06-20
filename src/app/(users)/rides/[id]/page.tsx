@@ -40,7 +40,6 @@ import {
 import { formatDistanceToNow, format, parseISO } from "date-fns";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PhoneNumberDialog } from "@/components/ui/phone-number-dialog";
@@ -63,7 +62,7 @@ interface RideDetails {
   description: string | null;
   driver: {
     id: string;
-    name: string | null; // API returns 'name', not firstName/lastName
+    name: string | null;
     driverRating: number | null;
     ridesCompleted: number;
     vehicle?: {
@@ -72,7 +71,7 @@ interface RideDetails {
       model: string;
       year?: number;
       color?: string;
-      licensePlate?: string; // Schema uses 'licensePlate', not 'plateNumber'
+      licensePlate?: string;
       vehicleImages: string[];
     };
   };
@@ -259,27 +258,38 @@ export default function RideDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center pb-16">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-2"></div>
-        <p className="text-muted-foreground font-medium text-sm">
-          Loading ride details...
-        </p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center animate-pulse">
+            <Car className="w-6 h-6 text-white" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-lg font-semibold text-gray-900">Loading...</p>
+            <p className="text-sm text-gray-500">Loading ride details...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error || !ride) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center pb-16">
-        <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-2">
-          <AlertCircle size={28} className="text-destructive" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center space-y-4 px-4">
+          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+            <AlertCircle className="w-6 h-6 text-red-600" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-lg font-semibold text-gray-900">Error</p>
+            <p className="text-sm text-gray-600">{error || "Ride not found"}</p>
+          </div>
+          <button
+            onClick={goBack}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors"
+          >
+            Go Back
+          </button>
         </div>
-        <p className="text-destructive font-medium mb-2 text-center text-base">
-          {error || "Ride not found"}
-        </p>
-        <Button onClick={goBack} size="sm" className="w-full max-w-[180px]">
-          Go Back
-        </Button>
       </div>
     );
   }
@@ -291,346 +301,90 @@ export default function RideDetailsPage() {
   const totalPrice = ride.price * numSeats;
 
   return (
-    <div className="min-h-screen bg-[#f8f9fb] pb-4 max-w-md mx-auto">
+    <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-40 px-3 py-2 flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={goBack}
-          className="h-8 w-8 p-0"
-        >
-          <ArrowLeft size={18} />
-        </Button>
-        <h1 className="text-base font-bold text-foreground">Ride Details</h1>
-        <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-          <Share2 size={18} />
-        </Button>
+      <div className="bg-white border-b border-gray-100">
+        <div className="flex items-center justify-between px-4 pt-8 pb-4">
+          <button
+            onClick={goBack}
+            className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <h1 className="text-xl font-semibold text-gray-900">Ride Details</h1>
+          <button className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+            <Share2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
-      <div className="px-2 pt-3 space-y-4">
+      {/* Content */}
+      <div className="px-4 pt-4 space-y-3">
         {/* Route & Price Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-border/60 p-3 space-y-2">
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <Calendar size={14} className="text-green-600" />
-            <span>{formattedDate}</span>
-            <Clock size={14} className="text-green-600 ml-2" />
-            <span>{ride.departureTime}</span>
-          </div>
-          <div className="flex items-center gap-2 mt-1">
-            <MapPin size={16} className="text-green-500" />
-            <span className="font-semibold text-foreground text-sm truncate max-w-[90px]">
-              {ride.fromLocation}
-            </span>
-            <span className="mx-1 text-muted-foreground">→</span>
-            <MapPin size={16} className="text-destructive" />
-            <span className="font-semibold text-foreground text-sm truncate max-w-[90px]">
-              {ride.toLocation}
-            </span>
-            <Button variant="outline" size="icon" className="h-7 w-7 ml-auto">
-              <Navigation size={14} />
-            </Button>
-          </div>
-          <div className="flex items-center justify-between bg-[#f3f6fa] rounded-lg px-2 py-2 mt-2">
-            <div className="flex items-center gap-1 text-xs">
-              <Users size={14} className="text-primary" />
-              <span className="font-medium text-foreground">
-                {ride.availableSeats} seats
-              </span>
-            </div>
-            <div className="flex items-center gap-1 text-lg font-bold text-green-600">
-              <IndianRupee size={16} />
-              <span>{ride.price}</span>
-              <span className="text-xs font-normal text-muted-foreground">
-                /seat
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Vehicle Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-border/60 p-3">
-          <div className="flex items-center mb-2">
-            <Car size={16} className="text-muted-foreground mr-2" />
-            <span className="text-sm font-bold text-foreground">Vehicle</span>
-          </div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-semibold text-foreground text-sm">
-              {ride.driver.vehicle?.make} {ride.driver.vehicle?.model}
-              {ride.driver.vehicle?.year && ` (${ride.driver.vehicle?.year})`}
-            </span>
-            {ride.driver.vehicle?.color && (
-              <Badge
-                variant="outline"
-                className="ml-2 text-xs px-2 py-0.5 bg-gray-50"
-              >
-                {ride.driver.vehicle?.color}
-              </Badge>
-            )}
-          </div>
-          {ride.driver.vehicle?.vehicleImages &&
-            Array.isArray(ride.driver.vehicle?.vehicleImages) &&
-            ride.driver.vehicle?.vehicleImages.length > 0 && (
-              <div className="mt-2">
-                <div className="text-xs text-muted-foreground mb-1 font-medium">
-                  Photos
-                </div>
-                <div className="flex overflow-x-auto gap-2 pb-1">
-                  {ride.driver.vehicle?.vehicleImages.map((image, index) => {
-                    const imageUrl = image.startsWith("http")
-                      ? image
-                      : image.startsWith("/")
-                      ? `${window.location.origin}${image}`
-                      : `${window.location.origin}/${image}`;
-                    return (
-                      <div
-                        key={index}
-                        className="min-w-[80px] h-[56px] rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 bg-[#f3f6fa]"
-                      >
-                        <img
-                          src={imageUrl}
-                          alt={`${ride.driver.vehicle?.make || "Vehicle"} ${
-                            ride.driver.vehicle?.model || "image"
-                          }`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src =
-                              "https://via.placeholder.com/80x56?text=Vehicle";
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-4 h-4 text-green-600" />
+                <span>{formattedDate}</span>
               </div>
-            )}
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-blue-600" />
+                <span>{ride.departureTime}</span>
+              </div>
+            </div>
+          </div>
+          <div className="p-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="font-semibold text-gray-900 text-sm truncate">
+                  {ride.fromLocation}
+                </span>
+              </div>
+              <div className="text-gray-400">→</div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <span className="font-semibold text-gray-900 text-sm truncate">
+                  {ride.toLocation}
+                </span>
+              </div>
+              <button className="ml-auto w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <Navigation className="w-4 h-4 text-blue-600" />
+              </button>
+            </div>
+            <div className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3">
+              <div className="flex items-center space-x-2">
+                <Users className="w-4 h-4 text-blue-600" />
+                <span className="font-medium text-gray-900 text-sm">
+                  {ride.availableSeats} seats available
+                </span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <IndianRupee className="w-5 h-5 text-green-600" />
+                <span className="text-xl font-bold text-green-600">
+                  {ride.price}
+                </span>
+                <span className="text-sm text-gray-500">/seat</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Driver Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-border/60 p-3">
-          <div className="flex items-center mb-2">
-            <UserCheck size={16} className="text-muted-foreground mr-2" />
-            <span className="text-sm font-bold text-foreground">Driver</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Avatar className="w-10 h-10 ring-2 ring-primary/20">
-              <AvatarFallback className="bg-primary text-primary-foreground text-base font-semibold">
-                {ride.driver.name
-                  ?.split(" ")
-                  .map((n) => n.charAt(0))
-                  .join("")
-                  .slice(0, 2) || "D"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-foreground text-sm truncate">
-                {ride.driver.name}
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <div className="flex items-center">
+              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                <UserCheck className="w-3 h-3 text-blue-600" />
               </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                <Star size={12} className="text-yellow-500 fill-current" />
-                <span className="font-medium">
-                  {ride.driver.driverRating?.toFixed(1) || "New"}
-                </span>
-                <span>•</span>
-                <span>{ride.driver.ridesCompleted} rides</span>
-              </div>
-            </div>
-            <div className="flex gap-1 ml-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setShowDriverSheet(true)}
-                className="h-8 w-8 p-0"
-              >
-                <Info size={14} />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleContactDriver}
-                className="h-8 w-8 p-0"
-              >
-                <MessageSquare size={14} />
-              </Button>
+              <h2 className="text-base font-semibold text-gray-900">Driver</h2>
             </div>
           </div>
-        </div>
-
-        {/* Trip Details */}
-        {ride.description && (
-          <div className="bg-white rounded-xl shadow-sm border border-border/60 p-3">
-            <div className="flex items-center mb-2">
-              <Info size={16} className="text-muted-foreground mr-2" />
-              <span className="text-sm font-bold text-foreground">
-                Trip Details
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              {ride.description}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Fixed Bottom Booking Button */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50">
-        <div className="max-w-md mx-auto p-2">
-          <Drawer open={showBookingSheet} onOpenChange={setShowBookingSheet}>
-            <DrawerTrigger asChild>
-              <Button className="w-full py-3 font-semibold text-base rounded-lg shadow-sm bg-green-600 hover:bg-green-700 text-white">
-                Request to Book
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className="h-auto max-h-[80vh] min-h-[45vh] flex flex-col rounded-t-2xl px-2">
-              <DrawerHeader className="flex-shrink-0">
-                <DrawerTitle className="text-base">Book Your Ride</DrawerTitle>
-              </DrawerHeader>
-              <div className="flex-1 overflow-y-auto py-4 px-1 space-y-4">
-                {/* Route Summary */}
-                <div className="bg-muted rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-foreground text-sm">
-                      {ride.fromLocation}
-                    </span>
-                    <span className="text-muted-foreground">→</span>
-                    <span className="font-semibold text-foreground text-sm">
-                      {ride.toLocation}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{formattedDate}</span>
-                    <span>•</span>
-                    <span className="font-semibold text-foreground text-sm">
-                      {ride.departureTime}
-                    </span>
-                  </div>
-                </div>
-                {/* Seat Selection */}
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-foreground">
-                    Number of Seats
-                  </label>
-                  <div className="flex items-center justify-between bg-muted rounded-lg p-3">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setNumSeats(Math.max(1, numSeats - 1))}
-                      disabled={numSeats <= 1}
-                      className="rounded-full w-8 h-8 p-0"
-                    >
-                      <Minus size={14} />
-                    </Button>
-                    <span className="text-lg font-semibold text-foreground">
-                      {numSeats}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() =>
-                        setNumSeats(Math.min(ride.availableSeats, numSeats + 1))
-                      }
-                      disabled={numSeats >= ride.availableSeats}
-                      className="rounded-full w-8 h-8 p-0"
-                    >
-                      <Plus size={14} />
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground text-center">
-                    {ride.availableSeats} seats available
-                  </p>
-                </div>
-                {/* Price Breakdown */}
-                <div className="bg-muted rounded-lg p-3 space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">
-                      Price per seat
-                    </span>
-                    <span className="font-medium text-foreground">
-                      ₹{ride.price}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">
-                      Number of seats
-                    </span>
-                    <span className="font-medium text-foreground">
-                      {numSeats}
-                    </span>
-                  </div>
-                  <div className="border-t pt-1 flex justify-between text-sm">
-                    <span className="font-semibold text-foreground">Total</span>
-                    <span className="font-bold text-lg text-primary">
-                      ₹{totalPrice}
-                    </span>
-                  </div>
-                </div>
-                {/* Booking Status */}
-                {bookingStatus === "success" && (
-                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <CheckCircle size={16} className="text-green-600" />
-                    <div>
-                      <p className="font-medium text-green-800 text-sm">
-                        Booking Request Sent!
-                      </p>
-                      <p className="text-xs text-green-600">
-                        The driver will review your request. You can message
-                        them for any questions.
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {bookingStatus === "error" && (
-                  <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                    <AlertCircle size={16} className="text-destructive" />
-                    <div>
-                      <p className="font-medium text-destructive text-sm">
-                        Booking Failed
-                      </p>
-                      <p className="text-xs text-destructive/80">
-                        Something went wrong. Please try again.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-              {/* Action Buttons - Fixed at bottom */}
-              <div className="flex-shrink-0 border-t bg-card p-2 pb-4 flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowBookingSheet(false)}
-                  className="flex-1 h-10 text-sm"
-                  disabled={bookingStatus === "loading"}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleBooking}
-                  disabled={
-                    bookingStatus === "loading" || bookingStatus === "success"
-                  }
-                  className="flex-1 h-10 font-semibold text-sm"
-                >
-                  {bookingStatus === "loading"
-                    ? "Processing..."
-                    : "Confirm Booking"}
-                </Button>
-              </div>
-            </DrawerContent>
-          </Drawer>
-        </div>
-      </div>
-
-      {/* Driver Details Sheet */}
-      <Drawer open={showDriverSheet} onOpenChange={setShowDriverSheet}>
-        <DrawerContent className="h-auto max-h-[75vh] flex flex-col rounded-t-2xl px-2">
-          <DrawerHeader className="flex-shrink-0">
-            <DrawerTitle className="text-base">Driver Information</DrawerTitle>
-          </DrawerHeader>
-          <div className="flex-1 overflow-y-auto py-4 space-y-4">
-            {/* Driver Profile */}
-            <div className="flex items-center gap-3">
-              <Avatar className="w-14 h-14 ring-2 ring-primary/20">
-                <AvatarFallback className="bg-primary text-primary-foreground text-lg font-semibold">
+          <div className="p-4">
+            <div className="flex items-center space-x-3">
+              <Avatar className="w-12 h-12 border-2 border-blue-100">
+                <AvatarFallback className="bg-blue-500 text-white text-base font-semibold">
                   {ride.driver.name
                     ?.split(" ")
                     .map((n) => n.charAt(0))
@@ -639,52 +393,340 @@ export default function RideDetailsPage() {
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-foreground">
+                <div className="font-semibold text-gray-900 text-sm">
                   {ride.driver.name}
-                </h3>
-                <div className="flex items-center gap-2 mt-1 text-xs">
-                  <Star size={14} className="text-yellow-500 fill-current" />
-                  <span className="font-medium text-foreground">
-                    {ride.driver.driverRating?.toFixed(1) || "New"}
-                  </span>
-                  <span className="text-muted-foreground">•</span>
-                  <span className="text-muted-foreground">
-                    {ride.driver.ridesCompleted} rides
-                  </span>
+                </div>
+                <div className="flex items-center space-x-3 text-xs text-gray-500 mt-1">
+                  <div className="flex items-center space-x-1">
+                    <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                    <span className="font-medium">
+                      {ride.driver.driverRating?.toFixed(1) || "New"}
+                    </span>
+                  </div>
+                  <span>•</span>
+                  <span>{ride.driver.ridesCompleted} rides</span>
                 </div>
               </div>
-            </div>
-            {/* Driver Stats */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-muted rounded-lg p-3 text-center">
-                <div className="text-lg font-bold text-primary">
-                  {ride.driver.ridesCompleted}
-                </div>
-                <p className="text-xs text-muted-foreground">Total Rides</p>
-              </div>
-              <div className="bg-muted rounded-lg p-3 text-center">
-                <div className="text-lg font-bold text-green-600">
-                  {ride.driver.driverRating?.toFixed(1) || "New"}
-                </div>
-                <p className="text-xs text-muted-foreground">Rating</p>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setShowDriverSheet(true)}
+                  className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleContactDriver}
+                  className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center"
+                >
+                  <MessageSquare className="w-4 h-4 text-blue-600" />
+                </button>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Vehicle Section */}
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <div className="flex items-center">
+              <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                <Car className="w-3 h-3 text-purple-600" />
+              </div>
+              <h2 className="text-base font-semibold text-gray-900">Vehicle</h2>
+            </div>
+          </div>
+          <div className="p-4">
+            <div className="flex items-center space-x-2 mb-3">
+              <span className="font-semibold text-gray-900 text-sm">
+                {ride.driver.vehicle?.make} {ride.driver.vehicle?.model}
+                {ride.driver.vehicle?.year && ` (${ride.driver.vehicle?.year})`}
+              </span>
+              {ride.driver.vehicle?.color && (
+                <Badge variant="outline" className="text-xs bg-gray-50">
+                  {ride.driver.vehicle?.color}
+                </Badge>
+              )}
+            </div>
+            {ride.driver.vehicle?.vehicleImages &&
+              Array.isArray(ride.driver.vehicle?.vehicleImages) &&
+              ride.driver.vehicle?.vehicleImages.length > 0 && (
+                <div>
+                  <div className="text-xs font-medium text-gray-700 mb-2">
+                    Photos
+                  </div>
+                  <div className="flex space-x-2 overflow-x-auto">
+                    {ride.driver.vehicle?.vehicleImages.map((image, index) => {
+                      const imageUrl = image.startsWith("http")
+                        ? image
+                        : image.startsWith("/")
+                        ? `${window.location.origin}${image}`
+                        : `${window.location.origin}/${image}`;
+                      return (
+                        <div
+                          key={index}
+                          className="flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border border-gray-200 bg-gray-50"
+                        >
+                          <img
+                            src={imageUrl}
+                            alt={`${ride.driver.vehicle?.make || "Vehicle"} ${
+                              ride.driver.vehicle?.model || "image"
+                            }`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src =
+                                "https://via.placeholder.com/80x56?text=Vehicle";
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+          </div>
+        </div>
+
+        {/* Trip Details */}
+        {ride.description && (
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <div className="flex items-center">
+                <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                  <Info className="w-3 h-3 text-green-600" />
+                </div>
+                <h2 className="text-base font-semibold text-gray-900">
+                  Trip Details
+                </h2>
+              </div>
+            </div>
+            <div className="p-4">
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {ride.description}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Fixed Bottom Booking Button */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+        <div className="p-4">
+          <Drawer open={showBookingSheet} onOpenChange={setShowBookingSheet}>
+            <DrawerTrigger asChild>
+              <button className="w-full px-4 py-4 bg-green-500 text-white rounded-xl font-semibold text-base hover:bg-green-600 active:bg-green-700 transition-colors">
+                Request to Book
+              </button>
+            </DrawerTrigger>
+            <DrawerContent className="h-auto max-h-[80vh] min-h-[45vh] flex flex-col rounded-t-2xl px-4">
+              <DrawerHeader className="flex-shrink-0">
+                <DrawerTitle className="text-lg font-semibold">
+                  Book Your Ride
+                </DrawerTitle>
+              </DrawerHeader>
+              <div className="flex-1 overflow-y-auto py-4 space-y-4">
+                {/* Route Summary */}
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-gray-900 text-sm">
+                      {ride.fromLocation}
+                    </span>
+                    <span className="text-gray-400">→</span>
+                    <span className="font-semibold text-gray-900 text-sm">
+                      {ride.toLocation}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-3 text-xs text-gray-600">
+                    <span>{formattedDate}</span>
+                    <span>•</span>
+                    <span className="font-semibold">{ride.departureTime}</span>
+                  </div>
+                </div>
+
+                {/* Seat Selection */}
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-gray-700">
+                    Number of Seats
+                  </label>
+                  <div className="flex items-center justify-between bg-gray-50 rounded-xl p-4">
+                    <button
+                      onClick={() => setNumSeats(Math.max(1, numSeats - 1))}
+                      disabled={numSeats <= 1}
+                      className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center disabled:opacity-50"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="text-xl font-semibold text-gray-900">
+                      {numSeats}
+                    </span>
+                    <button
+                      onClick={() =>
+                        setNumSeats(Math.min(ride.availableSeats, numSeats + 1))
+                      }
+                      disabled={numSeats >= ride.availableSeats}
+                      className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center disabled:opacity-50"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 text-center">
+                    {ride.availableSeats} seats available
+                  </p>
+                </div>
+
+                {/* Price Breakdown */}
+                <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Price per seat</span>
+                    <span className="font-medium text-gray-900">
+                      ₹{ride.price}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Number of seats</span>
+                    <span className="font-medium text-gray-900">
+                      {numSeats}
+                    </span>
+                  </div>
+                  <div className="border-t border-gray-200 pt-2 flex justify-between">
+                    <span className="font-semibold text-gray-900">Total</span>
+                    <span className="font-bold text-lg text-green-600">
+                      ₹{totalPrice}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Booking Status */}
+                {bookingStatus === "success" && (
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                    <div className="flex items-start space-x-3">
+                      <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                      <div>
+                        <h3 className="text-sm font-medium text-green-800">
+                          Booking Request Sent!
+                        </h3>
+                        <p className="text-xs text-green-600 mt-1">
+                          The driver will review your request. You can message
+                          them for any questions.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {bookingStatus === "error" && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                    <div className="flex items-start space-x-3">
+                      <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                      <div>
+                        <h3 className="text-sm font-medium text-red-800">
+                          Booking Failed
+                        </h3>
+                        <p className="text-xs text-red-600 mt-1">
+                          Something went wrong. Please try again.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons - Fixed at bottom */}
+              <div className="flex-shrink-0 border-t border-gray-200 bg-white pt-4 pb-4">
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setShowBookingSheet(false)}
+                    disabled={bookingStatus === "loading"}
+                    className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleBooking}
+                    disabled={
+                      bookingStatus === "loading" || bookingStatus === "success"
+                    }
+                    className="flex-1 px-4 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 active:bg-green-700 transition-colors disabled:opacity-50"
+                  >
+                    {bookingStatus === "loading"
+                      ? "Processing..."
+                      : "Confirm Booking"}
+                  </button>
+                </div>
+              </div>
+            </DrawerContent>
+          </Drawer>
+        </div>
+      </div>
+
+      {/* Driver Details Sheet */}
+      <Drawer open={showDriverSheet} onOpenChange={setShowDriverSheet}>
+        <DrawerContent className="h-auto max-h-[75vh] flex flex-col rounded-t-2xl px-4">
+          <DrawerHeader className="flex-shrink-0">
+            <DrawerTitle className="text-lg font-semibold">
+              Driver Information
+            </DrawerTitle>
+          </DrawerHeader>
+          <div className="flex-1 overflow-y-auto py-4 space-y-4">
+            {/* Driver Profile */}
+            <div className="flex items-center space-x-4">
+              <Avatar className="w-16 h-16 border-2 border-blue-100">
+                <AvatarFallback className="bg-blue-500 text-white text-xl font-semibold">
+                  {ride.driver.name
+                    ?.split(" ")
+                    .map((n) => n.charAt(0))
+                    .join("")
+                    .slice(0, 2) || "D"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-gray-900">
+                  {ride.driver.name}
+                </h3>
+                <div className="flex items-center space-x-3 text-sm text-gray-600 mt-1">
+                  <div className="flex items-center space-x-1">
+                    <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                    <span className="font-medium">
+                      {ride.driver.driverRating?.toFixed(1) || "New"}
+                    </span>
+                  </div>
+                  <span>•</span>
+                  <span>{ride.driver.ridesCompleted} rides</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Driver Stats */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-blue-600">
+                  {ride.driver.ridesCompleted}
+                </div>
+                <p className="text-xs text-gray-600 font-medium">Total Rides</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {ride.driver.driverRating?.toFixed(1) || "New"}
+                </div>
+                <p className="text-xs text-gray-600 font-medium">Rating</p>
+              </div>
+            </div>
+          </div>
+
           {/* Contact Actions - Fixed at bottom */}
-          <div className="flex-shrink-0 border-t bg-card p-2 pb-4 flex gap-2">
-            <Button
-              variant="outline"
-              className="flex-1 h-10 flex items-center gap-2 text-sm"
-              onClick={handleContactDriver}
-            >
-              <MessageSquare size={16} /> Message
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 h-10 flex items-center gap-2 text-sm"
-            >
-              <Phone size={16} /> Call
-            </Button>
+          <div className="flex-shrink-0 border-t border-gray-200 bg-white pt-4 pb-4">
+            <div className="flex space-x-3">
+              <button
+                onClick={handleContactDriver}
+                className="flex-1 px-4 py-3 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 active:bg-blue-300 transition-colors flex items-center justify-center space-x-2"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Message</span>
+              </button>
+              <button className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors flex items-center justify-center space-x-2">
+                <Phone className="w-4 h-4" />
+                <span>Call</span>
+              </button>
+            </div>
           </div>
         </DrawerContent>
       </Drawer>

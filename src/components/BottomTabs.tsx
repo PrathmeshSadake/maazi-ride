@@ -1,10 +1,9 @@
 "use client";
 
+import { cn } from "@/lib/utils";
+import { Car, Home, MessageSquare, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Car, MessageSquare, Settings } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 
 export default function BottomTabs() {
   const pathname = usePathname();
@@ -13,13 +12,13 @@ export default function BottomTabs() {
     {
       href: "/drivers",
       icon: Home,
-      label: "Dashboard",
+      label: "Home",
       isActive: pathname === "/drivers",
     },
     {
       href: "/drivers/trips",
       icon: Car,
-      label: "Rides",
+      label: "Trips",
       isActive: pathname.startsWith("/drivers/trips"),
     },
     {
@@ -31,48 +30,67 @@ export default function BottomTabs() {
     },
     {
       href: "/drivers/account",
-      icon: Settings,
+      icon: User,
       label: "Account",
       isActive: pathname.startsWith("/drivers/account"),
     },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-30">
-      <div className="max-w-sm mx-auto">
-        <nav className="flex justify-around items-center h-16 px-2">
+    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-200/50 shadow-lg z-50">
+      <div className="safe-area-bottom">
+        <nav className="flex justify-around items-center h-20 px-4">
           {tabs.map((tab) => (
             <Link
               key={tab.href}
               href={tab.href}
-              className={cn(
-                "flex flex-col items-center justify-center flex-1 py-2 text-xs transition-colors relative",
-                tab.isActive
-                  ? "text-blue-600"
-                  : "text-gray-600 hover:text-blue-500"
-              )}
+              className="flex flex-col items-center justify-center flex-1 py-2 relative group"
             >
-              <tab.icon
-                className={cn(
-                  "h-5 w-5 mb-1",
-                  tab.isActive ? "text-blue-600" : "text-gray-600"
+              <div className="relative">
+                {/* Icon Container */}
+                <div
+                  className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200",
+                    tab.isActive
+                      ? "bg-blue-100"
+                      : "group-hover:bg-gray-50 group-active:bg-gray-100"
+                  )}
+                >
+                  <tab.icon
+                    className={cn(
+                      "w-5 h-5 transition-colors duration-200",
+                      tab.isActive
+                        ? "text-blue-600"
+                        : "text-gray-500 group-hover:text-gray-700"
+                    )}
+                  />
+                </div>
+
+                {/* Badge */}
+                {tab.badge && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-medium">
+                      {tab.badge}
+                    </span>
+                  </div>
                 )}
-              />
+              </div>
+
+              {/* Label */}
               <span
                 className={cn(
-                  "text-xs",
-                  tab.isActive ? "text-blue-600 font-medium" : "text-gray-600"
+                  "text-xs font-medium mt-1 transition-colors duration-200",
+                  tab.isActive
+                    ? "text-blue-600"
+                    : "text-gray-500 group-hover:text-gray-700"
                 )}
               >
                 {tab.label}
               </span>
-              {tab.badge && (
-                <Badge className="absolute -top-1 right-0 h-4 w-4 rounded-full p-0 text-xs bg-red-500 flex items-center justify-center">
-                  {tab.badge}
-                </Badge>
-              )}
+
+              {/* Active Indicator */}
               {tab.isActive && (
-                <div className="absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full" />
+                <div className="absolute bottom-0 w-1 h-1 bg-blue-600 rounded-full" />
               )}
             </Link>
           ))}

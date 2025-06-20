@@ -20,6 +20,7 @@ import {
   Clock,
   Save,
   X,
+  ChevronRight,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -220,20 +221,20 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-md mx-auto space-y-4">
-          <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-20 h-20 bg-gray-200 rounded-full animate-pulse"></div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
-                  <div className="h-3 bg-gray-200 rounded w-24 animate-pulse"></div>
-                </div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white px-4 pt-8 pb-4">
+          <div className="h-6 bg-gray-200 rounded animate-pulse mb-4"></div>
+        </div>
+        <div className="px-4 space-y-4">
+          <div className="bg-white rounded-xl p-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse"></div>
+              <div className="space-y-2 flex-1">
+                <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
+                <div className="h-3 bg-gray-200 rounded w-24 animate-pulse"></div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -241,19 +242,17 @@ export default function ProfilePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Error Loading Profile
-            </h3>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <Button onClick={() => window.location.reload()} className="w-full">
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl p-6 text-center max-w-sm w-full">
+          <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Error Loading Profile
+          </h3>
+          <p className="text-gray-600 mb-4 text-sm">{error}</p>
+          <Button onClick={() => window.location.reload()} className="w-full">
+            Try Again
+          </Button>
+        </div>
       </div>
     );
   }
@@ -264,17 +263,15 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="flex items-center justify-between p-4">
+      <div className="bg-white">
+        <div className="flex items-center justify-between px-4 pt-8 pb-4">
           <div className="flex items-center space-x-3">
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={() => router.back()}
-              className="p-2"
+              className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center"
             >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+              <ArrowLeft className="w-4 h-4" />
+            </button>
             <h1 className="text-xl font-semibold text-gray-900">My Profile</h1>
           </div>
 
@@ -282,405 +279,374 @@ export default function ProfilePage() {
           <div className="flex items-center space-x-2">
             {isEditing ? (
               <>
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
                   onClick={handleEditToggle}
                   disabled={isSaving}
-                  className="flex items-center space-x-2"
+                  className="px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded-full"
                 >
-                  <X className="w-4 h-4" />
-                  <span>Cancel</span>
-                </Button>
-                <Button
-                  size="sm"
+                  Cancel
+                </button>
+                <button
                   onClick={handleSaveProfile}
                   disabled={isSaving}
-                  className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
+                  className="px-3 py-1.5 text-sm text-white bg-blue-500 rounded-full"
                 >
-                  <Save className="w-4 h-4" />
-                  <span>{isSaving ? "Saving..." : "Save"}</span>
-                </Button>
+                  {isSaving ? "Saving..." : "Save"}
+                </button>
               </>
             ) : (
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={handleEditToggle}
-                className="flex items-center space-x-2"
+                className="px-3 py-1.5 text-sm text-blue-500 bg-blue-50 rounded-full"
               >
-                <Edit3 className="w-4 h-4" />
-                <span>Edit</span>
-              </Button>
+                Edit
+              </button>
             )}
           </div>
         </div>
       </div>
 
-      <div className="p-4 space-y-6 max-w-md mx-auto">
+      <div className="px-4 pb-6 space-y-4">
         {/* Profile Header Card */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start space-x-4">
-              <Avatar className="w-20 h-20 border-4 border-green-100">
-                <AvatarFallback className="bg-green-100 text-green-800 text-xl font-bold">
-                  {(isEditing ? editForm.name : profile?.name)?.[0] || "D"}
-                </AvatarFallback>
-              </Avatar>
+        <div className="bg-white rounded-xl p-4">
+          <div className="flex items-start space-x-3">
+            <Avatar className="w-16 h-16 border-2 border-blue-100">
+              <AvatarFallback className="bg-blue-100 text-blue-800 text-xl font-bold">
+                {(isEditing ? editForm.name : profile?.name)?.[0] || "D"}
+              </AvatarFallback>
+            </Avatar>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 mb-1">
-                  {isEditing ? (
-                    <div className="w-full">
-                      <Label htmlFor="name" className="text-xs text-gray-500">
-                        Full Name
-                      </Label>
-                      <Input
-                        id="name"
-                        value={editForm.name}
-                        onChange={(e) =>
-                          handleInputChange("name", e.target.value)
-                        }
-                        className="mt-1 text-lg font-bold"
-                        placeholder="Enter your name"
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      <h2 className="text-xl font-bold text-gray-900 truncate">
-                        {profile?.name || "Driver"}
-                      </h2>
-                      {profile?.isVerified && (
-                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                      )}
-                    </>
-                  )}
+            <div className="flex-1 min-w-0">
+              {isEditing ? (
+                <div className="space-y-2">
+                  <Input
+                    value={editForm.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    className="text-lg font-bold border-0 p-0 focus-visible:ring-0"
+                    placeholder="Enter your name"
+                  />
                 </div>
-
-                {!isEditing && (
-                  <>
-                    <div className="flex items-center space-x-1 mb-3">
-                      <Star className="w-4 h-4 text-yellow-500" />
-                      <span className="text-sm font-medium text-gray-900">
-                        {profile?.stats.rating.toFixed(1) || "0.0"}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        ({profile?.stats.reviewCount} reviews)
-                      </span>
-                    </div>
-
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
-                      <div className="flex items-center space-x-1">
-                        <Trophy className="w-4 h-4" />
-                        <span>{profile?.stats.totalRides} rides</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>
-                          Since {formatDate(profile?.memberSince || "")}
-                        </span>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Verification Status */}
-            {!isEditing && (
-              <div className="mt-4 p-3 rounded-lg bg-gray-50">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    Verification Status
-                  </span>
-                  <Badge
-                    variant={
-                      verificationStatus === "verified"
-                        ? "default"
-                        : verificationStatus === "pending"
-                        ? "secondary"
-                        : "destructive"
-                    }
-                    className="text-xs"
-                  >
-                    {verificationStatus === "verified"
-                      ? "Verified"
-                      : verificationStatus === "pending"
-                      ? "Pending Review"
-                      : "Incomplete"}
-                  </Badge>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-600">Profile Completion</span>
-                    <span className="font-medium">{profileCompletion}%</span>
+              ) : (
+                <>
+                  <div className="flex items-center space-x-2 mb-1">
+                    <h2 className="text-lg font-bold text-gray-900 truncate">
+                      {profile?.name || "Driver"}
+                    </h2>
+                    {profile?.isVerified && (
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    )}
                   </div>
-                  <Progress value={profileCompletion} className="h-2" />
-                </div>
+
+                  <div className="flex items-center space-x-1 mb-2">
+                    <Star className="w-3 h-3 text-yellow-500" />
+                    <span className="text-sm font-medium text-gray-900">
+                      {profile?.stats.rating.toFixed(1) || "0.0"}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      ({profile?.stats.reviewCount} reviews)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center space-x-3 text-xs text-gray-600">
+                    <div className="flex items-center space-x-1">
+                      <Trophy className="w-3 h-3" />
+                      <span>{profile?.stats.totalRides} rides</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Calendar className="w-3 h-3" />
+                      <span>
+                        Since {formatDate(profile?.memberSince || "")}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Verification Status */}
+          {!isEditing && (
+            <div className="mt-4 p-3 rounded-lg bg-gray-50">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">
+                  Profile Completion
+                </span>
+                <Badge
+                  variant={
+                    verificationStatus === "verified"
+                      ? "default"
+                      : verificationStatus === "pending"
+                      ? "secondary"
+                      : "destructive"
+                  }
+                  className="text-xs"
+                >
+                  {verificationStatus === "verified"
+                    ? "Verified"
+                    : verificationStatus === "pending"
+                    ? "Pending"
+                    : "Incomplete"}
+                </Badge>
               </div>
-            )}
-          </CardContent>
-        </Card>
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="text-gray-600">
+                  {profileCompletion}% complete
+                </span>
+              </div>
+              <Progress value={profileCompletion} className="h-2" />
+            </div>
+          )}
+        </div>
 
         {/* Contact Information */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center space-x-2">
-              <Mail className="w-5 h-5" />
-              <span>Contact Information</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Mail className="w-4 h-4 text-gray-400" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {profile?.email || "Not provided"}
-                    </p>
-                    <p className="text-xs text-gray-500">Email Address</p>
-                  </div>
-                </div>
-                <CheckCircle className="w-4 h-4 text-green-500" />
+        <div className="bg-white rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h3 className="text-base font-semibold text-gray-900">
+              Contact Information
+            </h3>
+          </div>
+
+          <div className="p-4 space-y-4">
+            {/* Email */}
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                <Mail className="w-4 h-4 text-gray-600" />
               </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">
+                  {profile?.email || "Not provided"}
+                </p>
+                <p className="text-xs text-gray-500">Email Address</p>
+              </div>
+              <CheckCircle className="w-4 h-4 text-green-500" />
+            </div>
 
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3 flex-1">
-                  <Phone className="w-4 h-4 text-gray-400" />
-                  <div className="flex-1">
-                    {isEditing ? (
-                      <div>
-                        <Label
-                          htmlFor="phone"
-                          className="text-xs text-gray-500"
-                        >
-                          Phone Number
-                        </Label>
-                        <Input
-                          id="phone"
-                          value={editForm.phone}
-                          onChange={(e) =>
-                            handleInputChange("phone", e.target.value)
-                          }
-                          className="mt-1"
-                          placeholder="Enter phone number"
-                          type="tel"
-                        />
-                      </div>
-                    ) : (
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {profile?.phone || "Not provided"}
-                        </p>
-                        <p className="text-xs text-gray-500">Phone Number</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {!isEditing && (
+            {/* Phone */}
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                <Phone className="w-4 h-4 text-gray-600" />
+              </div>
+              <div className="flex-1">
+                {isEditing ? (
+                  <Input
+                    value={editForm.phone}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    placeholder="Enter phone number"
+                    type="tel"
+                    className="text-sm"
+                  />
+                ) : (
                   <>
-                    {profile?.phoneVerified ? (
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-red-500" />
-                    )}
+                    <p className="text-sm font-medium text-gray-900">
+                      {profile?.phone || "Not provided"}
+                    </p>
+                    <p className="text-xs text-gray-500">Phone Number</p>
                   </>
                 )}
               </div>
-
-              {/* UPI ID */}
-              <Separator />
-
-              <div className="flex items-center space-x-3">
-                <User className="w-4 h-4 text-gray-400" />
-                <div className="flex-1">
-                  {isEditing ? (
-                    <div>
-                      <Label htmlFor="upiId" className="text-xs text-gray-500">
-                        UPI ID (Optional)
-                      </Label>
-                      <Input
-                        id="upiId"
-                        value={editForm.upiId}
-                        onChange={(e) =>
-                          handleInputChange("upiId", e.target.value)
-                        }
-                        className="mt-1"
-                        placeholder="Enter UPI ID"
-                      />
-                    </div>
+              {!isEditing && (
+                <>
+                  {profile?.phoneVerified ? (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
                   ) : (
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {profile?.upiId || "Not provided"}
-                      </p>
-                      <p className="text-xs text-gray-500">UPI ID</p>
-                    </div>
+                    <XCircle className="w-4 h-4 text-red-500" />
                   )}
-                </div>
+                </>
+              )}
+            </div>
+
+            {/* UPI ID */}
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 text-gray-600" />
+              </div>
+              <div className="flex-1">
+                {isEditing ? (
+                  <Input
+                    value={editForm.upiId}
+                    onChange={(e) => handleInputChange("upiId", e.target.value)}
+                    placeholder="Enter UPI ID (Optional)"
+                    className="text-sm"
+                  />
+                ) : (
+                  <>
+                    <p className="text-sm font-medium text-gray-900">
+                      {profile?.upiId || "Not provided"}
+                    </p>
+                    <p className="text-xs text-gray-500">UPI ID</p>
+                  </>
+                )}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Vehicle Information */}
         {profile?.vehicle && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center space-x-2">
-                <Car className="w-5 h-5" />
-                <span>Vehicle Details</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+          <div className="bg-white rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <h3 className="text-base font-semibold text-gray-900 flex items-center">
+                <Car className="w-4 h-4 mr-2" />
+                Vehicle Details
+              </h3>
+            </div>
+
+            <div className="p-4 space-y-3">
+              <div>
+                <p className="text-sm font-medium text-gray-900">
+                  {profile.vehicle.year} {profile.vehicle.make}{" "}
+                  {profile.vehicle.model}
+                </p>
+                <p className="text-xs text-gray-500">Vehicle</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-900">
-                    {profile.vehicle.year} {profile.vehicle.make}{" "}
-                    {profile.vehicle.model}
+                    {profile.vehicle.color || "Not specified"}
                   </p>
-                  <p className="text-xs text-gray-500">Vehicle</p>
+                  <p className="text-xs text-gray-500">Color</p>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {profile.vehicle.color || "Not specified"}
-                    </p>
-                    <p className="text-xs text-gray-500">Color</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {profile.vehicle.licensePlate || "Not provided"}
-                    </p>
-                    <p className="text-xs text-gray-500">License Plate</p>
-                  </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {profile.vehicle.licensePlate || "Not provided"}
+                  </p>
+                  <p className="text-xs text-gray-500">License Plate</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Documents Status */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center space-x-2">
-              <Shield className="w-5 h-5" />
-              <span>Documents</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[
-                {
-                  key: "drivingLicense",
-                  label: "Driving License",
-                  verified: profile?.hasDocuments.drivingLicense,
-                },
-                {
-                  key: "vehicleRegistration",
-                  label: "Vehicle Registration",
-                  verified: profile?.hasDocuments.vehicleRegistration,
-                },
-                {
-                  key: "insurance",
-                  label: "Insurance Certificate",
-                  verified: profile?.hasDocuments.insurance,
-                },
-              ].map((doc) => (
-                <div
-                  key={doc.key}
-                  className="flex items-center justify-between"
-                >
-                  <span className="text-sm text-gray-700">{doc.label}</span>
-                  {doc.verified ? (
-                    <Badge variant="default" className="text-xs">
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Uploaded
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary" className="text-xs">
-                      <Clock className="w-3 h-3 mr-1" />
-                      Pending
-                    </Badge>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h3 className="text-base font-semibold text-gray-900 flex items-center">
+              <Shield className="w-4 h-4 mr-2" />
+              Documents
+            </h3>
+          </div>
+
+          <div className="p-4 space-y-3">
+            {[
+              {
+                key: "drivingLicense",
+                label: "Driving License",
+                verified: profile?.hasDocuments.drivingLicense,
+              },
+              {
+                key: "vehicleRegistration",
+                label: "Vehicle Registration",
+                verified: profile?.hasDocuments.vehicleRegistration,
+              },
+              {
+                key: "insurance",
+                label: "Insurance Certificate",
+                verified: profile?.hasDocuments.insurance,
+              },
+            ].map((doc) => (
+              <div key={doc.key} className="flex items-center justify-between">
+                <span className="text-sm text-gray-700">{doc.label}</span>
+                {doc.verified ? (
+                  <Badge
+                    variant="default"
+                    className="text-xs bg-green-100 text-green-800"
+                  >
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Uploaded
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="text-xs">
+                    <Clock className="w-3 h-3 mr-1" />
+                    Pending
+                  </Badge>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Recent Reviews */}
         {profile?.recentReviews &&
           profile.recentReviews.length > 0 &&
           !isEditing && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <Star className="w-5 h-5" />
-                  <span>Recent Reviews</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {profile.recentReviews.map((review, index) => (
-                    <div
-                      key={index}
-                      className="border-l-4 border-green-200 pl-4"
-                    >
-                      <div className="flex items-center space-x-2 mb-1">
-                        <div className="flex items-center">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-3 h-3 ${
-                                i < review.rating
-                                  ? "text-yellow-400 fill-current"
-                                  : "text-gray-300"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-xs text-gray-500">
-                          by {review.author.name}
-                        </span>
+            <div className="bg-white rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100">
+                <h3 className="text-base font-semibold text-gray-900 flex items-center">
+                  <Star className="w-4 h-4 mr-2" />
+                  Recent Reviews
+                </h3>
+              </div>
+
+              <div className="p-4 space-y-4">
+                {profile.recentReviews.map((review, index) => (
+                  <div key={index} className="border-l-4 border-blue-200 pl-3">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-3 h-3 ${
+                              i < review.rating
+                                ? "text-yellow-400 fill-current"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        ))}
                       </div>
-                      {review.comment && (
-                        <p className="text-sm text-gray-700 italic">
-                          "{review.comment}"
-                        </p>
-                      )}
+                      <span className="text-xs text-gray-500">
+                        by {review.author.name}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    {review.comment && (
+                      <p className="text-sm text-gray-700 italic">
+                        "{review.comment}"
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
-        {/* Action Buttons - Only show when not editing */}
+        {/* Action Buttons */}
         {!isEditing && (
-          <div className="space-y-3 pb-6">
-            <Button
+          <div className="space-y-3">
+            <button
               onClick={() => router.push("/drivers/account/documents")}
-              className="w-full h-12"
-              variant="outline"
+              className="w-full flex items-center p-3 bg-white rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors"
             >
-              <Shield className="w-4 h-4 mr-2" />
-              Manage Documents
-            </Button>
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                <Shield className="w-4 h-4 text-gray-600" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="font-medium text-gray-900 text-sm">
+                  Manage Documents
+                </div>
+                <div className="text-xs text-gray-500">
+                  Upload and verify documents
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </button>
 
-            <Button
+            <button
               onClick={() => router.push("/drivers/account/vehicle")}
-              className="w-full h-12"
-              variant="outline"
+              className="w-full flex items-center p-3 bg-white rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors"
             >
-              <Car className="w-4 h-4 mr-2" />
-              Vehicle Information
-            </Button>
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                <Car className="w-4 h-4 text-gray-600" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="font-medium text-gray-900 text-sm">
+                  Vehicle Information
+                </div>
+                <div className="text-xs text-gray-500">
+                  Update vehicle details
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </button>
           </div>
         )}
       </div>

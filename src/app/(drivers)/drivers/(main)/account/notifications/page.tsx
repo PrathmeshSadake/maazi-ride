@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Bell,
-  Settings,
+  Settings2,
   CheckCircle,
   AlertCircle,
   MessageSquare,
   Car,
   Calendar,
+  Clock,
+  Check,
+  ChevronRight,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -29,6 +32,9 @@ export default function NotificationsPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [activeTab, setActiveTab] = useState<"notifications" | "settings">(
+    "notifications"
+  );
   const [notificationSettings, setNotificationSettings] = useState({
     emailEnabled: true,
     pushEnabled: true,
@@ -45,10 +51,6 @@ export default function NotificationsPage() {
       if (status !== "loading" && !session?.user) return;
 
       try {
-        // In a real app, replace this with API call
-        // const response = await fetch(`/api/drivers/${user.id}/notifications`);
-        // const data = await response.json();
-
         // Mocked data for demonstration
         const mockNotifications: Notification[] = [
           {
@@ -57,7 +59,7 @@ export default function NotificationsPage() {
             message: "You have a new ride request from Mumbai to Pune.",
             type: "ride_request",
             read: false,
-            createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
+            createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
           },
           {
             id: "2",
@@ -65,7 +67,7 @@ export default function NotificationsPage() {
             message: "Your driving license has been verified successfully.",
             type: "document_verified",
             read: true,
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
           },
           {
             id: "3",
@@ -73,7 +75,7 @@ export default function NotificationsPage() {
             message: "You received a payment of ₹550 for ride #12345.",
             type: "payment",
             read: true,
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
           },
           {
             id: "4",
@@ -82,15 +84,7 @@ export default function NotificationsPage() {
               "You have a new message from Raj regarding the upcoming ride.",
             type: "message",
             read: false,
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(), // 1.5 days ago
-          },
-          {
-            id: "5",
-            title: "Ride Cancelled",
-            message: "Ride #54321 has been cancelled by the passenger.",
-            type: "ride_cancelled",
-            read: true,
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 days ago
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
           },
         ];
 
@@ -108,10 +102,6 @@ export default function NotificationsPage() {
   // Mark a notification as read
   const markAsRead = async (notificationId: string) => {
     try {
-      // In a real app, make an API call to update the read status
-      // await fetch(`/api/notifications/${notificationId}/read`, { method: 'POST' });
-
-      // Update local state
       setNotifications((prevNotifications) =>
         prevNotifications.map((notification) =>
           notification.id === notificationId
@@ -127,10 +117,6 @@ export default function NotificationsPage() {
   // Mark all notifications as read
   const markAllAsRead = async () => {
     try {
-      // In a real app, make an API call to update all as read
-      // await fetch(`/api/notifications/read-all`, { method: 'POST' });
-
-      // Update local state
       setNotifications((prevNotifications) =>
         prevNotifications.map((notification) => ({
           ...notification,
@@ -147,15 +133,15 @@ export default function NotificationsPage() {
     switch (type) {
       case "ride_request":
       case "ride_cancelled":
-        return <Car className="text-blue-500" />;
+        return <Car className="w-4 h-4 text-blue-500" />;
       case "document_verified":
-        return <CheckCircle className="text-green-500" />;
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
       case "payment":
-        return <Calendar className="text-purple-500" />;
+        return <Calendar className="w-4 h-4 text-purple-500" />;
       case "message":
-        return <MessageSquare className="text-yellow-500" />;
+        return <MessageSquare className="w-4 h-4 text-yellow-500" />;
       default:
-        return <Bell className="text-gray-500" />;
+        return <Bell className="w-4 h-4 text-gray-500" />;
     }
   };
 
@@ -167,82 +153,144 @@ export default function NotificationsPage() {
     }));
   };
 
-  return (
-    <div className="p-4 max-w-3xl mx-auto">
-      <div className="flex items-center mb-6">
-        <button
-          onClick={() => router.back()}
-          className="p-2 mr-2 rounded-full hover:bg-gray-100"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-2xl font-bold">Notifications</h1>
-      </div>
+  // Format relative time
+  const formatTime = (dateString: string) => {
+    const now = new Date();
+    const time = new Date(dateString);
+    const diff = now.getTime() - time.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-      {/* Tabs */}
-      <div className="flex border-b border-gray-200 mb-6">
-        <button className="px-4 py-2 border-b-2 border-green-500 font-medium text-green-600">
-          Notifications
-        </button>
-        <button className="px-4 py-2 text-gray-500 hover:text-gray-700">
-          Settings
-        </button>
-      </div>
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+  };
 
-      {isLoading ? (
-        <div className="py-8 text-center">Loading notifications...</div>
-      ) : (
-        <>
-          {/* Notification header with actions */}
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h2 className="text-lg font-medium">Recent Notifications</h2>
-              <p className="text-sm text-gray-500">
-                {notifications.filter((n) => !n.read).length} unread
-                notifications
-              </p>
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white px-4 pt-8 pb-4">
+          <div className="h-6 bg-gray-200 rounded animate-pulse mb-4"></div>
+        </div>
+        <div className="px-4 space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-4">
+              <div className="flex space-x-3">
+                <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
+                  <div className="h-3 bg-gray-200 rounded w-48 animate-pulse"></div>
+                </div>
+              </div>
             </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-            {notifications.some((n) => !n.read) && (
-              <button
-                onClick={markAllAsRead}
-                className="text-sm text-green-600 hover:text-green-700"
-              >
-                Mark all as read
-              </button>
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white">
+        <div className="flex items-center px-4 pt-8 pb-4">
+          <button
+            onClick={() => router.back()}
+            className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <h1 className="text-xl font-semibold text-gray-900">Notifications</h1>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab("notifications")}
+            className={`flex-1 px-4 py-3 text-sm font-medium ${
+              activeTab === "notifications"
+                ? "border-b-2 border-blue-500 text-blue-600"
+                : "text-gray-500"
+            }`}
+          >
+            Notifications
+          </button>
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`flex-1 px-4 py-3 text-sm font-medium ${
+              activeTab === "settings"
+                ? "border-b-2 border-blue-500 text-blue-600"
+                : "text-gray-500"
+            }`}
+          >
+            Settings
+          </button>
+        </div>
+      </div>
+
+      <div className="px-4 pb-6">
+        {activeTab === "notifications" ? (
+          <div className="space-y-4 mt-4">
+            {/* Notification header with actions */}
+            {notifications.length > 0 && (
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-base font-medium text-gray-900">
+                    Recent
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    {notifications.filter((n) => !n.read).length} unread
+                  </p>
+                </div>
+
+                {notifications.some((n) => !n.read) && (
+                  <button
+                    onClick={markAllAsRead}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Mark all read
+                  </button>
+                )}
+              </div>
             )}
-          </div>
 
-          {/* Notifications list */}
-          {notifications.length > 0 ? (
-            <div className="space-y-3">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-4 rounded-lg border ${
-                    notification.read
-                      ? "bg-white border-gray-200"
-                      : "bg-green-50 border-green-200"
-                  }`}
-                >
-                  <div className="flex">
-                    <div className="mr-3 mt-1">
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium mb-1">{notification.title}</h3>
-                      <p className="text-gray-600 text-sm">
-                        {notification.message}
-                      </p>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-xs text-gray-500">
-                          {new Date(notification.createdAt).toLocaleString()}
-                        </span>
+            {/* Notifications list */}
+            {notifications.length > 0 ? (
+              <div className="space-y-3">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`bg-white rounded-xl p-4 ${
+                      !notification.read ? "ring-2 ring-blue-100" : ""
+                    }`}
+                  >
+                    <div className="flex">
+                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between">
+                          <h3 className="font-medium text-gray-900 text-sm">
+                            {notification.title}
+                          </h3>
+                          <div className="flex items-center space-x-2 ml-2">
+                            <span className="text-xs text-gray-500">
+                              {formatTime(notification.createdAt)}
+                            </span>
+                            {!notification.read && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-gray-600 text-sm mt-1">
+                          {notification.message}
+                        </p>
 
                         {!notification.read && (
                           <button
                             onClick={() => markAsRead(notification.id)}
-                            className="text-xs text-green-600 hover:text-green-700"
+                            className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium"
                           >
                             Mark as read
                           </button>
@@ -250,207 +298,171 @@ export default function NotificationsPage() {
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-12 text-center text-gray-500">
-              <Bell size={48} className="mx-auto mb-4 text-gray-300" />
-              <p>No notifications yet</p>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Notification Settings Section */}
-      <div className="mt-8 bg-white rounded-lg shadow p-6">
-        <div className="flex items-center mb-4">
-          <Settings className="text-gray-500 mr-2" />
-          <h2 className="text-xl font-semibold">Notification Settings</h2>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <h3 className="font-medium mb-2">Notification Channels</h3>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <span className="mr-2">Email Notifications</span>
-                </label>
-                <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                  <input
-                    type="checkbox"
-                    checked={notificationSettings.emailEnabled}
-                    onChange={() => toggleSetting("emailEnabled")}
-                    className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                  />
-                  <label
-                    className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                      notificationSettings.emailEnabled
-                        ? "bg-green-500"
-                        : "bg-gray-300"
-                    }`}
-                  ></label>
-                </div>
+                ))}
               </div>
-
-              <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <span className="mr-2">Push Notifications</span>
-                </label>
-                <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                  <input
-                    type="checkbox"
-                    checked={notificationSettings.pushEnabled}
-                    onChange={() => toggleSetting("pushEnabled")}
-                    className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                  />
-                  <label
-                    className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                      notificationSettings.pushEnabled
-                        ? "bg-green-500"
-                        : "bg-gray-300"
-                    }`}
-                  ></label>
+            ) : (
+              <div className="bg-white rounded-xl py-12 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Bell className="w-8 h-8 text-gray-400" />
                 </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No notifications yet
+                </h3>
+                <p className="text-gray-500 text-sm">
+                  We'll notify you when something important happens
+                </p>
               </div>
-
-              <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <span className="mr-2">SMS Notifications</span>
-                </label>
-                <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                  <input
-                    type="checkbox"
-                    checked={notificationSettings.smsEnabled}
-                    onChange={() => toggleSetting("smsEnabled")}
-                    className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                  />
-                  <label
-                    className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                      notificationSettings.smsEnabled
-                        ? "bg-green-500"
-                        : "bg-gray-300"
-                    }`}
-                  ></label>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
-
-          <div>
-            <h3 className="font-medium mb-2">Notification Types</h3>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <span className="mr-2">Ride Requests</span>
-                </label>
-                <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                  <input
-                    type="checkbox"
-                    checked={notificationSettings.rideRequests}
-                    onChange={() => toggleSetting("rideRequests")}
-                    className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                  />
-                  <label
-                    className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                      notificationSettings.rideRequests
-                        ? "bg-green-500"
-                        : "bg-gray-300"
-                    }`}
-                  ></label>
-                </div>
+        ) : (
+          /* Settings Tab */
+          <div className="space-y-4 mt-4">
+            {/* Notification Channels */}
+            <div className="bg-white rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100">
+                <h3 className="text-base font-semibold text-gray-900">
+                  Notification Channels
+                </h3>
               </div>
 
-              <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <span className="mr-2">Payment Updates</span>
-                </label>
-                <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                  <input
-                    type="checkbox"
-                    checked={notificationSettings.paymentUpdates}
-                    onChange={() => toggleSetting("paymentUpdates")}
-                    className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                  />
-                  <label
-                    className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                      notificationSettings.paymentUpdates
-                        ? "bg-green-500"
-                        : "bg-gray-300"
-                    }`}
-                  ></label>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <span className="mr-2">System Updates</span>
-                </label>
-                <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                  <input
-                    type="checkbox"
-                    checked={notificationSettings.systemUpdates}
-                    onChange={() => toggleSetting("systemUpdates")}
-                    className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                  />
-                  <label
-                    className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                      notificationSettings.systemUpdates
-                        ? "bg-green-500"
-                        : "bg-gray-300"
-                    }`}
-                  ></label>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <span className="mr-2">Promotions & Offers</span>
-                </label>
-                <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                  <input
-                    type="checkbox"
-                    checked={notificationSettings.promotions}
-                    onChange={() => toggleSetting("promotions")}
-                    className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                  />
-                  <label
-                    className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                      notificationSettings.promotions
-                        ? "bg-green-500"
-                        : "bg-gray-300"
-                    }`}
-                  ></label>
-                </div>
+              <div className="p-4 space-y-4">
+                {[
+                  {
+                    key: "pushEnabled",
+                    label: "Push Notifications",
+                    description: "Receive notifications on your device",
+                  },
+                  {
+                    key: "emailEnabled",
+                    label: "Email Notifications",
+                    description: "Get updates via email",
+                  },
+                  {
+                    key: "smsEnabled",
+                    label: "SMS Notifications",
+                    description: "Receive text messages for important updates",
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.key}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900 text-sm">
+                        {item.label}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {item.description}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() =>
+                        toggleSetting(
+                          item.key as keyof typeof notificationSettings
+                        )
+                      }
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        notificationSettings[
+                          item.key as keyof typeof notificationSettings
+                        ]
+                          ? "bg-blue-500"
+                          : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          notificationSettings[
+                            item.key as keyof typeof notificationSettings
+                          ]
+                            ? "translate-x-6"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
 
-          <div className="pt-4">
-            <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+            {/* Notification Types */}
+            <div className="bg-white rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100">
+                <h3 className="text-base font-semibold text-gray-900">
+                  Notification Types
+                </h3>
+              </div>
+
+              <div className="p-4 space-y-4">
+                {[
+                  {
+                    key: "rideRequests",
+                    label: "Ride Requests",
+                    description: "New ride requests and bookings",
+                  },
+                  {
+                    key: "paymentUpdates",
+                    label: "Payment Updates",
+                    description: "Payment confirmations and receipts",
+                  },
+                  {
+                    key: "systemUpdates",
+                    label: "System Updates",
+                    description: "App updates and system maintenance",
+                  },
+                  {
+                    key: "promotions",
+                    label: "Promotions & Offers",
+                    description: "Special offers and promotional content",
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.key}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900 text-sm">
+                        {item.label}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {item.description}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() =>
+                        toggleSetting(
+                          item.key as keyof typeof notificationSettings
+                        )
+                      }
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        notificationSettings[
+                          item.key as keyof typeof notificationSettings
+                        ]
+                          ? "bg-blue-500"
+                          : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          notificationSettings[
+                            item.key as keyof typeof notificationSettings
+                          ]
+                            ? "translate-x-6"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <button className="w-full px-4 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors">
               Save Settings
             </button>
           </div>
-        </div>
+        )}
       </div>
-
-      <style jsx>{`
-        .toggle-checkbox:checked {
-          right: 0;
-          border-color: #ffffff;
-        }
-        .toggle-checkbox:checked + .toggle-label {
-          background-color: #10b981;
-        }
-        .toggle-checkbox {
-          right: 0;
-          transition: all 0.3s;
-        }
-        .toggle-label {
-          transition: all 0.3s;
-        }
-      `}</style>
     </div>
   );
 }
