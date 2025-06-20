@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { PhoneNumberDialog } from "@/components/ui/phone-number-dialog";
 import { toast } from "sonner";
 
 interface Driver {
@@ -51,6 +52,10 @@ export default function RidesPage() {
   const [filteredRides, setFilteredRides] = useState<Ride[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [userPhone, setUserPhone] = useState<string | null>(null);
+  const [phoneDialogOpen, setPhoneDialogOpen] = useState(false);
+  const [currentRideId, setCurrentRideId] = useState<string | null>(null);
+  const [isBooking, setIsBooking] = useState(false);
 
   useEffect(() => {
     const fetchRides = async () => {
@@ -71,7 +76,20 @@ export default function RidesPage() {
       }
     };
 
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch("/api/users/me");
+        if (response.ok) {
+          const userData = await response.json();
+          setUserPhone(userData.phone);
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
     fetchRides();
+    fetchUserProfile();
   }, []);
 
   useEffect(() => {
@@ -100,16 +118,35 @@ export default function RidesPage() {
   };
 
   const handleApplyForRide = async (rideId: string) => {
+    // Check if user has phone number
+    if (!userPhone) {
+      // Show dialog to collect phone number
+      setCurrentRideId(rideId);
+      setPhoneDialogOpen(true);
+      return;
+    }
+
+    // User has phone number, proceed with booking
+    await submitBooking(rideId, userPhone);
+  };
+
+  const submitBooking = async (rideId: string, phoneNumber: string) => {
+    setIsBooking(true);
+    console.log("Submitting booking with phone number:", phoneNumber);
     try {
+      const requestBody = {
+        rideId,
+        numSeats: 1,
+        phoneNumber,
+      };
+      console.log("Request body:", requestBody);
+
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          rideId,
-          numSeats: 1,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (response.ok) {
@@ -138,6 +175,16 @@ export default function RidesPage() {
     } catch (error) {
       console.error("Error applying for ride:", error);
       toast.error("An error occurred while applying for the ride");
+    } finally {
+      setIsBooking(false);
+      setPhoneDialogOpen(false);
+      setCurrentRideId(null);
+    }
+  };
+
+  const handlePhoneSubmit = (phoneNumber: string) => {
+    if (currentRideId) {
+      submitBooking(currentRideId, phoneNumber);
     }
   };
 
@@ -273,8 +320,11 @@ export default function RidesPage() {
                       : "Request Rejected"}
                   </Badge>
                 ) : (
-                  <Button onClick={() => handleApplyForRide(ride.id)}>
-                    Apply for Ride
+                  <Button
+                    onClick={() => handleApplyForRide(ride.id)}
+                    disabled={isBooking}
+                  >
+                    {isBooking ? "Applying..." : "Apply for Ride"}
                   </Button>
                 )}
               </CardFooter>
@@ -286,6 +336,13 @@ export default function RidesPage() {
           <p className="text-gray-500 mb-4">No rides found</p>
         </div>
       )}
+
+      <PhoneNumberDialog
+        open={phoneDialogOpen}
+        onOpenChange={setPhoneDialogOpen}
+        onSubmit={handlePhoneSubmit}
+        isLoading={isBooking}
+      />
     </div>
   );
 }

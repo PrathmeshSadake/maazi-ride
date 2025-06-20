@@ -28,6 +28,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { rideId, numSeats, phoneNumber } = createBookingSchema.parse(body);
 
+    // Phone number is required for booking
+    if (!phoneNumber) {
+      return NextResponse.json(
+        { message: "Phone number is required for booking" },
+        { status: 400 }
+      );
+    }
+
     // Get the ride details
     const ride = await prisma.ride.findUnique({
       where: { id: rideId },

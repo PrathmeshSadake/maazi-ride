@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Phone,
   User,
+  IndianRupee,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
@@ -201,8 +202,9 @@ export default function DriverBookingsPage() {
                     {booking.status.replace("_", " ")}
                   </div>
                 </div>
-                <div className="text-lg font-semibold">
-                  ${booking.ride.price * booking.numSeats}
+                <div className="text-lg font-semibold flex items-center gap-1">
+                  <IndianRupee size={16} />
+                  {booking.ride.price * booking.numSeats}
                 </div>
               </div>
 

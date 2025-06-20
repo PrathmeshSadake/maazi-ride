@@ -43,6 +43,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { PhoneNumberDialog } from "@/components/ui/phone-number-dialog";
 import {
   Drawer,
   DrawerContent,
@@ -92,12 +93,30 @@ export default function RideDetailsPage() {
   >("idle");
   const [showBookingSheet, setShowBookingSheet] = useState(false);
   const [showDriverSheet, setShowDriverSheet] = useState(false);
+  const [userPhone, setUserPhone] = useState<string | null>(null);
+  const [phoneDialogOpen, setPhoneDialogOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchRideDetails();
     }
   }, [id]);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch("/api/users/me");
+        if (response.ok) {
+          const userData = await response.json();
+          setUserPhone(userData.phone);
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   // Debug hook to monitor vehicle data
   useEffect(() => {
@@ -154,6 +173,20 @@ export default function RideDetailsPage() {
 
     if (!ride) return;
 
+    // Check if user has phone number
+    if (!userPhone) {
+      // Show dialog to collect phone number
+      setPhoneDialogOpen(true);
+      return;
+    }
+
+    // User has phone number, proceed with booking
+    await submitBooking(userPhone);
+  };
+
+  const submitBooking = async (phoneNumber: string) => {
+    if (!ride) return;
+
     setBookingStatus("loading");
 
     try {
@@ -165,6 +198,7 @@ export default function RideDetailsPage() {
         body: JSON.stringify({
           rideId: ride.id,
           numSeats,
+          phoneNumber,
         }),
       });
 
@@ -186,7 +220,13 @@ export default function RideDetailsPage() {
     } catch (err) {
       console.error("Error booking ride:", err);
       setBookingStatus("error");
+    } finally {
+      setPhoneDialogOpen(false);
     }
+  };
+
+  const handlePhoneSubmit = (phoneNumber: string) => {
+    submitBooking(phoneNumber);
   };
 
   const handleContactDriver = () => {
@@ -648,6 +688,13 @@ export default function RideDetailsPage() {
           </div>
         </DrawerContent>
       </Drawer>
+
+      <PhoneNumberDialog
+        open={phoneDialogOpen}
+        onOpenChange={setPhoneDialogOpen}
+        onSubmit={handlePhoneSubmit}
+        isLoading={bookingStatus === "loading"}
+      />
     </div>
   );
 }
