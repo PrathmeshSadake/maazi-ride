@@ -13,7 +13,9 @@ CREATE TABLE "User" (
     "name" TEXT,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
-    "role" "UserRole" NOT NULL DEFAULT 'user',
+    "phone" TEXT,
+    "phoneVerified" BOOLEAN NOT NULL DEFAULT false,
+    "role" "UserRole",
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "driverRating" DOUBLE PRECISION,
@@ -83,7 +85,11 @@ CREATE TABLE "Ride" (
     "id" TEXT NOT NULL,
     "driverId" TEXT NOT NULL,
     "fromLocation" TEXT NOT NULL,
+    "fromLatitude" DOUBLE PRECISION NOT NULL,
+    "fromLongitude" DOUBLE PRECISION NOT NULL,
     "toLocation" TEXT NOT NULL,
+    "toLatitude" DOUBLE PRECISION NOT NULL,
+    "toLongitude" DOUBLE PRECISION NOT NULL,
     "departureDate" TIMESTAMP(3) NOT NULL,
     "departureTime" TEXT NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
@@ -106,6 +112,7 @@ CREATE TABLE "Booking" (
     "userId" TEXT NOT NULL,
     "status" "BookingStatus" NOT NULL DEFAULT 'PENDING',
     "numSeats" INTEGER NOT NULL DEFAULT 1,
+    "phoneNumber" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -176,6 +183,9 @@ CREATE TABLE "FilterOptions" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_phone_key" ON "User"("phone");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Account_provider_providerAccountId_key" ON "Account"("provider", "providerAccountId");

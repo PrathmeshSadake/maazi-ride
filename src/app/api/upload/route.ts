@@ -27,8 +27,10 @@ export async function POST(request: Request) {
       );
     }
 
+    const randomString = Math.random().toString(36).substring(2, 15);
+
     // Upload to Vercel Blob
-    const blob = await put(file.name, file, {
+    const blob = await put(`${randomString}-${file.name}`, file, {
       access: "public",
     });
 

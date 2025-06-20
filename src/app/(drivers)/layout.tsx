@@ -9,13 +9,13 @@ export default async function DriversLayout({
   const session = await auth();
   const user = session?.user;
 
-  // if (!user) {
-  //   redirect("/sign-in");
-  // }
+  if (!user) {
+    redirect("/sign-in");
+  }
 
-  // if (user && user.role !== "driver") {
-  //   redirect("/");
-  // }
+  if (user && user.role !== "driver") {
+    redirect("/");
+  }
 
   return (
     <div className="min-h-screen flex flex-col w-full max-w-sm mx-auto">

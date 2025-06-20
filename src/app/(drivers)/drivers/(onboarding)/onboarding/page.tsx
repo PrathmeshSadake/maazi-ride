@@ -682,37 +682,228 @@ export default function DriverOnboarding() {
             <CardHeader>
               <CardTitle>Upload Vehicle Images</CardTitle>
               <CardDescription>
-                Upload images of your vehicle. At least 2 images are required,
-                and you can upload up to 4.
+                Upload clear, high-quality images of your vehicle. At least 2
+                images are required (maximum 4).
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="border rounded-lg p-4">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleVehicleImageChange}
-                  className="mb-4"
-                />
-                <div className="grid grid-cols-2 gap-4">
-                  {vehicleImageUrls.map((url, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={url}
-                        alt={`Vehicle Image ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-md"
-                      />
-                      <button
-                        onClick={() => removeVehicleImage(index)}
-                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+            <CardContent className="space-y-6">
+              {/* Upload Guidelines */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-900 mb-2">
+                  Photo Guidelines
+                </h4>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>• Take photos in good lighting conditions</li>
+                  <li>• Include front, back, and side views of your vehicle</li>
+                  <li>• Ensure license plate is clearly visible</li>
+                  <li>• Avoid blurry or dark images</li>
+                </ul>
+              </div>
+
+              {/* Upload Zone */}
+              <div className="space-y-4">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-8 h-8 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        &times;
-                      </button>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
                     </div>
-                  ))}
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-1">
+                        Upload Vehicle Photos
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Drag and drop your images here, or click to browse
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const element =
+                            document.getElementById("vehicle-images");
+                          if (element) element.click();
+                        }}
+                        className="mb-2"
+                      >
+                        Choose Files
+                      </Button>
+                      <p className="text-xs text-gray-400">
+                        Supports: JPG, PNG, HEIC (Max 10MB each)
+                      </p>
+                    </div>
+                  </div>
+                  <input
+                    id="vehicle-images"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleVehicleImageChange}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Progress Indicator */}
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">
+                    {vehicleImageUrls.length} of 4 images uploaded
+                  </span>
+                  <span className="text-gray-500">Minimum 2 required</span>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${Math.min(
+                        (vehicleImageUrls.length / 4) * 100,
+                        100
+                      )}%`,
+                    }}
+                  ></div>
                 </div>
               </div>
+
+              {/* Image Preview Grid */}
+              {vehicleImageUrls.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900">Uploaded Images</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+                    {vehicleImageUrls.map((url, index) => (
+                      <div
+                        key={index}
+                        className="relative group bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                      >
+                        <div className="aspect-video relative">
+                          <img
+                            src={url}
+                            alt={`Vehicle Image ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          {/* Remove Button */}
+                          <button
+                            onClick={() => removeVehicleImage(index)}
+                            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                            title="Remove image"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                          {/* Image Number Badge */}
+                          <div className="absolute top-2 left-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                            {index + 1}
+                          </div>
+                        </div>
+                        <div className="p-3">
+                          <p className="text-sm font-medium text-gray-900">
+                            Image {index + 1}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Click to view full size
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Empty slots */}
+                    {Array.from({ length: 4 - vehicleImageUrls.length }).map(
+                      (_, index) => (
+                        <div
+                          key={`empty-${index}`}
+                          className="relative bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg overflow-hidden"
+                        >
+                          <div className="aspect-video flex items-center justify-center">
+                            <div className="text-center">
+                              <svg
+                                className="w-8 h-8 text-gray-400 mx-auto mb-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={1}
+                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                              </svg>
+                              <p className="text-xs text-gray-400">
+                                {index === 0 && vehicleImageUrls.length === 0
+                                  ? "Add your first image"
+                                  : "Optional"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Status Messages */}
+              {vehicleImageUrls.length > 0 && (
+                <div className="space-y-2">
+                  {vehicleImageUrls.length < 2 && (
+                    <div className="flex items-center space-x-2 text-amber-600">
+                      <svg
+                        className="w-5 h-5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span className="text-sm">
+                        Upload at least {2 - vehicleImageUrls.length} more
+                        image(s) to continue
+                      </span>
+                    </div>
+                  )}
+                  {vehicleImageUrls.length >= 2 && (
+                    <div className="flex items-center space-x-2 text-green-600">
+                      <svg
+                        className="w-5 h-5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span className="text-sm">
+                        Great! You have enough images to proceed
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button variant="outline" onClick={handlePrevStep}>
@@ -722,8 +913,15 @@ export default function DriverOnboarding() {
                 variant="default"
                 onClick={handleNextStep}
                 disabled={vehicleImageUrls.length < 2}
+                className={
+                  vehicleImageUrls.length >= 2
+                    ? "bg-green-600 hover:bg-green-700"
+                    : ""
+                }
               >
-                Next Step
+                {vehicleImageUrls.length >= 2
+                  ? "Continue"
+                  : `Upload ${2 - vehicleImageUrls.length} more image(s)`}
               </Button>
             </CardFooter>
           </Card>
@@ -833,12 +1031,47 @@ export default function DriverOnboarding() {
     }
   };
 
+  // Check if driver has submitted all documents for verification
+  const hasSubmittedAllDocuments = () => {
+    if (!driver) return false;
+
+    const hasDocuments =
+      driver.drivingLicenseUrl &&
+      driver.vehicleRegistrationUrl &&
+      driver.insuranceUrl;
+
+    const hasVehicleInfo =
+      driver.vehicle &&
+      driver.vehicle.make &&
+      driver.vehicle.model &&
+      driver.vehicle.year &&
+      driver.vehicle.color &&
+      driver.vehicle.licensePlate;
+
+    const hasVehicleImages =
+      driver.vehicle?.vehicleImages && driver.vehicle.vehicleImages.length >= 2;
+
+    return hasDocuments && hasVehicleInfo && hasVehicleImages;
+  };
+
   // Redirect verified drivers to dashboard
   useEffect(() => {
     if (!driverLoading && driver?.isVerified) {
-      // router.push("/drivers");
+      router.push("/drivers");
     }
   }, [driver?.isVerified, driverLoading, router]);
+
+  // Redirect to verification pending page if documents are submitted but not verified
+  useEffect(() => {
+    if (
+      !driverLoading &&
+      driver &&
+      !driver.isVerified &&
+      hasSubmittedAllDocuments()
+    ) {
+      router.push("/drivers/verification-pending");
+    }
+  }, [driver, driverLoading, router]);
 
   // Show loading state while driver data is being fetched
   if (status === "loading" || driverLoading) {
@@ -883,8 +1116,21 @@ export default function DriverOnboarding() {
             <p className="text-green-700 mb-4">
               You can now start offering rides on the platform.
             </p>
-            <Link href="/drivers/main">
+            <Link href="/drivers">
               <Button>Go to Driver Dashboard</Button>
+            </Link>
+          </div>
+        ) : hasSubmittedAllDocuments() ? (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+            <h2 className="text-xl font-semibold text-blue-800 mb-2">
+              Verification in Progress
+            </h2>
+            <p className="text-blue-700 mb-4">
+              Your documents have been submitted and are under review. This
+              process usually takes 1-3 business days.
+            </p>
+            <Link href="/drivers/verification-pending">
+              <Button variant="outline">View Status</Button>
             </Link>
           </div>
         ) : (
@@ -898,65 +1144,70 @@ export default function DriverOnboarding() {
           </div>
         )}
 
-        {/* Progress Steps */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="w-full flex items-center">
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  step >= 1 ? "bg-blue-500 text-white" : "bg-gray-200"
-                }`}
-              >
-                1
+        {/* Only show onboarding form if not verified and haven't submitted all documents */}
+        {!driver?.isVerified && !hasSubmittedAllDocuments() && (
+          <>
+            {/* Progress Steps */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between">
+                <div className="w-full flex items-center">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      step >= 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+                    }`}
+                  >
+                    1
+                  </div>
+                  <div
+                    className={`flex-1 h-1 mx-2 ${
+                      step > 1 ? "bg-blue-500" : "bg-gray-200"
+                    }`}
+                  ></div>
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      step >= 2 ? "bg-blue-500 text-white" : "bg-gray-200"
+                    }`}
+                  >
+                    2
+                  </div>
+                  <div
+                    className={`flex-1 h-1 mx-2 ${
+                      step > 2 ? "bg-blue-500" : "bg-gray-200"
+                    }`}
+                  ></div>
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      step >= 3 ? "bg-blue-500 text-white" : "bg-gray-200"
+                    }`}
+                  >
+                    3
+                  </div>
+                  <div
+                    className={`flex-1 h-1 mx-2 ${
+                      step > 3 ? "bg-blue-500" : "bg-gray-200"
+                    }`}
+                  ></div>
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      step >= 4 ? "bg-blue-500 text-white" : "bg-gray-200"
+                    }`}
+                  >
+                    4
+                  </div>
+                </div>
               </div>
-              <div
-                className={`flex-1 h-1 mx-2 ${
-                  step > 1 ? "bg-blue-500" : "bg-gray-200"
-                }`}
-              ></div>
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  step >= 2 ? "bg-blue-500 text-white" : "bg-gray-200"
-                }`}
-              >
-                2
-              </div>
-              <div
-                className={`flex-1 h-1 mx-2 ${
-                  step > 2 ? "bg-blue-500" : "bg-gray-200"
-                }`}
-              ></div>
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  step >= 3 ? "bg-blue-500 text-white" : "bg-gray-200"
-                }`}
-              >
-                3
-              </div>
-              <div
-                className={`flex-1 h-1 mx-2 ${
-                  step > 3 ? "bg-blue-500" : "bg-gray-200"
-                }`}
-              ></div>
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  step >= 4 ? "bg-blue-500 text-white" : "bg-gray-200"
-                }`}
-              >
-                4
+              <div className="flex justify-between mt-2 text-sm">
+                <div className="text-center w-20">Documents</div>
+                <div className="text-center w-20">Vehicle</div>
+                <div className="text-center w-20">Images</div>
+                <div className="text-center w-20">Confirm</div>
               </div>
             </div>
-          </div>
-          <div className="flex justify-between mt-2 text-sm">
-            <div className="text-center w-20">Documents</div>
-            <div className="text-center w-20">Vehicle</div>
-            <div className="text-center w-20">Images</div>
-            <div className="text-center w-20">Confirm</div>
-          </div>
-        </div>
 
-        {/* Form Content */}
-        {renderStepContent()}
+            {/* Form Content */}
+            {renderStepContent()}
+          </>
+        )}
       </div>
     </div>
   );

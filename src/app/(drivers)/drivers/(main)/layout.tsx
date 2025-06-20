@@ -41,7 +41,7 @@ const layout = async ({ children }: { children: React.ReactNode }) => {
   // If driver is not verified, redirect based on their status
   if (!driver?.isVerified) {
     console.log("Redirecting to drivers onboarding page");
-    // redirect("/drivers/onboarding");
+    redirect("/drivers/onboarding");
   }
 
   return (

@@ -83,9 +83,9 @@ export default async function VerificationPendingPage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-3">
-          <Button className="w-full" asChild>
+          {/* <Button className="w-full" asChild>
             <Link href="/drivers/account">View Profile</Link>
-          </Button>
+          </Button> */}
           <div className="text-center text-sm text-gray-500">
             <p>
               Need help?{" "}
