@@ -220,17 +220,6 @@ export default function PaymentPage() {
           </div>
         )}
       </div>
-
-      <div className="mt-6 bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Payment History</h2>
-        <p className="text-gray-600">
-          Your recent payment transactions will appear here.
-        </p>
-        {/* We would implement payment history here in a future update */}
-        <div className="py-8 text-center text-gray-500">
-          No payment history available yet.
-        </div>
-      </div>
     </div>
   );
 }

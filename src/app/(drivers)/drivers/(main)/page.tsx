@@ -105,7 +105,7 @@ export default async function DriverDashboard() {
       <div className="px-4 pb-0">
         <div className="space-y-4">
           {/* Performance Overview Card */}
-          <Card className="overflow-hidden border-gray-200">
+          {/* <Card className="overflow-hidden border-gray-200">
             <CardHeader className="bg-white border-b">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-base font-semibold">
@@ -180,7 +180,7 @@ export default async function DriverDashboard() {
                 <Progress value={0} className="h-2" />
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Quick Actions Card */}
           <Card className="border-gray-200">

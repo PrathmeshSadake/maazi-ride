@@ -133,18 +133,6 @@ const layout = async ({ children }: { children: React.ReactNode }) => {
                     </DrawerClose>
 
                     <DrawerClose asChild>
-                      <Link href="/drivers/earnings">
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start h-12 text-left"
-                        >
-                          <IndianRupee className="h-5 w-5 mr-3" />
-                          View Earnings
-                        </Button>
-                      </Link>
-                    </DrawerClose>
-
-                    <DrawerClose asChild>
                       <Link href="/drivers/messages">
                         <Button
                           variant="ghost"

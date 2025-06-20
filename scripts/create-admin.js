@@ -27,6 +27,7 @@ async function createSuperAdmin() {
         email,
         password: hashedPassword,
         role: UserRole.admin,
+        isVerified: true,
       },
     });
 

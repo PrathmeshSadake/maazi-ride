@@ -153,14 +153,14 @@ export default function VehiclePage() {
             )}
 
             {/* Update button */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
+            {/* <div className="mt-6 pt-6 border-t border-gray-200">
               <button
                 onClick={() => router.push("/drivers/onboarding/vehicle")}
                 className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 Update Vehicle Information
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       ) : (
