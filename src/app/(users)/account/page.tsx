@@ -202,9 +202,9 @@ export default function AccountPage() {
                       </Avatar>
                     </div>
 
-                    <button className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors">
+                    {/* <button className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors">
                       Change Photo
-                    </button>
+                    </button> */}
 
                     <div className="space-y-4">
                       <div>
@@ -264,7 +264,7 @@ export default function AccountPage() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-3">
+        {/* <div className="grid grid-cols-3 gap-3">
           <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
             <div className="text-2xl font-bold text-blue-600">12</div>
             <p className="text-xs text-gray-600 font-medium">Total Rides</p>
@@ -277,7 +277,7 @@ export default function AccountPage() {
             <div className="text-2xl font-bold text-purple-600">₹2.4k</div>
             <p className="text-xs text-gray-600 font-medium">Saved</p>
           </div>
-        </div>
+        </div> */}
 
         {/* Menu Items */}
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">

@@ -93,14 +93,17 @@ const AuthPage = () => {
         {/* Logo and Header */}
         <div className="text-center space-y-6">
           <div className="relative">
-            <Image
-              src="https://rue7vxma3l1fw7f7.public.blob.vercel-storage.com/logo-bf8y30pc7CCXr3951SDdFWldtMUxO3.png"
-              alt="Maazi Ride"
-              width={72}
-              height={72}
-              className="w-full h-full object-contain"
-              priority
-            />
+            <div className="w-42 h-42 relative mx-auto">
+              <Image
+                src="https://rue7vxma3l1fw7f7.public.blob.vercel-storage.com/logo-bf8y30pc7CCXr3951SDdFWldtMUxO3.png"
+                alt="Maazi Ride"
+                width={42}
+                height={42}
+                className="w-full h-full object-contain"
+                priority
+              />
+            </div>
+
             <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
               <div className="w-2 h-2 bg-white rounded-full"></div>
             </div>
