@@ -9,7 +9,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "rue7vxma3l1fw7f7.public.blob.vercel-storage.com",
       },
     ],
   },
