@@ -38,6 +38,7 @@ model User {
   phone         String?   @unique
   phoneVerified Boolean   @default(false)
   role          UserRole?
+  image         String?   // Profile image URL
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   accounts      Account[]
@@ -109,6 +110,7 @@ model Vehicle {
   color         String?
   licensePlate  String?
   vehicleImages String[] // Array of image URLs
+  isCommercial  Boolean  @default(false) // Whether the vehicle is commercial or not
   userId        String   @unique  // One-to-one relation with User
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())

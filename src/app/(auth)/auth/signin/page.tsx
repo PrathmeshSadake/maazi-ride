@@ -15,6 +15,7 @@ function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const successMessage = searchParams.get("message");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -90,6 +91,23 @@ function SignInContent() {
 
       {/* Content */}
       <div className="px-4 pb-6 space-y-4">
+        {/* Success Banner */}
+        {successMessage && (
+          <div className="bg-green-50 border border-green-100 rounded-xl p-4">
+            <div className="flex items-start">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+              </div>
+              <div>
+                <h3 className="font-medium text-green-800 text-sm mb-1">
+                  Success
+                </h3>
+                <p className="text-green-600 text-xs">{successMessage}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Error Banner */}
         {error && (
           <div className="bg-red-50 border border-red-100 rounded-xl p-4">

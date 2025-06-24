@@ -25,6 +25,7 @@ interface VehicleData {
   year: string;
   color: string;
   licensePlate: string;
+  isCommercial: boolean;
 }
 
 interface FormData {
@@ -79,6 +80,7 @@ export default function DriverOnboarding() {
       year: "",
       color: "",
       licensePlate: "",
+      isCommercial: false,
     },
   });
 
@@ -115,6 +117,7 @@ export default function DriverOnboarding() {
               year: driver.vehicle.year?.toString() || "",
               color: driver.vehicle.color || "",
               licensePlate: driver.vehicle.licensePlate || "",
+              isCommercial: (driver.vehicle as any).isCommercial || false,
             }
           : prev.vehicle,
       }));
@@ -240,6 +243,7 @@ export default function DriverOnboarding() {
           vehicle: {
             ...formData.vehicle,
             images: vehicleImageUrls,
+            isCommercial: formData.vehicle.isCommercial,
           },
         }),
       });
@@ -660,6 +664,72 @@ export default function DriverOnboarding() {
                     />
                   </div>
                 </div>
+
+                {/* Vehicle Type Selection */}
+                <div className="space-y-4 mt-6">
+                  <h3 className="text-lg font-medium">Vehicle Type</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="radio"
+                        id="non-commercial"
+                        name="vehicle.isCommercial"
+                        value="false"
+                        checked={!formData.vehicle.isCommercial}
+                        onChange={(e) => {
+                          setFormData({
+                            ...formData,
+                            vehicle: {
+                              ...formData.vehicle,
+                              isCommercial: false,
+                            },
+                          });
+                        }}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                      />
+                      <label
+                        htmlFor="non-commercial"
+                        className="text-sm font-medium"
+                      >
+                        Non-Commercial Vehicle
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="radio"
+                        id="commercial"
+                        name="vehicle.isCommercial"
+                        value="true"
+                        checked={formData.vehicle.isCommercial}
+                        onChange={(e) => {
+                          setFormData({
+                            ...formData,
+                            vehicle: {
+                              ...formData.vehicle,
+                              isCommercial: true,
+                            },
+                          });
+                        }}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                      />
+                      <label
+                        htmlFor="commercial"
+                        className="text-sm font-medium"
+                      >
+                        Commercial Vehicle
+                      </label>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-sm text-blue-800">
+                      <strong>Commercial vehicles</strong> include taxis,
+                      ride-sharing vehicles, delivery trucks, etc.
+                      <br />
+                      <strong>Non-commercial vehicles</strong> are personal
+                      vehicles used for ridesharing.
+                    </p>
+                  </div>
+                </div>
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
@@ -985,6 +1055,21 @@ export default function DriverOnboarding() {
 
                       <p className="text-sm text-gray-500">License Plate:</p>
                       <p>{formData.vehicle.licensePlate}</p>
+
+                      <p className="text-sm text-gray-500">Vehicle Type:</p>
+                      <p>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            formData.vehicle.isCommercial
+                              ? "bg-orange-100 text-orange-800"
+                              : "bg-green-100 text-green-800"
+                          }`}
+                        >
+                          {formData.vehicle.isCommercial
+                            ? "Commercial"
+                            : "Non-Commercial"}
+                        </span>
+                      </p>
                     </div>
                   </div>
                 </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   User,
@@ -18,6 +18,8 @@ import {
   Phone,
   Mail,
   ArrowLeft,
+  Camera,
+  Upload,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useLogout } from "@/hooks/useLogout";
@@ -40,10 +42,32 @@ import {
 
 export default function AccountPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const { logout } = useLogout();
   const [loading, setLoading] = useState(false);
   const [showSignOutSheet, setShowSignOutSheet] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Form state for editing
+  const [editForm, setEditForm] = useState({
+    name: "",
+    phone: "",
+    image: "",
+  });
+
+  // Initialize form when session data is available
+  useEffect(() => {
+    if (session?.user) {
+      setEditForm({
+        name: session.user.name || "",
+        phone: "", // We'll fetch this from the user profile API if needed
+        image: session.user.image || "",
+      });
+    }
+  }, [session?.user]);
 
   const handleSignOut = async () => {
     setLoading(true);
@@ -53,6 +77,109 @@ export default function AccountPage() {
       console.error("Error signing out:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditToggle = () => {
+    if (isEditingProfile) {
+      // Reset form when canceling
+      setEditForm({
+        name: session?.user?.name || "",
+        phone: "", // We'll fetch this from the user profile API if needed
+        image: session?.user?.image || "",
+      });
+    }
+    setIsEditingProfile(!isEditingProfile);
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setEditForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image size must be less than 5MB");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to upload image");
+      }
+
+      const data = await response.json();
+      setEditForm((prev) => ({
+        ...prev,
+        image: data.url,
+      }));
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Failed to upload image. Please try again.");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!session?.user?.id) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch(`/api/users/${session.user.id}/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editForm),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
+
+      const updatedUser = await response.json();
+
+      // Update the session with new data
+      await update({
+        ...session,
+        user: {
+          ...session.user,
+          name: updatedUser.name,
+          image: updatedUser.image,
+        },
+      });
+
+      setIsEditingProfile(false);
+      alert("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -155,15 +282,17 @@ export default function AccountPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Avatar className="w-16 h-16 border-2 border-white/20 mr-4">
-                <AvatarImage src={session?.user?.image || ""} />
+                <AvatarImage
+                  src={editForm.image || session?.user?.image || ""}
+                />
                 <AvatarFallback className="bg-white/20 text-white text-xl font-semibold">
-                  {session?.user?.name?.charAt(0) || "U"}
+                  {(editForm.name || session?.user?.name)?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <div className="flex items-center space-x-2 mb-1">
                   <h2 className="text-lg font-semibold">
-                    {session?.user?.name || "User"}
+                    {editForm.name || session?.user?.name || "User"}
                   </h2>
                   <div className="bg-green-400/20 border border-green-400/30 text-green-100 text-xs px-2 py-0.5 rounded-full font-medium">
                     Verified
@@ -179,9 +308,12 @@ export default function AccountPage() {
               </div>
             </div>
 
-            <Drawer>
+            <Drawer open={isEditingProfile} onOpenChange={setIsEditingProfile}>
               <DrawerTrigger asChild>
-                <button className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                <button
+                  className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"
+                  onClick={() => setIsEditingProfile(true)}
+                >
                   <Edit className="w-4 h-4 text-white" />
                 </button>
               </DrawerTrigger>
@@ -194,17 +326,41 @@ export default function AccountPage() {
                 <div className="flex-1 overflow-y-auto py-4">
                   <div className="space-y-6">
                     <div className="flex justify-center">
-                      <Avatar className="w-24 h-24 border-4 border-blue-100">
-                        <AvatarImage src={session?.user?.image || ""} />
-                        <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-2xl font-semibold">
-                          {session?.user?.name?.charAt(0) || "U"}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar className="w-24 h-24 border-4 border-blue-100">
+                          <AvatarImage src={editForm.image || ""} />
+                          <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-2xl font-semibold">
+                            {editForm.name?.charAt(0) || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isUploadingImage}
+                          className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-blue-600 disabled:opacity-50"
+                        >
+                          {isUploadingImage ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Camera className="w-4 h-4" />
+                          )}
+                        </button>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
+                      </div>
                     </div>
 
-                    {/* <button className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors">
-                      Change Photo
-                    </button> */}
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingImage}
+                      className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors disabled:opacity-50"
+                    >
+                      {isUploadingImage ? "Uploading..." : "Change Photo"}
+                    </button>
 
                     <div className="space-y-4">
                       <div>
@@ -213,7 +369,10 @@ export default function AccountPage() {
                         </label>
                         <input
                           type="text"
-                          defaultValue={session?.user?.name || ""}
+                          value={editForm.name}
+                          onChange={(e) =>
+                            handleInputChange("name", e.target.value)
+                          }
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                         />
                       </div>
@@ -224,7 +383,7 @@ export default function AccountPage() {
                         </label>
                         <input
                           type="email"
-                          defaultValue={session?.user?.email || ""}
+                          value={session?.user?.email || ""}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-sm"
                           disabled
                         />
@@ -236,6 +395,10 @@ export default function AccountPage() {
                         </label>
                         <input
                           type="tel"
+                          value={editForm.phone}
+                          onChange={(e) =>
+                            handleInputChange("phone", e.target.value)
+                          }
                           placeholder="Add phone number"
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                         />
@@ -250,11 +413,19 @@ export default function AccountPage() {
                 {/* Fixed action buttons at bottom */}
                 <div className="flex-shrink-0 py-4 border-t border-gray-200 bg-white">
                   <div className="flex space-x-3 pb-safe">
-                    <button className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors">
+                    <button
+                      onClick={handleEditToggle}
+                      disabled={isSaving}
+                      className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors disabled:opacity-50"
+                    >
                       Cancel
                     </button>
-                    <button className="flex-1 px-4 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors">
-                      Save Changes
+                    <button
+                      onClick={handleSaveProfile}
+                      disabled={isSaving || isUploadingImage}
+                      className="flex-1 px-4 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors disabled:opacity-50"
+                    >
+                      {isSaving ? "Saving..." : "Save Changes"}
                     </button>
                   </div>
                 </div>
@@ -262,22 +433,6 @@ export default function AccountPage() {
             </Drawer>
           </div>
         </div>
-
-        {/* Quick Stats */}
-        {/* <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
-            <div className="text-2xl font-bold text-blue-600">12</div>
-            <p className="text-xs text-gray-600 font-medium">Total Rides</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
-            <div className="text-2xl font-bold text-green-600">4.8</div>
-            <p className="text-xs text-gray-600 font-medium">Rating</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
-            <div className="text-2xl font-bold text-purple-600">₹2.4k</div>
-            <p className="text-xs text-gray-600 font-medium">Saved</p>
-          </div>
-        </div> */}
 
         {/* Menu Items */}
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">

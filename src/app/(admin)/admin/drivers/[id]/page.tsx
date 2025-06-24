@@ -26,6 +26,7 @@ interface Driver {
     color: string | null;
     licensePlate: string | null;
     vehicleImages: string[] | null;
+    isCommercial?: boolean;
   } | null;
 }
 
@@ -290,6 +291,24 @@ const DriverDetailPage = () => {
                               </p>
                             </div>
                           )}
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">
+                              Vehicle Type
+                            </p>
+                            <div className="mt-1">
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  driver.vehicle.isCommercial
+                                    ? "bg-orange-100 text-orange-800"
+                                    : "bg-green-100 text-green-800"
+                                }`}
+                              >
+                                {driver.vehicle.isCommercial
+                                  ? "Commercial"
+                                  : "Non-Commercial"}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
 

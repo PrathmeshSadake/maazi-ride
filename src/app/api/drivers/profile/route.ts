@@ -85,6 +85,7 @@ export async function PUT(request: NextRequest) {
           color: vehicle.color,
           licensePlate: vehicle.licensePlate,
           vehicleImages: vehicle.images,
+          isCommercial: vehicle.isCommercial || false,
         },
         create: {
           userId: user.id,
@@ -94,6 +95,7 @@ export async function PUT(request: NextRequest) {
           color: vehicle.color,
           licensePlate: vehicle.licensePlate,
           vehicleImages: vehicle.images,
+          isCommercial: vehicle.isCommercial || false,
         },
       });
 

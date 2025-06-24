@@ -70,6 +70,7 @@ interface Driver {
     color?: string;
     licensePlate?: string;
     vehicleImages: string[];
+    isCommercial?: boolean;
   };
   offeredRides?: Array<{
     id: string;
@@ -642,6 +643,22 @@ const AdminDriversPage = () => {
                                       {selectedDriver.vehicle.licensePlate ||
                                         "N/A"}
                                     </p>
+                                    <div className="flex items-center mt-2">
+                                      <span className="text-sm text-muted-foreground mr-2">
+                                        Type:
+                                      </span>
+                                      <span
+                                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                          selectedDriver.vehicle.isCommercial
+                                            ? "bg-orange-100 text-orange-800"
+                                            : "bg-green-100 text-green-800"
+                                        }`}
+                                      >
+                                        {selectedDriver.vehicle.isCommercial
+                                          ? "Commercial"
+                                          : "Non-Commercial"}
+                                      </span>
+                                    </div>
                                   </div>
                                   {selectedDriver.vehicle.vehicleImages.length >
                                     0 && (

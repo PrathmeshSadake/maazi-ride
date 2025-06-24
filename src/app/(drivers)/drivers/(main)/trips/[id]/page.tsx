@@ -218,23 +218,32 @@ export default function TripDetailPage() {
   };
 
   const handleCancelTrip = async () => {
+    setIsProcessing(true);
     try {
       const response = await fetch(`/api/rides/${params.id}/cancel`, {
         method: "PATCH",
       });
 
       if (!response.ok) {
-        throw new Error("Failed to cancel trip");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to cancel trip");
       }
 
-      toast.success("Trip cancelled successfully");
-      router.refresh();
-      // Refresh the trip data
       const updatedTrip = await response.json();
       setTrip(updatedTrip);
+
+      toast.success("Trip cancelled successfully");
+      setShowCancelDialog(false);
+
+      // Refresh trip data to ensure consistency
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (err) {
       console.error("Error cancelling trip:", err);
-      toast.error("Failed to cancel trip");
+      toast.error(err instanceof Error ? err.message : "Failed to cancel trip");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -585,10 +594,11 @@ export default function TripDetailPage() {
                   <Button
                     variant="destructive"
                     onClick={() => setShowCancelDialog(true)}
+                    disabled={isProcessing}
                     className="w-full text-sm"
                     size="sm"
                   >
-                    Cancel Trip
+                    {isProcessing ? "Processing..." : "Cancel Trip"}
                   </Button>
                 </CardFooter>
               )}
@@ -831,9 +841,10 @@ export default function TripDetailPage() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleCancelTrip}
-              className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto"
+              disabled={isProcessing}
+              className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto disabled:opacity-50"
             >
-              Yes, Cancel Trip
+              {isProcessing ? "Cancelling..." : "Yes, Cancel Trip"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

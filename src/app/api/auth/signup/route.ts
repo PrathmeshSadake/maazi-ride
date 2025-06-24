@@ -7,6 +7,7 @@ import { z } from "zod";
 const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
+  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.enum(["user", "driver"]).default("user"),
 });
@@ -18,14 +19,26 @@ export async function POST(request: Request) {
     // Validate request body
     const validatedData = signupSchema.parse(body);
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    // Check if user already exists by email
+    const existingUserByEmail = await prisma.user.findUnique({
       where: { email: validatedData.email },
     });
 
-    if (existingUser) {
+    if (existingUserByEmail) {
       return NextResponse.json(
         { error: "User with this email already exists" },
+        { status: 400 }
+      );
+    }
+
+    // Check if user already exists by phone
+    const existingUserByPhone = await prisma.user.findUnique({
+      where: { phone: validatedData.phone },
+    });
+
+    if (existingUserByPhone) {
+      return NextResponse.json(
+        { error: "User with this phone number already exists" },
         { status: 400 }
       );
     }
@@ -38,6 +51,7 @@ export async function POST(request: Request) {
       data: {
         name: validatedData.name,
         email: validatedData.email,
+        phone: validatedData.phone,
         password: hashedPassword,
         role: validatedData.role,
       },

@@ -15,22 +15,53 @@ import {
   Eye,
   EyeOff,
   UserCheck,
+  Phone,
 } from "lucide-react";
 
 export default function SignupPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<UserRole>("user");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Phone number formatting function
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-numeric characters
+    const numericValue = value.replace(/\D/g, "");
+
+    // Limit to 10 digits for Indian numbers
+    const truncated = numericValue.slice(0, 10);
+
+    // Format as XXXXX XXXXX if 10 digits
+    if (truncated.length > 5) {
+      return `${truncated.slice(0, 5)} ${truncated.slice(5)}`;
+    }
+
+    return truncated;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setPhone(formatted);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // Validate phone number
+    const phoneDigits = phone.replace(/\D/g, "");
+    if (phoneDigits.length !== 10) {
+      setError("Please enter a valid 10-digit phone number");
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/auth/signup", {
@@ -38,7 +69,13 @@ export default function SignupPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({
+          name,
+          email,
+          phone: phoneDigits, // Send only digits to backend
+          password,
+          role,
+        }),
       });
 
       const data = await response.json();
@@ -48,7 +85,7 @@ export default function SignupPage() {
       }
 
       // Redirect to login page
-      router.push("/auth/signin");
+      router.push("/auth/signin?message=Account created successfully");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Something went wrong");
     } finally {
@@ -237,6 +274,36 @@ export default function SignupPage() {
                     className="pl-10 h-12 border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-lg text-sm"
                   />
                 </div>
+              </div>
+
+              {/* Phone Input */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="phone"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Phone Number
+                </Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Phone className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={handlePhoneChange}
+                    placeholder="Enter your phone number"
+                    disabled={loading}
+                    maxLength={11} // XXXXX XXXXX format
+                    className="pl-10 h-12 border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-lg text-sm"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  10-digit Indian mobile number
+                </p>
               </div>
 
               {/* Password Input */}
