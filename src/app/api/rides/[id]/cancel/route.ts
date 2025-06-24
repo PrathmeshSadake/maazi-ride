@@ -48,8 +48,7 @@ export async function PATCH(
       include: {
         driver: {
           select: {
-            firstName: true,
-            lastName: true,
+            name: true,
             driverRating: true,
           },
         },
