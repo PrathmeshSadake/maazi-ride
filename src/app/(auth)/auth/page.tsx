@@ -223,7 +223,7 @@ const AuthPage = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-4">
           <Link href="/auth/signin">
             <button className="w-full px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 active:from-blue-700 active:to-blue-800 transition-all duration-200 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl">
               <LogIn className="w-5 h-5" />
@@ -232,21 +232,13 @@ const AuthPage = () => {
             </button>
           </Link>
 
-          <Link href="/auth/signup mt-2">
+          <Link href="/auth/signup">
             <button className="w-full px-6 py-4 bg-white border-2 border-blue-500 text-blue-600 rounded-xl font-semibold hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center space-x-3 shadow-sm hover:shadow-md">
               <UserPlus className="w-5 h-5" />
               <span>Create New Account</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </Link>
-
-          {/* Phone Auth Option */}
-          {/* <Link href="/auth/phone-auth">
-            <button className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors flex items-center justify-center space-x-2 shadow-sm">
-              <Smartphone className="w-4 h-4" />
-              <span>Continue with Phone Number</span>
-            </button>
-          </Link> */}
         </div>
 
         {/* Show Onboarding Again */}
