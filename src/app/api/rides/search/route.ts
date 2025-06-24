@@ -141,7 +141,7 @@ export async function GET(req: NextRequest) {
     const COORD_THRESHOLD = 0.1; // Increasing threshold to make search more lenient
 
     // Build the where clause for the final query
-    const whereClause = {
+    const whereClause: any = {
       availableSeats: {
         gt: 0,
       },
