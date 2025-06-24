@@ -107,8 +107,8 @@ export default function HomePage() {
     }
 
     if (selectedDate) {
-      // Format as YYYY-MM-DD for better compatibility
-      const formattedDate = selectedDate.toISOString().split("T")[0];
+      // Format as ISO string for better compatibility
+      const formattedDate = selectedDate.toISOString();
       console.log("Setting date parameter:", formattedDate);
       queryParams.append("date", formattedDate);
     }

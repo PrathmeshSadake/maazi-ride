@@ -49,6 +49,7 @@ export default function AccountPage() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form state for editing
@@ -58,16 +59,42 @@ export default function AccountPage() {
     image: "",
   });
 
+  // Fetch user profile data including phone number
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!session?.user?.id) return;
+
+      try {
+        const response = await fetch(`/api/users/${session.user.id}/profile`);
+        if (response.ok) {
+          const data = await response.json();
+          setUserProfile(data);
+          setEditForm({
+            name: data.name || "",
+            phone: data.phone || "",
+            image: data.image || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
+    if (session?.user) {
+      fetchUserProfile();
+    }
+  }, [session?.user?.id]);
+
   // Initialize form when session data is available
   useEffect(() => {
-    if (session?.user) {
+    if (session?.user && userProfile) {
       setEditForm({
-        name: session.user.name || "",
-        phone: "", // We'll fetch this from the user profile API if needed
-        image: session.user.image || "",
+        name: userProfile.name || session.user.name || "",
+        phone: userProfile.phone || "",
+        image: userProfile.image || session.user.image || "",
       });
     }
-  }, [session?.user]);
+  }, [session?.user, userProfile]);
 
   const handleSignOut = async () => {
     setLoading(true);
@@ -84,9 +111,9 @@ export default function AccountPage() {
     if (isEditingProfile) {
       // Reset form when canceling
       setEditForm({
-        name: session?.user?.name || "",
-        phone: "", // We'll fetch this from the user profile API if needed
-        image: session?.user?.image || "",
+        name: userProfile?.name || session?.user?.name || "",
+        phone: userProfile?.phone || "",
+        image: userProfile?.image || session?.user?.image || "",
       });
     }
     setIsEditingProfile(!isEditingProfile);
@@ -97,6 +124,37 @@ export default function AccountPage() {
       ...prev,
       [field]: value,
     }));
+  };
+
+  // Phone number formatting function
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-numeric characters
+    const numericValue = value.replace(/\D/g, "");
+
+    // Limit to 10 digits for Indian numbers
+    const truncated = numericValue.slice(0, 10);
+
+    // Format as XXXXX XXXXX if 10 digits
+    if (truncated.length > 5) {
+      return `${truncated.slice(0, 5)} ${truncated.slice(5)}`;
+    }
+
+    return truncated;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    handleInputChange("phone", formatted);
+  };
+
+  // Format phone number for display
+  const formatPhoneForDisplay = (phone: string) => {
+    if (!phone) return "";
+    const clean = phone.replace(/\D/g, "");
+    if (clean.length === 10) {
+      return `${clean.slice(0, 5)} ${clean.slice(5)}`;
+    }
+    return phone;
   };
 
   const handleImageUpload = async (
@@ -147,6 +205,25 @@ export default function AccountPage() {
   const handleSaveProfile = async () => {
     if (!session?.user?.id) return;
 
+    // Validate required fields
+    if (!editForm.name.trim()) {
+      alert("Name is required");
+      return;
+    }
+
+    if (!editForm.phone.trim()) {
+      alert("Phone number is required");
+      return;
+    }
+
+    // Validate phone number format (basic validation)
+    const phoneRegex = /^\d{10}$/;
+    const cleanPhone = editForm.phone.replace(/\D/g, "");
+    if (!phoneRegex.test(cleanPhone)) {
+      alert("Please enter a valid 10-digit phone number");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const response = await fetch(`/api/users/${session.user.id}/profile`, {
@@ -154,7 +231,10 @@ export default function AccountPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify({
+          ...editForm,
+          phone: cleanPhone, // Send clean phone number to API
+        }),
       });
 
       if (!response.ok) {
@@ -172,6 +252,9 @@ export default function AccountPage() {
           image: updatedUser.image,
         },
       });
+
+      // Update local profile state
+      setUserProfile(updatedUser);
 
       setIsEditingProfile(false);
       alert("Profile updated successfully!");
@@ -283,16 +366,28 @@ export default function AccountPage() {
             <div className="flex items-center">
               <Avatar className="w-16 h-16 border-2 border-white/20 mr-4">
                 <AvatarImage
-                  src={editForm.image || session?.user?.image || ""}
+                  src={
+                    editForm.image ||
+                    userProfile?.image ||
+                    session?.user?.image ||
+                    ""
+                  }
                 />
                 <AvatarFallback className="bg-white/20 text-white text-xl font-semibold">
-                  {(editForm.name || session?.user?.name)?.charAt(0) || "U"}
+                  {(
+                    editForm.name ||
+                    userProfile?.name ||
+                    session?.user?.name
+                  )?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <div className="flex items-center space-x-2 mb-1">
                   <h2 className="text-lg font-semibold">
-                    {editForm.name || session?.user?.name || "User"}
+                    {editForm.name ||
+                      userProfile?.name ||
+                      session?.user?.name ||
+                      "User"}
                   </h2>
                   <div className="bg-green-400/20 border border-green-400/30 text-green-100 text-xs px-2 py-0.5 rounded-full font-medium">
                     Verified
@@ -301,6 +396,11 @@ export default function AccountPage() {
                 <p className="text-white/80 text-sm mb-1">
                   {session?.user?.email}
                 </p>
+                {userProfile?.phone && (
+                  <p className="text-white/80 text-sm mb-1">
+                    {formatPhoneForDisplay(userProfile.phone)}
+                  </p>
+                )}
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
                   <span className="text-white/90 text-xs">Active User</span>
@@ -365,7 +465,7 @@ export default function AccountPage() {
                     <div className="space-y-4">
                       <div>
                         <label className="text-sm font-medium text-gray-700 block mb-2">
-                          Name
+                          Name <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -374,6 +474,7 @@ export default function AccountPage() {
                             handleInputChange("name", e.target.value)
                           }
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          required
                         />
                       </div>
 
@@ -391,17 +492,19 @@ export default function AccountPage() {
 
                       <div>
                         <label className="text-sm font-medium text-gray-700 block mb-2">
-                          Phone
+                          Phone Number <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="tel"
                           value={editForm.phone}
-                          onChange={(e) =>
-                            handleInputChange("phone", e.target.value)
-                          }
-                          placeholder="Add phone number"
+                          onChange={handlePhoneChange}
+                          placeholder="Enter 10-digit phone number"
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          required
                         />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Enter your 10-digit phone number without country code
+                        </p>
                       </div>
                     </div>
 

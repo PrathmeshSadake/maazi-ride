@@ -65,7 +65,13 @@ function ExplorePageContent() {
 
     if (dateParam) {
       try {
-        setSelectedDate(new Date(decodeURIComponent(dateParam)));
+        // Parse the ISO string date parameter
+        const parsedDate = new Date(decodeURIComponent(dateParam));
+        if (!isNaN(parsedDate.getTime())) {
+          setSelectedDate(parsedDate);
+        } else {
+          console.error("Invalid date value:", dateParam);
+        }
       } catch (e) {
         console.error("Invalid date format:", e);
       }
