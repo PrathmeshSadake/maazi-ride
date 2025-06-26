@@ -32,6 +32,7 @@ interface Driver {
   name: string;
   driverRating?: number;
   phone?: string;
+  upiId?: string;
 }
 
 interface Booking {
@@ -483,10 +484,29 @@ export default function ActivityPage() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <Phone size={16} />
-                        </Button>
-                        <Button variant="outline" size="sm">
+                        {selectedRide.driver?.phone && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              window.open(
+                                `tel:${selectedRide.driver?.phone}`,
+                                "_self"
+                              )
+                            }
+                          >
+                            <Phone size={16} />
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            router.push(
+                              `/messages/direct/${selectedRide.driver?.id}`
+                            )
+                          }
+                        >
                           <MessageCircle size={16} />
                         </Button>
                       </div>
@@ -506,6 +526,14 @@ export default function ActivityPage() {
                         {selectedRide.booking?.numSeats || 1}
                       </span>
                     </div>
+                    {selectedRide.driver?.upiId && (
+                      <div className="flex justify-between items-center py-1 border-b border-gray-200">
+                        <span className="text-gray-600">Driver UPI ID</span>
+                        <span className="font-semibold text-blue-600">
+                          {selectedRide.driver.upiId}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-600">Total Amount</span>
                       <span className="font-semibold text-lg">
@@ -518,17 +546,9 @@ export default function ActivityPage() {
                 {/* Action Buttons */}
                 <div className="flex gap-3 pt-4 border-t">
                   {selectedRide.status === "PENDING" && (
-                    <>
-                      <Button
-                        variant="outline"
-                        className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
-                      >
-                        Cancel Ride
-                      </Button>
-                      <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
-                        Contact Driver
-                      </Button>
-                    </>
+                    <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
+                      Contact Driver
+                    </Button>
                   )}
 
                   {selectedRide.status === "COMPLETED" && (
