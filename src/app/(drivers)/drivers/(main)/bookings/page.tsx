@@ -302,7 +302,10 @@ export default function DriverBookingsPage() {
                   {booking.status === "CONFIRMED" && (
                     <div className="flex gap-2 pt-3 border-t border-gray-100">
                       {booking.user.phone && (
-                        <button className="flex-1 flex items-center justify-center py-2 px-3 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 active:bg-blue-200 transition-colors">
+                        <button 
+                          onClick={() => window.open(`tel:${booking.user.phone?.replace(/\D/g, "")}`, "_self")}
+                          className="flex-1 flex items-center justify-center py-2 px-3 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 active:bg-blue-200 transition-colors"
+                        >
                           <Phone className="w-3 h-3 mr-1" />
                           Call
                         </button>

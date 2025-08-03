@@ -490,7 +490,7 @@ export default function ActivityPage() {
                             size="sm"
                             onClick={() =>
                               window.open(
-                                `tel:${selectedRide.driver?.phone}`,
+                                `tel:${selectedRide.driver?.phone?.replace(/\D/g, "")}`,
                                 "_self"
                               )
                             }

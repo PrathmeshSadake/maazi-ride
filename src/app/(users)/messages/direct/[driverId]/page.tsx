@@ -238,7 +238,8 @@ function DirectMessageContent() {
 
   const makePhoneCall = (phoneNumber: string) => {
     if (phoneNumber) {
-      window.open(`tel:${phoneNumber}`, "_self");
+      const cleanPhone = phoneNumber.replace(/\D/g, "");
+      window.open(`tel:${cleanPhone}`, "_self");
     }
   };
 

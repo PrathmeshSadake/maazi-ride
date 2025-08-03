@@ -63,6 +63,7 @@ interface RideDetails {
   driver: {
     id: string;
     name: string | null;
+    phone?: string;
     driverRating: number | null;
     ridesCompleted: number;
     vehicle?: {
@@ -250,6 +251,17 @@ export default function RideDetailsPage() {
         // Fallback to simple messaging
         router.push(`/messages/direct/${ride.driver.id}?rideId=${ride.id}`);
       });
+  };
+
+  const handleCallDriver = () => {
+    if (!ride?.driver?.phone) {
+      alert("Driver phone number not available");
+      return;
+    }
+    
+    // Clean the phone number and make the call
+    const cleanPhone = ride.driver.phone.replace(/\D/g, "");
+    window.open(`tel:${cleanPhone}`, "_self");
   };
 
   const goBack = () => {
@@ -722,7 +734,11 @@ export default function RideDetailsPage() {
                 <MessageSquare className="w-4 h-4" />
                 <span>Message</span>
               </button>
-              <button className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors flex items-center justify-center space-x-2">
+              <button 
+                onClick={handleCallDriver}
+                disabled={!ride?.driver?.phone}
+                className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <Phone className="w-4 h-4" />
                 <span>Call</span>
               </button>

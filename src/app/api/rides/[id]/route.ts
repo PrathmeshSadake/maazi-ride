@@ -40,6 +40,7 @@ export async function GET(
           select: {
             id: true,
             name: true,
+            phone: true,
             driverRating: true,
             ridesCompleted: true,
             vehicle: true,
