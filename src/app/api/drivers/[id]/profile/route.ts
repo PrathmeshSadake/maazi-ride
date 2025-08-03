@@ -36,6 +36,7 @@ export async function GET(
         ridesCompleted: true,
         isVerified: true,
         createdAt: true,
+        image: true,
         drivingLicenseUrl: true,
         vehicleRegistrationUrl: true,
         insuranceUrl: true,
@@ -100,6 +101,7 @@ export async function GET(
       ridesCompleted: driver.offeredRides.length,
       isVerified: driver.isVerified,
       memberSince: driver.createdAt,
+      image: driver.image,
       hasDocuments: {
         drivingLicense: !!driver.drivingLicenseUrl,
         vehicleRegistration: !!driver.vehicleRegistrationUrl,
@@ -141,7 +143,7 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { name, phone, upiId } = body;
+    const { name, phone, upiId, image } = body;
 
     // Update user profile
     const updatedDriver = await prisma.user.update({
@@ -153,6 +155,7 @@ export async function PUT(
         ...(name && { name }),
         ...(phone && { phone }),
         ...(upiId && { upiId }),
+        ...(image && { image }),
       },
       select: {
         id: true,
@@ -160,6 +163,7 @@ export async function PUT(
         email: true,
         phone: true,
         upiId: true,
+        image: true,
       },
     });
 

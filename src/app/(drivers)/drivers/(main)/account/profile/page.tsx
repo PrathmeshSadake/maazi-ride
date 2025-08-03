@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -21,6 +21,8 @@ import {
   Save,
   X,
   ChevronRight,
+  Camera,
+  Upload,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +43,7 @@ interface DriverProfile {
   ridesCompleted: number;
   isVerified: boolean;
   memberSince: string;
+  image?: string;
   hasDocuments: {
     drivingLicense: boolean;
     vehicleRegistration: boolean;
@@ -70,17 +73,20 @@ interface DriverProfile {
 }
 
 export default function ProfilePage() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<DriverProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [editForm, setEditForm] = useState({
     name: "",
     phone: "",
     upiId: "",
+    image: "",
   });
 
   // Fetch user profile data
@@ -109,6 +115,7 @@ export default function ProfilePage() {
           name: data.name || "",
           phone: data.phone || "",
           upiId: data.upiId || "",
+          image: data.image || "",
         });
       } catch (err) {
         console.error("Error fetching profile:", err);
@@ -129,6 +136,7 @@ export default function ProfilePage() {
         name: profile?.name || "",
         phone: profile?.phone || "",
         upiId: profile?.upiId || "",
+        image: profile?.image || "",
       });
     }
     setIsEditing(!isEditing);
@@ -142,9 +150,104 @@ export default function ProfilePage() {
     }));
   };
 
+  // Phone number formatting function
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-numeric characters
+    const numericValue = value.replace(/\D/g, "");
+
+    // Limit to 10 digits for Indian numbers
+    const truncated = numericValue.slice(0, 10);
+
+    // Format as XXXXX XXXXX if 10 digits
+    if (truncated.length > 5) {
+      return `${truncated.slice(0, 5)} ${truncated.slice(5)}`;
+    }
+
+    return truncated;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    handleInputChange("phone", formatted);
+  };
+
+  // Format phone number for display
+  const formatPhoneForDisplay = (phone: string) => {
+    if (!phone) return "";
+    const clean = phone.replace(/\D/g, "");
+    if (clean.length === 10) {
+      return `${clean.slice(0, 5)} ${clean.slice(5)}`;
+    }
+    return phone;
+  };
+
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image size must be less than 5MB");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to upload image");
+      }
+
+      const data = await response.json();
+      setEditForm((prev) => ({
+        ...prev,
+        image: data.url,
+      }));
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Failed to upload image. Please try again.");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   // Handle save profile
   const handleSaveProfile = async () => {
     if (!session?.user?.id) return;
+
+    // Validate required fields
+    if (!editForm.name.trim()) {
+      alert("Name is required");
+      return;
+    }
+
+    if (!editForm.phone.trim()) {
+      alert("Phone number is required");
+      return;
+    }
+
+    // Validate phone number format (basic validation)
+    const phoneRegex = /^\d{10}$/;
+    const cleanPhone = editForm.phone.replace(/\D/g, "");
+    if (!phoneRegex.test(cleanPhone)) {
+      alert("Please enter a valid 10-digit phone number");
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -153,12 +256,27 @@ export default function ProfilePage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify({
+          ...editForm,
+          phone: cleanPhone, // Send clean phone number to API
+        }),
       });
 
       if (!response.ok) {
         throw new Error("Failed to update profile");
       }
+
+      const updatedDriver = await response.json();
+
+      // Update the session with new data
+      await update({
+        ...session,
+        user: {
+          ...session.user,
+          name: updatedDriver.name,
+          image: updatedDriver.image,
+        },
+      });
 
       // Update local profile state
       setProfile((prev) =>
@@ -166,13 +284,15 @@ export default function ProfilePage() {
           ? {
               ...prev,
               name: editForm.name,
-              phone: editForm.phone,
+              phone: cleanPhone,
               upiId: editForm.upiId,
+              image: editForm.image,
             }
           : null
       );
 
       setIsEditing(false);
+      alert("Profile updated successfully!");
     } catch (err) {
       console.error("Error updating profile:", err);
       alert("Failed to update profile. Please try again.");
@@ -310,11 +430,45 @@ export default function ProfilePage() {
         {/* Profile Header Card */}
         <div className="bg-white rounded-xl p-4">
           <div className="flex items-start space-x-3">
-            <Avatar className="w-16 h-16 border-2 border-blue-100">
-              <AvatarFallback className="bg-blue-100 text-blue-800 text-xl font-bold">
-                {(isEditing ? editForm.name : profile?.name)?.[0] || "D"}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="w-16 h-16 border-2 border-blue-100">
+                <AvatarImage
+                  src={isEditing ? editForm.image : profile?.image}
+                />
+                <AvatarFallback className="bg-blue-100 text-blue-800 text-xl font-bold">
+                  {(isEditing ? editForm.name : profile?.name)?.[0] || "D"}
+                </AvatarFallback>
+              </Avatar>
+              {isEditing && (
+                <>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingImage}
+                    className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-blue-600 disabled:opacity-50"
+                  >
+                    {isUploadingImage ? (
+                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Camera className="w-3 h-3" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingImage}
+                    className="mt-2 w-full px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors disabled:opacity-50"
+                  >
+                    {isUploadingImage ? "Uploading..." : "Change Photo"}
+                  </button>
+                </>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </div>
 
             <div className="flex-1 min-w-0">
               {isEditing ? (
@@ -430,7 +584,7 @@ export default function ProfilePage() {
                 {isEditing ? (
                   <Input
                     value={editForm.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    onChange={handlePhoneChange}
                     placeholder="Enter phone number"
                     type="tel"
                     className="text-sm"
@@ -438,7 +592,7 @@ export default function ProfilePage() {
                 ) : (
                   <>
                     <p className="text-sm font-medium text-gray-900">
-                      {profile?.phone || "Not provided"}
+                      {formatPhoneForDisplay(profile?.phone || "")}
                     </p>
                     <p className="text-xs text-gray-500">Phone Number</p>
                   </>
