@@ -71,8 +71,8 @@ function SignInContent() {
             <Image
               src="https://rue7vxma3l1fw7f7.public.blob.vercel-storage.com/logo-bf8y30pc7CCXr3951SDdFWldtMUxO3.png"
               alt="Maazi Ride"
-              width={96}
-              height={96}
+              width={200}
+              height={200}
               className="w-full h-full object-contain"
               priority
             />
